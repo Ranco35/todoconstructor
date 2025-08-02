@@ -1,0 +1,79 @@
+# Ver más: https://help.github.com/articles/ignoring-files/
+
+# ========================
+# Dependencias
+# ========================
+node_modules/
+.pnp/
+.pnp.*
+.yarn/*
+!.yarn/patches
+!.yarn/plugins
+!.yarn/releases
+!.yarn/versions
+
+# ========================
+# Testing y cobertura
+# ========================
+coverage/
+
+# ========================
+# Next.js
+# ========================
+.next/
+out/
+
+# ========================
+# Producción y compilación
+# ========================
+build/
+dist/
+
+# ========================
+# Archivos de entorno y configuración
+# ========================
+.env*
+.vercel
+docker-compose.yml
+schema_online.sql
+
+# ========================
+# Prisma (auto-generado)
+# ========================
+src/generated/prisma/
+
+# ========================
+# Archivos temporales SO/IDE
+# ========================
+.DS_Store
+Thumbs.db
+*.swp
+*.swo
+.vscode/
+
+# ========================
+# Logs y depuración
+# ========================
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+pnpm-debug.log*
+
+# ========================
+# Archivos específicos
+# ========================
+*.pem
+next-env.d.ts
+
+# ========================
+# Sesiones de WhatsApp Web JS
+# ========================
+.wwebjs_auth/
+
+# ========================
+# Extras opcionales
+# ========================
+.idea/               # JetBrains IDEs
+.cache/              # Caches varias
+# Evitar archivo accidental 'nul' (Windows)
+nul

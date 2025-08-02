@@ -1,0 +1,14 @@
+# Test Excel file for email duplicate unification
+# This is a placeholder for the actual Excel file
+# The real file would contain:
+# - Multiple rows with the same email addresses
+# - Different client data for each duplicate
+# - Mix of PERSONA and EMPRESA types
+# - Various field combinations to test the unification modal
+
+# Example structure:
+# ID | Tipo Cliente | Nombre Principal | Apellido | Email | Teléfono | RUT | Razón Social | Giro
+#    | PERSONA      | Juan             | Pérez    | juan@test.com | +56 9 1234 5678 | 12.345.678-9 | | 
+#    | EMPRESA      | Empresa ABC      |          | juan@test.com | +56 9 8765 4321 | 98.765.432-1 | Empresa ABC SpA | Servicios
+#    | PERSONA      | María            | González | maria@test.com | +56 9 1111 2222 | 11.111.111-1 | | 
+#    | EMPRESA      | Empresa XYZ      |          | maria@test.com | +56 9 3333 4444 | 33.333.333-3 | Empresa XYZ Ltda | Comercio 

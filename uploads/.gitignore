@@ -1,0 +1,9 @@
+# Ignorar todos los archivos PDF y contenido
+*.pdf
+*.PDF
+*
+
+# Mantener la estructura de directorios
+!.gitignore
+!*/
+!*/.gitignore 

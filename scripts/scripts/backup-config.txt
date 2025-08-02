@@ -1,0 +1,17 @@
+# Configuración de respaldo actualizada
+# Fecha: 2025-07-20 23:13:29
+
+# Información de conexión
+SUPABASE_URL=https://bvzfuibqlprrfbudnauc.supabase.co
+DB_HOST=db.bvzfuibqlprrfbudnauc.supabase.co
+DB_PORT=5432
+DB_NAME=postgres
+DB_USER=postgres
+DB_PASSWORD=oRL24lHBIMXY6EeW
+
+# URL de conexión completa
+CONNECTION_URL=postgresql://postgres:oRL24lHBIMXY6EeW@db.bvzfuibqlprrfbudnauc.supabase.co:5432/=require
+
+# Comandos útiles
+# Respaldo: pg_dump "" -f respaldo.sql
+# Restaurar: psql "" -f respaldo.sql

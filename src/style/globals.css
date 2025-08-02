@@ -1,0 +1,117 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@font-face {
+  font-family: FontAwesome6ProRegular;
+  src: url(./fonts/FontAwesome6ProRegular400.otf);
+}
+
+@font-face {
+  font-family: FontAwesome6ProSolid;
+  src: url(./fonts/FontAwesome6ProSolid900.otf);
+}
+
+@font-face {
+  font-family: FontAwesome6ProLight;
+  src: url(./fonts/FontAwesome6ProLight300.otf);
+}
+
+
+i {
+  font-style: normal !important
+}
+
+.xmark::before {
+  font-family: FontAwesome6ProRegular !important;
+  content: '\f00d';
+}
+
+
+.menu::before {
+  font-family: FontAwesome6ProRegular !important;
+  content: '\f0c9';
+}
+
+
+.angle-up::before {
+  font-family: FontAwesome6ProRegular !important;
+  content: '\f106';
+}
+
+
+.angle-down::before {
+  font-family: FontAwesome6ProRegular !important;
+  content: '\f107';
+}
+:root {
+  --background: #ffffff;
+  --foreground: #171717;
+}
+
+@theme inline {
+  --color-background: var(--background);
+  --color-foreground: var(--foreground);
+  --font-sans: var(--font-geist-sans);
+  --font-mono: var(--font-geist-mono);
+}
+
+@media (prefers-color-scheme: dark) {
+  :root {
+    --background: #ededed;
+    --foreground: #0a0a0a;
+  }
+}
+
+body {
+  background: var(--background);
+  color: var(--foreground);
+  font-family: Arial, Helvetica, sans-serif;
+}
+
+/* Estilos para mejorar el scroll horizontal de tablas */
+.table-container {
+  overflow-x: auto;
+  scrollbar-width: thin;
+  scrollbar-color: #cbd5e1 #f1f5f9;
+}
+
+.table-container::-webkit-scrollbar {
+  height: 8px;
+}
+
+.table-container::-webkit-scrollbar-track {
+  background: #f1f5f9;
+  border-radius: 4px;
+}
+
+.table-container::-webkit-scrollbar-thumb {
+  background: #cbd5e1;
+  border-radius: 4px;
+}
+
+.table-container::-webkit-scrollbar-thumb:hover {
+  background: #94a3b8;
+}
+
+/* Evitar overflow en el layout principal */
+html {
+  overflow-x: hidden;
+}
+
+body {
+  overflow-x: hidden;
+}
+
+/* Forzar alineación a la izquierda en ProductSelector */
+.product-selector-input,
+.product-selector-input input {
+  text-align: left !important;
+  padding-left: 12px !important;
+}
+
+/* Selector más específico para campos de presupuesto */
+[data-component="budget-form"] input,
+[data-component="product-selector"] input {
+  text-align: left !important;
+}

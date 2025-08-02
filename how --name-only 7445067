@@ -1,0 +1,10 @@
+[33m5d7c320[m[33m ([m[1;36mHEAD[m[33m -> [m[1;32mmain[m[33m, [m[1;31morigin/main[m[33m)[m fix: resolver error 'Cannot read properties of undefined (reading apply)' en búsqueda de clientes
+[33m7445067[m fix crea reserva busca clientes
+[33m61082d6[m fix facturas 1
+[33m087fde3[m docs: Resolución factura servicios FC250801-0001 - Validación inteligente implementada
+[33m3a60ba2[m fix facturas
+[33m3792da6[m se puede selecionar pirveedor en servicios y se mejora exportar IA
+[33m4949669[m fix creacion bodegas hidra
+[33m5cae511[m docs: final success confirmation - users and eduardo problem completely resolved
+[33mcb04237[m fix: show real user instead of temp@user.com in dashboard layout
+[33m83ef725[m docs: complete documentation for Server Action in client error

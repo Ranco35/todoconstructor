@@ -1,0 +1,26 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(find:*)",
+      "Bash(npm run build:*)",
+      "Bash(npm run lint)",
+      "Bash(npx tsc:*)",
+      "Bash(node:*)",
+      "Bash(rm:*)",
+      "Bash(cp:*)",
+      "Bash(npm install)",
+      "Bash(npm run dev:*)",
+      "Bash(npx next:*)",
+      "Bash(npm ls:*)",
+      "Bash(npm:*)",
+      "Bash(ls:*)",
+      "Bash(true)",
+      "Bash(chmod:*)",
+      "Bash(./install-deps.sh)",
+      "Bash(curl:*)",
+      "Bash(grep:*)",
+      "Bash(powershell.exe:*)"
+    ]
+  },
+  "enableAllProjectMcpServers": false
+}
