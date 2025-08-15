@@ -7,26 +7,18 @@ import { NextRequest, NextResponse } from 'next/server'
 // Utiliza la clave de servicio (service_role), que tiene permisos de administrador y bypassa RLS.
 // NUNCA expongas la service_role key en el lado del cliente.
 
-const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL!
-const supabaseAnonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!
-const supabaseServiceKey = process.env.SUPABASE_SERVICE_ROLE_KEY!
+// Lectura perezosa de variables de entorno para evitar fallos en build
+function getEnv() {
+  const url = process.env.NEXT_PUBLIC_SUPABASE_URL
+  const anon = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY
+  const service = process.env.SUPABASE_SERVICE_ROLE_KEY
 
-// Validaciones de seguridad mejoradas
-if (!supabaseUrl) {
-  throw new Error('NEXT_PUBLIC_SUPABASE_URL is required but not set in environment variables');
-}
+  // Validación suave (no arrojar en import/build). Validar en tiempo de solicitud.
+  if (url && !url.startsWith('https://') && !url.startsWith('http://127.0.0.1') && !url.startsWith('http://localhost')) {
+    console.warn('NEXT_PUBLIC_SUPABASE_URL should start with https:// or be a local URL (http://127.0.0.1 or http://localhost)')
+  }
 
-if (!supabaseAnonKey) {
-  throw new Error('NEXT_PUBLIC_SUPABASE_ANON_KEY is required but not set in environment variables');
-}
-
-if (!supabaseServiceKey) {
-  console.warn('SUPABASE_SERVICE_ROLE_KEY is not set in environment variables. Service client will not work.');
-}
-
-// Permitir URLs locales para desarrollo
-if (!supabaseUrl.startsWith('https://') && !supabaseUrl.startsWith('http://127.0.0.1') && !supabaseUrl.startsWith('http://localhost')) {
-  throw new Error('NEXT_PUBLIC_SUPABASE_URL must start with https:// or be a local development URL (http://127.0.0.1 or http://localhost)');
+  return { url, anon, service }
 }
 
 // Función helper para validar la conexión de forma más robusta
@@ -54,7 +46,12 @@ export async function createServerComponentClient() {
   try {
     const cookieStore = await cookies()
 
-    const client = createServerClient(supabaseUrl, supabaseAnonKey, {
+    const { url, anon } = getEnv()
+    if (!url || !anon) {
+      throw new Error('Supabase env vars are not set (NEXT_PUBLIC_SUPABASE_URL / NEXT_PUBLIC_SUPABASE_ANON_KEY)')
+    }
+
+    const client = createServerClient(url, anon, {
       cookies: {
         getAll() {
           return cookieStore.getAll()
@@ -86,7 +83,12 @@ export async function createServerComponentClient() {
 // Cliente para Route Handlers
 export function createRouteHandlerClient(request: NextRequest, response: NextResponse) {
   try {
-    const client = createServerClient(supabaseUrl, supabaseAnonKey, {
+    const { url, anon } = getEnv()
+    if (!url || !anon) {
+      throw new Error('Supabase env vars are not set (NEXT_PUBLIC_SUPABASE_URL / NEXT_PUBLIC_SUPABASE_ANON_KEY)')
+    }
+
+    const client = createServerClient(url, anon, {
       cookies: {
         getAll() {
           return request.cookies.getAll()
@@ -112,7 +114,12 @@ export async function createServerActionClient() {
   try {
     const cookieStore = await cookies()
 
-    const client = createServerClient(supabaseUrl, supabaseAnonKey, {
+    const { url, anon } = getEnv()
+    if (!url || !anon) {
+      throw new Error('Supabase env vars are not set (NEXT_PUBLIC_SUPABASE_URL / NEXT_PUBLIC_SUPABASE_ANON_KEY)')
+    }
+
+    const client = createServerClient(url, anon, {
       cookies: {
         getAll() {
           return cookieStore.getAll()
@@ -165,13 +172,14 @@ export async function createClient() {
 // Cliente con service role para bypassear RLS en server actions críticas
 export async function getSupabaseServiceClient() {
   try {
-    if (!supabaseServiceKey) {
-      throw new Error('SUPABASE_SERVICE_ROLE_KEY is not set');
+    const { url, service } = getEnv()
+    if (!url || !service) {
+      throw new Error('Supabase env vars are not set (NEXT_PUBLIC_SUPABASE_URL / SUPABASE_SERVICE_ROLE_KEY)')
     }
 
     const cookieStore = await cookies();
 
-    const client = createServerClient(supabaseUrl, supabaseServiceKey, {
+    const client = createServerClient(url, service, {
       cookies: {
         getAll() {
           return cookieStore.getAll()

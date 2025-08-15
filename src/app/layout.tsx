@@ -13,8 +13,8 @@ const jetbrainsMono = JetBrains_Mono({
 });
 
 export const metadata: Metadata = {
-  title: "Admin Termas - Sistema de Gestión Integral",
-  description: "Sistema integral de administración para gestión hotelera y termal",
+  title: "TodoConstructor - Sistema de Gestión de Ferretería",
+  description: "Sistema integral de administración para gestión de ferretería y construcción",
 };
 
 export default function RootLayout({

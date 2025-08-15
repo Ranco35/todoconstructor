@@ -53,7 +53,7 @@ async function createSupabaseServerClient() {
           try {
             return cookieStore.get(name)?.value;
           } catch (error) {
-            console.warn(`Error getting cookie ${name}:`, error);
+            // Silenciar errores de cookies para evitar console errors
             return undefined;
           }
         },
@@ -61,14 +61,14 @@ async function createSupabaseServerClient() {
           try {
             cookieStore.set({ name, value, ...options });
           } catch (error) {
-            console.warn(`Error setting cookie ${name}:`, error);
+            // Silenciar errores de cookies para evitar console errors
           }
         },
         remove(name: string, options: CookieOptions) {
           try {
             cookieStore.set({ name, value: '', ...options });
           } catch (error) {
-            console.warn(`Error removing cookie ${name}:`, error);
+            // Silenciar errores de cookies para evitar console errors
           }
         },
       },
@@ -169,18 +169,18 @@ export async function logout() {
   }
 }
 
-// Función para obtener usuario actual - VERSIÓN SIMPLE QUE FUNCIONA
+// Función para obtener usuario actual - VERSIÓN MEJORADA
 export async function getCurrentUser(): Promise<UserData | null> {
   try {
-    const supabase = await createSupabaseServerClient();
-    const { data: { user }, error: userError } = await supabase.auth.getUser();
-
-    if (userError) {
-      console.error('Error getting user:', userError.message);
+    // Verificar variables de entorno primero
+    if (!process.env.NEXT_PUBLIC_SUPABASE_URL || !process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY) {
       return null;
     }
 
-    if (!user) {
+    const supabase = await createSupabaseServerClient();
+    const { data: { user }, error: userError } = await supabase.auth.getUser();
+
+    if (userError || !user) {
       return null;
     }
 
@@ -192,7 +192,6 @@ export async function getCurrentUser(): Promise<UserData | null> {
       .single();
 
     if (profileError) {
-      console.error('Error fetching user from DB:', profileError.message);
       // Si no existe en tabla pública, retornar datos básicos de auth
       return {
         id: user.id,

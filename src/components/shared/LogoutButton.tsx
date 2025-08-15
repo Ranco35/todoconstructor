@@ -13,7 +13,7 @@ export default function LogoutButton() {
     try {
       const { error } = await supabase.auth.signOut();
       if (error) {
-        console.error('Error logging out:', error);
+        // Error silenciado para evitar interceptor de Next.js
         return;
       }
       
@@ -21,7 +21,7 @@ export default function LogoutButton() {
       router.push('/login');
       router.refresh();
     } catch (error) {
-      console.error('Unexpected error during logout:', error);
+      // Error silenciado para evitar interceptor de Next.js
     }
   };
 

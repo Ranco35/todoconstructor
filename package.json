@@ -1,12 +1,12 @@
 {
-  "name": "termas-admin",
+  "name": "todo-constructor",
   "version": "0.1.0",
   "private": true,
   "scripts": {
     "dev": "next dev",
     "dev:safe": "node node_modules/next/dist/bin/next dev",
     "dev:fast": "NEXT_CONFIG_FILE=next.config.dev.js node node_modules/next/dist/bin/next dev --turbo",
-    "dev:turbo": "node node_modules/next/dist/bin/next dev --turbo", 
+    "dev:turbo": "node node_modules/next/dist/bin/next dev --turbo",
     "dev:minimal": "./dev-minimal.sh",
     "dev:ultra": "dev-ultra.bat",
     "dev:powershell": "powershell -Command \"$env:NEXT_CONFIG_FILE='next.config.minimal.js'; $env:NODE_OPTIONS='--max-old-space-size=4096'; node node_modules/next/dist/bin/next dev\"",

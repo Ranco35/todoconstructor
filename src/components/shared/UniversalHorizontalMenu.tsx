@@ -40,7 +40,7 @@ export default function UniversalHorizontalMenu({
           setActiveDropdown(null);
         }
       } catch (error) {
-        console.error('Error in handleClickOutside:', error);
+        // Error silenciado para evitar interceptor de Next.js
         setActiveDropdown(null);
       }
     };
@@ -56,7 +56,7 @@ export default function UniversalHorizontalMenu({
       }
       return pathname.startsWith(sectionHref);
     } catch (error) {
-      console.error('Error in isActiveSection:', error);
+      // Error silenciado para evitar interceptor de Next.js
       return false;
     }
   };
@@ -77,7 +77,7 @@ export default function UniversalHorizontalMenu({
         setActiveDropdown(activeDropdown === sectionLabel ? null : sectionLabel);
       }
     } catch (error) {
-      console.error('Error in handleDropdownToggle:', error);
+      // Error silenciado para evitar interceptor de Next.js
     }
   };
 
@@ -85,7 +85,7 @@ export default function UniversalHorizontalMenu({
     try {
       setIsMenuOpen(false);
     } catch (error) {
-      console.error('Error in handleMobileMenuClick:', error);
+      // Error silenciado para evitar interceptor de Next.js
     }
   };
 
@@ -93,7 +93,7 @@ export default function UniversalHorizontalMenu({
     try {
       setActiveDropdown(activeDropdown === 'user' ? null : 'user');
     } catch (error) {
-      console.error('Error in handleUserDropdownClick:', error);
+      // Error silenciado para evitar interceptor de Next.js
     }
   };
 
@@ -104,12 +104,12 @@ export default function UniversalHorizontalMenu({
           {/* Logo y título */}
           <div className="flex items-center space-x-4">
             <Link href="/" className="flex items-center space-x-3">
-              <div className="w-10 h-10 bg-gradient-to-br from-blue-600 to-purple-600 rounded-lg flex items-center justify-center">
-                <span className="text-white font-bold text-lg">A</span>
+              <div className="w-10 h-10 bg-gradient-to-br from-orange-600 to-red-600 rounded-lg flex items-center justify-center">
+                <span className="text-white font-bold text-lg">🔨</span>
               </div>
               <div>
-                <h1 className="text-xl font-bold text-gray-900">Admintermas</h1>
-                <p className="text-xs text-gray-500">Sistema de Gestión</p>
+                <h1 className="text-xl font-bold text-gray-900">TodoConstructor</h1>
+                <p className="text-xs text-gray-500">Sistema de Ferretería</p>
               </div>
             </Link>
           </div>

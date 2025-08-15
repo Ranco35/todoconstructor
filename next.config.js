@@ -18,8 +18,8 @@ const nextConfig = {
   
   // Optimizaciones experimentales para performance
   experimental: {
-    // 🔥 HABILITADO: Server Actions explícitamente para Vercel
-    serverActions: true,
+    // 🔥 HABILITADO: Server Actions explícitamente para Vercel (Next 15 requiere objeto)
+    serverActions: {},
     // Optimizar imports de paquetes pesados
     optimizePackageImports: [
       'lucide-react', 

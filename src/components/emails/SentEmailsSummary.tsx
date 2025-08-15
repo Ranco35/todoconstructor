@@ -77,7 +77,7 @@ export default function SentEmailsSummary({
       }
 
     } catch (err) {
-      console.error('Error cargando datos de correos enviados:', err);
+      // Manejo silencioso de errores para evitar console errors
       setError('Error cargando información de correos enviados');
     } finally {
       setLoading(false);

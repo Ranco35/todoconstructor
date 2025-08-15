@@ -14,12 +14,28 @@ export default function CategoryParentSelector({ value, onChange, excludeId }: C
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    fetch('/api/categories?flat=true')
-      .then(res => res.json())
-      .then(data => {
-        setCategories(data.filter((cat: Category) => cat.id !== excludeId));
+    async function loadCategories() {
+      try {
+        const res = await fetch('/api/categories?flat=true');
+        if (!res.ok) {
+          throw new Error(`Failed to fetch categories: ${res.status}`);
+        }
+        const data = await res.json();
+        
+        if (Array.isArray(data)) {
+          setCategories(data.filter((cat: Category) => cat.id !== excludeId));
+        } else {
+          setCategories([]);
+        }
+      } catch (error) {
+        // Manejo silencioso de errores para evitar console errors
+        setCategories([]);
+      } finally {
         setLoading(false);
-      });
+      }
+    }
+
+    loadCategories();
   }, [excludeId]);
 
   return (

@@ -37,7 +37,7 @@ export default function HomePage() {
       <div className="min-h-screen bg-gray-50 flex items-center justify-center">
         <div className="text-center">
           <div className="animate-spin rounded-full h-16 w-16 border-b-2 border-blue-500 mx-auto"></div>
-          <p className="mt-4 text-gray-600">Cargando Admintermas...</p>
+          <p className="mt-4 text-gray-600">Cargando TodoConstructor...</p>
           <p className="mt-2 text-sm text-gray-500">Inicializando aplicación</p>
         </div>
       </div>
@@ -66,10 +66,10 @@ export default function HomePage() {
       <div className="max-w-2xl mx-auto text-center p-8">
         <div className="bg-white rounded-2xl shadow-xl p-8">
           <h1 className="text-4xl font-bold text-gray-900 mb-4">
-            🏨 Admintermas
+            🔨 TodoConstructor
           </h1>
           <p className="text-xl text-gray-600 mb-8">
-            Sistema de Gestión Integral
+            Sistema de Gestión de Ferretería
           </p>
           
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-8">

@@ -31,7 +31,7 @@ export default function AuthGuard({ children }: AuthGuardProps) {
           router.push('/login');
         }
       } catch (error) {
-        console.error('Error checking authentication:', error);
+        // Error silenciado para evitar interceptor de Next.js
         // En caso de error, también redirigir a login
         router.push('/login');
       } finally {

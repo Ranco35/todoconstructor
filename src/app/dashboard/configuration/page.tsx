@@ -57,8 +57,15 @@ function QuickAction({ title, description, icon, href, color }: QuickActionProps
 }
 
 export default async function ConfigurationDashboardPage() {
-  const currentUser = await getCurrentUser();
-  if (!currentUser) {
+  let currentUser;
+  
+  try {
+    currentUser = await getCurrentUser();
+    if (!currentUser) {
+      redirect('/login');
+    }
+  } catch (error) {
+    // Si hay error en auth, redirigir al login
     redirect('/login');
   }
 
