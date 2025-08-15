@@ -5,7 +5,14 @@ const supabaseAnonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!
 
 // Cliente para el navegador (browser/client components)
 export function createClient() {
-  return createBrowserClient(supabaseUrl, supabaseAnonKey)
+  return createBrowserClient(supabaseUrl, supabaseAnonKey, {
+    auth: {
+      persistSession: true,
+      storageKey: 'admintermas-auth',
+      autoRefreshToken: true,
+      detectSessionInUrl: true
+    }
+  })
 }
 
 // Tipos para las tablas de Supabase (basados en tu schema de Prisma)

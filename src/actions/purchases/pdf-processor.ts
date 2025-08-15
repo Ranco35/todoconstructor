@@ -54,10 +54,20 @@ interface ProcessPDFResult {
   logId?: number
 }
 
-// Configurar OpenAI
-const openai = new OpenAI({
-  apiKey: process.env.OPENAI_API_KEY
-})
+// Inicialización perezosa de OpenAI para evitar fallos en build cuando falta la API key
+function getOpenAIClient(): OpenAI | null {
+  const apiKey = process.env.OPENAI_API_KEY
+  if (!apiKey) {
+    console.warn('OPENAI_API_KEY no configurada. Se usará OCR como fallback para procesamiento de PDF.')
+    return null
+  }
+  try {
+    return new OpenAI({ apiKey })
+  } catch (err) {
+    console.warn('No se pudo inicializar OpenAI. Se usará OCR como fallback.', err)
+    return null
+  }
+}
 
 /**
  * Procesa texto extraído usando OCR simple (placeholder)
@@ -387,6 +397,14 @@ Responde SOLO con JSON válido sin explicaciones:
     let response: any = null // ✅ Definir response en scope correcto
 
     if (method === 'ai') {
+      const openai = getOpenAIClient()
+      if (!openai) {
+        console.warn('OPENAI no disponible. Cambiando a método OCR automáticamente.')
+        // Fallback automático a OCR cuando no hay API key
+        extractedData = await processWithOCR(pdfText, fileName)
+        analysisResponse = JSON.stringify(extractedData, null, 2)
+        processingTime = Date.now() - startTime
+      } else {
       // Llamar a ChatGPT
       console.log('🤖 Enviando texto a ChatGPT para análisis...')
       const systemMessage = 'Eres un experto en procesamiento de facturas chilenas. NUNCA uses datos de ejemplo o ficticios. Solo extraes datos reales del texto proporcionado. Respondes únicamente con JSON válido basado en el contenido real del PDF.'
@@ -456,6 +474,7 @@ Responde SOLO con JSON válido sin explicaciones:
         console.error('❌ Error parseando JSON de ChatGPT:', parseError)
         console.error('📄 Respuesta problemática:', analysisResponse)
         throw new Error(`Respuesta de ChatGPT no es JSON válido: ${parseError instanceof Error ? parseError.message : 'Error desconocido'}`)
+      }
       }
       
     } else {

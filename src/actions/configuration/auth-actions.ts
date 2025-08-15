@@ -88,11 +88,11 @@ export async function login(credentials: LoginCredentials): Promise<LoginResult>
     // Determinar email del usuario
     let userEmail = username;
     if (!username.includes('@')) {
-      // Si no es email, buscar en la tabla User
+      // Si no es email, buscar en la tabla User por username o name
       const { data: user, error: findUserError } = await supabase
         .from('User')
         .select('email')
-        .eq('name', username)
+        .or(`username.eq.${username},name.eq.${username}`)
         .single();
 
       if (findUserError || !user) {

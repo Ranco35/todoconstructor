@@ -20,6 +20,9 @@ export default function LoginPage() {
     try {
       console.log('🔍 Iniciando login con API route:', { username: formData.username });
       
+      const controller = new AbortController();
+      const timeoutId = setTimeout(() => controller.abort(), 30000); // 30 segundos timeout
+
       const response = await fetch('/api/auth/login', {
         method: 'POST',
         headers: {
@@ -28,8 +31,17 @@ export default function LoginPage() {
         body: JSON.stringify({
           username: formData.username,
           password: formData.password
-        })
+        }),
+        signal: controller.signal
       });
+
+      clearTimeout(timeoutId);
+
+      if (!response.ok) {
+        console.error('❌ Error HTTP:', response.status, response.statusText);
+        setError(`Error del servidor: ${response.status} ${response.statusText}`);
+        return;
+      }
 
       const result = await response.json();
       console.log('📋 Resultado del login:', result);
@@ -50,7 +62,14 @@ export default function LoginPage() {
       }
     } catch (error) {
       console.error('💥 Error capturado:', error);
-      setError(`Error interno del servidor: ${error.message || error}`);
+      
+      if (error.name === 'AbortError') {
+        setError('Error: La petición tardó demasiado. Intenta de nuevo.');
+      } else if (error.name === 'TypeError' && error.message.includes('fetch')) {
+        setError('Error: No se pudo conectar con el servidor. Verifica tu conexión.');
+      } else {
+        setError(`Error interno del servidor: ${error.message || error}`);
+      }
     } finally {
       setLoading(false);
     }
@@ -107,6 +126,7 @@ export default function LoginPage() {
                 placeholder="Ingresa tu usuario o correo"
                 disabled={loading}
                 suppressHydrationWarning
+                autoComplete="username"
               />
             </div>
 
@@ -125,6 +145,7 @@ export default function LoginPage() {
                 placeholder="Ingresa tu contraseña"
                 disabled={loading}
                 suppressHydrationWarning
+                autoComplete="current-password"
               />
             </div>
 
