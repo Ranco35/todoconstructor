@@ -2,7 +2,6 @@
 
 // actions/products/export.ts
 import { getSupabaseServerClient } from '@/lib/supabase-server';
-import * as XLSX from 'xlsx';
 
 export interface ProductExportData {
   id: number;
@@ -313,6 +312,7 @@ export async function getProductsByIds(ids: number[]): Promise<ProductExportData
 export async function generateProductsExcel(
   params?: { categoryId?: number; search?: string; ids?: number[] }
 ): Promise<Buffer> {
+  const XLSX = await import('xlsx');
   let products: ProductExportData[] = [];
   if (params?.ids && params.ids.length > 0) {
     products = await getProductsByIds(params.ids);
@@ -425,6 +425,7 @@ export async function generateProductsExcel(
 
 // Función para generar plantilla Excel con ejemplos
 export async function generateProductTemplate(): Promise<Buffer> {
+  const XLSX = await import('xlsx');
   const workbook = XLSX.utils.book_new();
   
   // Datos de ejemplo para cada tipo de producto con TODOS los campos
