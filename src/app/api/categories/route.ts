@@ -1,16 +1,9 @@
 import { NextResponse } from 'next/server';
-import { createClient } from '@supabase/supabase-js';
-
-function getSupabaseClient() {
-  return createClient(
-    process.env.NEXT_PUBLIC_SUPABASE_URL!,
-    process.env.SUPABASE_SERVICE_ROLE_KEY!
-  );
-}
+import { getSupabaseServerClient } from '@/lib/supabase-server';
 
 export async function GET() {
   try {
-    const supabase = getSupabaseClient();
+    const supabase = await getSupabaseServerClient();
     
     const { data: categories, error } = await supabase
       .from('Category')

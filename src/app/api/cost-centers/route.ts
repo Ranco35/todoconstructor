@@ -1,17 +1,10 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { createClient } from '@supabase/supabase-js';
+import { getSupabaseServerClient } from '@/lib/supabase-server';
 import { getActiveCostCenters } from '@/actions/configuration/cost-center-actions';
-
-function getSupabaseClient() {
-  return createClient(
-    process.env.NEXT_PUBLIC_SUPABASE_URL!,
-    process.env.SUPABASE_SERVICE_ROLE_KEY!
-  );
-}
 
 export async function GET(request: NextRequest) {
   try {
-    const supabase = getSupabaseClient();
+    const supabase = await getSupabaseServerClient();
     const { searchParams } = new URL(request.url);
     const hierarchical = searchParams.get('hierarchical') === 'true';
     const active = searchParams.get('active') !== 'false'; // Por defecto solo activos

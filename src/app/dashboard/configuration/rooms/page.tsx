@@ -4,7 +4,7 @@ import RoomTable from '@/components/rooms/RoomTable';
 import { Plus, Search, Bed } from 'lucide-react';
 import Link from 'next/link';
 import RoomsClient from './RoomsClient';
-import { createClient } from '@supabase/supabase-js';
+import { getSupabaseServerClient } from '@/lib/supabase-server';
 
 // Force dynamic rendering
 export const dynamic = 'force-dynamic';
@@ -16,7 +16,7 @@ export default async function RoomsPage() {
   const totalPages = result.success ? result.totalPages : 0;
 
   // Verificar si hay productos de habitaciones sin categoría 'Sistema Reservas'
-  const supabase = createClient(process.env.NEXT_PUBLIC_SUPABASE_URL!, process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!);
+  const supabase = await getSupabaseServerClient();
   const { data: habitacionesSinCategoria } = await supabase
     .from('Product')
     .select('id, sku, name')
