@@ -1,3 +1,5 @@
+"use server";
+
 import { getSupabaseServerClient } from '@/lib/supabase-server';
 import type { POSProductCategory } from '@/types/pos/category';
 
