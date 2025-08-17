@@ -2,6 +2,7 @@
 
 import React, { useState } from 'react';
 import { useRouter } from 'next/navigation';
+import { createClient } from '@/lib/supabase';
 
 export default function LoginPage() {
   const [formData, setFormData] = useState({
@@ -39,7 +40,13 @@ export default function LoginPage() {
 
       if (!response.ok) {
         console.error('❌ Error HTTP:', response.status, response.statusText);
-        setError(`Error del servidor: ${response.status} ${response.statusText}`);
+        try {
+          const errBody = await response.json();
+          const message = errBody?.message || errBody?.error || `${response.status} ${response.statusText}`;
+          setError(message);
+        } catch {
+          setError(`Error del servidor: ${response.status} ${response.statusText}`);
+        }
         return;
       }
 
@@ -53,7 +60,21 @@ export default function LoginPage() {
       }
 
       if (result.success) {
-        console.log('✅ Login exitoso, redirigiendo...');
+        console.log('✅ Login exitoso, hidratando sesión de cliente...');
+
+        try {
+          if (result.session?.access_token && result.session?.refresh_token) {
+            const supabase = createClient();
+            await supabase.auth.setSession({
+              access_token: result.session.access_token,
+              refresh_token: result.session.refresh_token,
+            });
+          }
+        } catch (setErr) {
+          console.warn('No se pudo hidratar la sesión del cliente:', setErr);
+        }
+
+        console.log('➡️ Redirigiendo a dashboard...');
         router.push('/dashboard');
         router.refresh();
       } else {

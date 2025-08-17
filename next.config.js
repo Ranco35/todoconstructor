@@ -16,6 +16,21 @@ const nextConfig = {
   poweredByHeader: false,
   reactStrictMode: true,
   
+  // Configuración de cookies para producción
+  async headers() {
+    return [
+      {
+        source: '/(.*)',
+        headers: [
+          {
+            key: 'Set-Cookie',
+            value: 'SameSite=Lax; Secure; HttpOnly',
+          },
+        ],
+      },
+    ];
+  },
+  
   // Optimizaciones experimentales para performance
   experimental: {
     // 🔥 HABILITADO: Server Actions explícitamente para Vercel (Next 15 requiere objeto)

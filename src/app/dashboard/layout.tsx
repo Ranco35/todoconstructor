@@ -22,18 +22,25 @@ function DashboardContent({ children }: { children: React.ReactNode }) {
         
         // Usar Supabase auth directo en cliente con cookies
         const supabase = createClient();
+        
+        // Intentar obtener sesión primero
         const { data: { session }, error: sessionError } = await supabase.auth.getSession();
         
-        if (sessionError || !session) {
+        if (sessionError) {
+          console.log('❌ Dashboard Layout: Error obteniendo sesión:', sessionError.message);
+          setShouldRedirect(true);
+          return;
+        }
+        
+        if (!session) {
           console.log('❌ Dashboard Layout: No hay sesión activa, redirigiendo a login');
-          console.log('Session error:', sessionError);
-          console.log('Session:', session);
           setShouldRedirect(true);
           return;
         }
         
         console.log('✅ Dashboard Layout: Sesión encontrada:', session.user.email);
         
+        // Verificar usuario
         const { data: { user }, error: authError } = await supabase.auth.getUser();
         
         if (authError || !user) {

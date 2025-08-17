@@ -16,6 +16,10 @@ interface LoginResult {
   success: boolean;
   message?: string;
   user?: any;
+  session?: {
+    access_token: string;
+    refresh_token: string;
+  };
 }
 
 interface UserData {
@@ -131,9 +135,17 @@ export async function login(credentials: LoginCredentials): Promise<LoginResult>
         console.warn('Could not update lastLogin:', updateError);
       }
 
+      // Incluir tokens para que el cliente pueda hidratar su sesión local
+      const accessToken = data.session?.access_token || '';
+      const refreshToken = data.session?.refresh_token || '';
+
       return {
         success: true,
-        user: data.user
+        user: data.user,
+        session: {
+          access_token: accessToken,
+          refresh_token: refreshToken,
+        },
       };
     }
 

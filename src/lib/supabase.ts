@@ -10,7 +10,14 @@ export function createClient() {
       persistSession: true,
       storageKey: 'admintermas-auth',
       autoRefreshToken: true,
-      detectSessionInUrl: true
+      detectSessionInUrl: true,
+      flowType: 'pkce',
+      debug: process.env.NODE_ENV === 'development'
+    },
+    global: {
+      headers: {
+        'X-Client-Info': 'admintermas-web'
+      }
     }
   })
 }
