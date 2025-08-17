@@ -297,5 +297,4 @@ export interface Database {
   }
 }
 
-// Cliente tipado de Supabase
-export const supabaseClient = createClient<Database>(supabaseUrl, supabaseAnonKey) 
+// Nota: No exportar un cliente instanciado a nivel de módulo para evitar que se bundlee en server/edge
