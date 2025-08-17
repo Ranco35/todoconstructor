@@ -1,6 +1,6 @@
 'use server';
 
-import { createClient } from '@/lib/supabase';
+import { getSupabaseServerClient } from '@/lib/supabase-server';
 import { revalidatePath } from 'next/cache';
 
 export interface PackageModular {
@@ -18,7 +18,7 @@ export interface PackageWithProducts extends PackageModular {
 
 // Obtener todos los paquetes modulares
 export async function getPackagesModular(): Promise<PackageModular[]> {
-  const supabase = createClient();
+  const supabase = await getSupabaseServerClient();
   
   try {
     const { data, error } = await supabase
@@ -40,7 +40,7 @@ export async function getPackagesModular(): Promise<PackageModular[]> {
 
 // Obtener paquetes con sus productos asociados
 export async function getPackagesWithProducts(): Promise<PackageWithProducts[]> {
-  const supabase = createClient();
+  const supabase = await getSupabaseServerClient();
   
   try {
     console.log('Iniciando consulta de paquetes...');
@@ -111,7 +111,7 @@ export async function getPackagesWithProducts(): Promise<PackageWithProducts[]> 
 
 // Crear nuevo paquete
 export async function createPackageModular(name: string, color: string = 'blue'): Promise<PackageModular> {
-  const supabase = createClient();
+  const supabase = await getSupabaseServerClient();
   
   try {
     // Validar nombre duplicado
@@ -148,7 +148,7 @@ export async function createPackageModular(name: string, color: string = 'blue')
 
 // Actualizar nombre de paquete
 export async function updatePackageName(packageId: number, newName: string): Promise<void> {
-  const supabase = createClient();
+  const supabase = await getSupabaseServerClient();
   
   try {
     const { error } = await supabase
@@ -173,7 +173,7 @@ export async function updatePackageName(packageId: number, newName: string): Pro
 
 // Eliminar paquete
 export async function deletePackageModular(packageId: number): Promise<void> {
-  const supabase = createClient();
+  const supabase = await getSupabaseServerClient();
   
   try {
     // Eliminar vinculaciones de productos primero
@@ -207,7 +207,7 @@ export async function deletePackageModular(packageId: number): Promise<void> {
 
 // Agregar producto a paquete
 export async function addProductToPackage(packageId: number, productId: number): Promise<void> {
-  const supabase = createClient();
+  const supabase = await getSupabaseServerClient();
   
   try {
     const { error } = await supabase
@@ -235,7 +235,7 @@ export async function addProductToPackage(packageId: number, productId: number):
 
 // Remover producto de paquete
 export async function removeProductFromPackage(packageId: number, productId: number): Promise<void> {
-  const supabase = createClient();
+  const supabase = await getSupabaseServerClient();
   
   try {
     const { error } = await supabase
@@ -258,7 +258,7 @@ export async function removeProductFromPackage(packageId: number, productId: num
 
 // Verificar si existe paquete con nombre
 export async function checkPackageNameExists(name: string, excludeId?: number): Promise<boolean> {
-  const supabase = createClient();
+  const supabase = await getSupabaseServerClient();
   
   try {
     let query = supabase

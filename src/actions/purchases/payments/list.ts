@@ -1,6 +1,5 @@
 'use server';
 
-import { createClient } from '@/lib/supabase';
 import type { PurchasePayment } from '@/types/database';
 import { getSupabaseServerClient } from '@/lib/supabase-server';
 

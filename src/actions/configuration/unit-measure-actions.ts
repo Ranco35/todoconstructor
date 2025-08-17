@@ -1,6 +1,6 @@
 'use server';
 
-import { createClient } from '@/lib/supabase';
+import { getSupabaseServerClient } from '@/lib/supabase-server';
 import { UnitMeasure, UnitMeasureFormData, UnitMeasureResponse, ProductUnitConversion, ProductUnitConversionFormData } from '@/types/unit-measure';
 import { revalidatePath } from 'next/cache';
 
@@ -20,7 +20,7 @@ export async function getUnitMeasures({
   category?: string;
   includeInactive?: boolean;
 } = {}): Promise<UnitMeasureResponse> {
-  const supabase = createClient();
+  const supabase = await getSupabaseServerClient();
   
   try {
     let query = supabase
@@ -81,7 +81,7 @@ export async function getUnitMeasures({
  * Obtener una unidad de medida por ID
  */
 export async function getUnitMeasureById(id: number): Promise<UnitMeasure | null> {
-  const supabase = createClient();
+  const supabase = await getSupabaseServerClient();
   
   try {
     const { data, error } = await supabase
@@ -114,7 +114,7 @@ export async function getUnitMeasureById(id: number): Promise<UnitMeasure | null
  * Crear nueva unidad de medida
  */
 export async function createUnitMeasure(formData: UnitMeasureFormData): Promise<UnitMeasure> {
-  const supabase = createClient();
+  const supabase = await getSupabaseServerClient();
   
   try {
     // Validar que la abreviatura no exista
@@ -171,7 +171,7 @@ export async function createUnitMeasure(formData: UnitMeasureFormData): Promise<
  * Actualizar unidad de medida
  */
 export async function updateUnitMeasure(id: number, formData: UnitMeasureFormData): Promise<UnitMeasure> {
-  const supabase = createClient();
+  const supabase = await getSupabaseServerClient();
   
   try {
     // Verificar que no sea una unidad del sistema
@@ -240,7 +240,7 @@ export async function updateUnitMeasure(id: number, formData: UnitMeasureFormDat
  * Eliminar unidad de medida
  */
 export async function deleteUnitMeasure(id: number): Promise<void> {
-  const supabase = createClient();
+  const supabase = await getSupabaseServerClient();
   
   try {
     // Verificar que no sea una unidad del sistema
@@ -306,7 +306,7 @@ export async function deleteUnitMeasureAction(formData: FormData) {
  * Obtener unidades base disponibles para conversión
  */
 export async function getBaseUnits(): Promise<UnitMeasure[]> {
-  const supabase = createClient();
+  const supabase = await getSupabaseServerClient();
   
   try {
     const { data, error } = await supabase
@@ -333,7 +333,7 @@ export async function getBaseUnits(): Promise<UnitMeasure[]> {
  * Obtener unidades por categoría
  */
 export async function getUnitsByCategory(category: string): Promise<UnitMeasure[]> {
-  const supabase = createClient();
+  const supabase = await getSupabaseServerClient();
   
   try {
     const { data, error } = await supabase
@@ -364,7 +364,7 @@ export async function convertUnits(
   toUnitId: number,
   productId?: number
 ): Promise<number> {
-  const supabase = createClient();
+  const supabase = await getSupabaseServerClient();
   
   try {
     // Si son la misma unidad, no hay conversión
