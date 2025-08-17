@@ -1,13 +1,6 @@
 'use server'
 
 import { getSupabaseServerClient } from '@/lib/supabase-server'
-import { 
-  uploadWebsiteImage, 
-  deleteWebsiteImage, 
-  updateWebsiteImage, 
-  getWebsiteImageUrl,
-  extractWebsitePathFromUrl 
-} from '@/lib/supabase-storage'
 import { formatFileSize } from '@/utils/fileUtils'
 
 export interface WebsiteImage {
@@ -31,6 +24,56 @@ export interface ImageStats {
   byCategory: Record<string, number>
   totalSize: number // bytes
   activeImages: number
+}
+
+// Server-side helpers (avoid importing client-only storage utils)
+const WEBSITE_BUCKET_NAME = 'website-images'
+
+function extractWebsitePathFromUrl(publicUrl: string): string | null {
+  try {
+    const url = new URL(publicUrl)
+    const parts = url.pathname.split('/')
+    if (parts.length >= 6 && parts[4] === WEBSITE_BUCKET_NAME) {
+      return parts.slice(5).join('/')
+    }
+    return null
+  } catch {
+    return null
+  }
+}
+
+async function uploadWebsiteImageServer(file: File, category: string = 'other') {
+  const supabase = await getSupabaseServerClient()
+  const timestamp = Date.now()
+  const random = Math.random().toString(36).slice(2, 8)
+  const ext = (file.name.split('.').pop() || 'jpg').toLowerCase()
+  const fileName = `${timestamp}_${random}.${ext}`
+  const filePath = `${category}/${fileName}`
+
+  const { error } = await supabase.storage
+    .from(WEBSITE_BUCKET_NAME)
+    .upload(filePath, file, { cacheControl: '3600', upsert: false })
+
+  if (error) {
+    return { success: false as const, error: error.message }
+  }
+
+  const { data } = supabase.storage.from(WEBSITE_BUCKET_NAME).getPublicUrl(filePath)
+  return { success: true as const, publicUrl: data.publicUrl, filePath }
+}
+
+async function deleteWebsiteImageServer(filePath: string) {
+  const supabase = await getSupabaseServerClient()
+  const { error } = await supabase.storage.from(WEBSITE_BUCKET_NAME).remove([filePath])
+  if (error) return { success: false as const, error: error.message }
+  return { success: true as const }
+}
+
+async function updateWebsiteImageServer(file: File, category: string, currentStoragePath?: string) {
+  if (currentStoragePath) {
+    await deleteWebsiteImageServer(currentStoragePath)
+  }
+  return await uploadWebsiteImageServer(file, category)
 }
 
 /**
@@ -385,7 +428,7 @@ export async function uploadNewWebsiteImage(
     })
 
     // Subir archivo a Supabase Storage
-    const uploadResult = await uploadWebsiteImage(file, category)
+    const uploadResult = await uploadWebsiteImageServer(file, category)
     
     if (!uploadResult.success) {
       console.error('❌ Error subiendo imagen:', uploadResult.error)
@@ -415,7 +458,7 @@ export async function uploadNewWebsiteImage(
     if (dbError) {
       console.error('❌ Error insertando en BD:', dbError)
       // Intentar eliminar archivo subido si falló la inserción
-      await deleteWebsiteImage(uploadResult.filePath!)
+      await deleteWebsiteImageServer(uploadResult.filePath!)
       return { success: false, error: 'Error al guardar la imagen en la base de datos' }
     }
 
