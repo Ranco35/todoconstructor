@@ -2,7 +2,7 @@
 
 import { getSupabaseServerClient, getSupabaseServiceClient } from '@/lib/supabase-server';
 import { revalidatePath } from 'next/cache';
-import * as XLSX from 'xlsx';
+// Evitar importar XLSX en top-level en server; cargarlo dinámicamente cuando se necesite
 import { getCurrentUser } from './auth-actions';
 
 // Types

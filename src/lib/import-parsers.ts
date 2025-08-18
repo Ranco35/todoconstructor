@@ -1,4 +1,4 @@
-import * as XLSX from 'xlsx';
+// Importar XLSX dinámicamente en funciones que lo requieran para evitar bundling global
 
 export interface WarehouseAssignment {
   warehouseName: string;

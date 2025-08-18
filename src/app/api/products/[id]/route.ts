@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { getSupabaseServerClient } from '@/lib/supabase-server';
+import { getCategoryTableName } from '@/lib/table-resolver';
 
 export async function GET(
   request: NextRequest,
@@ -51,8 +52,9 @@ export async function GET(
     // Obtener categoría si existe
     let categoryName = 'Sin categoría';
     if (product.categoryid) {
-      const { data: category } = await supabase
-        .from('Category')
+      const categoryTable = await getCategoryTableName(supabase as any);
+      const { data: category } = await (supabase as any)
+        .from(categoryTable)
         .select('name')
         .eq('id', product.categoryid)
         .single();

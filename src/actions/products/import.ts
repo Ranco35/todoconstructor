@@ -94,8 +94,10 @@ export async function importProducts(products: ProductImportData[], confirmDelet
         if (!categoryId && productData.categoryName) {
           const categoryName = String(productData.categoryName).trim();
           if (categoryName) {
-            const { data: category } = await supabase
-              .from('Category')
+            const { getCategoryTableName } = await import('@/lib/table-resolver');
+            const categoryTable = await getCategoryTableName(supabase as any);
+            const { data: category } = await (supabase as any)
+              .from(categoryTable)
               .select('id')
               .ilike('name', categoryName)
               .single();

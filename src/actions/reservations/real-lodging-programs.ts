@@ -98,8 +98,11 @@ export async function getRealLodgingProgramById(id: number): Promise<RealLodging
 // Verificar si existe la categoría "Programas Alojamiento"
 export async function verifyLodgingProgramsCategory() {
   try {
-    const { data, error } = await (await getSupabaseServerClient())
-      .from('Category')
+    const supabase = await getSupabaseServerClient();
+    const { getCategoryTableName } = await import('@/lib/table-resolver');
+    const categoryTable = await getCategoryTableName(supabase as any);
+    const { data, error } = await (supabase as any)
+      .from(categoryTable)
       .select('id, name')
       .eq('name', 'Programas Alojamiento')
       .single();

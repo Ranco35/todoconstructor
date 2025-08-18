@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { getSupabaseServerClient } from '@/lib/supabase-server'
+import { getCategoryTableName } from '@/lib/table-resolver'
 
 export async function POST(request: NextRequest) {
   try {
@@ -23,8 +24,9 @@ export async function POST(request: NextRequest) {
 
     // 2. Crear categorías de prueba
     console.log('📦 Creando categorías...')
-    const { data: categories, error: categoryError } = await supabase
-      .from('Category')
+    const categoryTable = await getCategoryTableName(supabase as any)
+    const { data: categories, error: categoryError } = await (supabase as any)
+      .from(categoryTable)
       .insert([
         { name: 'Vajilla', description: 'Platos, vasos, cubiertos' },
         { name: 'Cristalería', description: 'Copas, jarras, vasos' },

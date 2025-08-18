@@ -1,5 +1,5 @@
 import { NextResponse } from 'next/server';
-import * as XLSX from 'xlsx';
+// Evitar import estático; cargar XLSX dentro del handler
 
 export async function GET() {
   try {

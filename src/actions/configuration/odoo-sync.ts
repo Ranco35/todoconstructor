@@ -172,8 +172,10 @@ export async function transferOdooProductsToCategory(
 
     // Obtener información de la categoría destino
     const supabase = await getSupabaseClient();
-    const { data: targetCategory, error: categoryError } = await supabase
-      .from('Category')
+    const { getCategoryTableName } = await import('@/lib/table-resolver');
+    const categoryTable = await getCategoryTableName(supabase as any);
+    const { data: targetCategory, error: categoryError } = await (supabase as any)
+      .from(categoryTable)
       .select('name')
       .eq('id', targetCategoryId)
       .single();

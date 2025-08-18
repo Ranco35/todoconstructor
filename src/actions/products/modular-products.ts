@@ -1167,8 +1167,10 @@ async function getCategoryIdForModular(modularCategory: string): Promise<number>
   
   // Buscar si existe alguna de las categorías
   for (const categoryName of possibleNames) {
-    const { data: existingCategory } = await supabase
-      .from('Category')
+    const { getCategoryTableName } = await import('@/lib/table-resolver');
+    const categoryTable = await getCategoryTableName(supabase as any);
+    const { data: existingCategory } = await (supabase as any)
+      .from(categoryTable)
       .select('id')
       .eq('name', categoryName)
       .single();
@@ -1180,8 +1182,8 @@ async function getCategoryIdForModular(modularCategory: string): Promise<number>
 
   // Si no existe, crear la categoría principal
   const mainCategoryName = possibleNames[0];
-  const { data: newCategory, error } = await supabase
-    .from('Category')
+  const { data: newCategory, error } = await (supabase as any)
+    .from(categoryTable)
     .insert({ 
       name: mainCategoryName,
       description: `Categoría para productos de ${modularCategory}`
@@ -1192,8 +1194,8 @@ async function getCategoryIdForModular(modularCategory: string): Promise<number>
   if (error) {
     console.error('Error creating category:', error);
     // Fallback: usar una categoría genérica existente o crear "Servicios Generales"
-    const { data: fallbackCategory } = await supabase
-      .from('Category')
+    const { data: fallbackCategory } = await (supabase as any)
+      .from(categoryTable)
       .select('id')
       .limit(1)
       .single();

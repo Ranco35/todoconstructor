@@ -1,6 +1,6 @@
 import { NextResponse } from 'next/server';
 import { getSupplierImportTemplate } from '@/actions/suppliers/import';
-import * as XLSX from 'xlsx';
+// Evitar importación estática de XLSX
 
 export async function GET() {
   try {

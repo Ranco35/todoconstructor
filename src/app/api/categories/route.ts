@@ -1,12 +1,14 @@
 import { NextResponse } from 'next/server';
 import { getSupabaseServerClient } from '@/lib/supabase-server';
+import { getCategoryTableName } from '@/lib/table-resolver';
 
 export async function GET() {
   try {
     const supabase = await getSupabaseServerClient();
     
-    const { data: categories, error } = await supabase
-      .from('Category')
+    const categoryTable = await getCategoryTableName(supabase as any);
+    const { data: categories, error } = await (supabase as any)
+      .from(categoryTable)
       .select('*');
 
     if (error) {
@@ -20,8 +22,8 @@ export async function GET() {
       allCategories.map(async (category) => {
         let parentInfo = null;
         if (category.parentId) {
-          const { data: parentCategory } = await supabase
-            .from('Category')
+          const { data: parentCategory } = await (supabase as any)
+            .from(categoryTable)
             .select('name')
             .eq('id', category.parentId)
             .single();

@@ -1,7 +1,7 @@
 'use server';
 
 import { createClient } from '@supabase/supabase-js';
-import * as XLSX from 'xlsx';
+// Carga dinámica cuando se usa (evita bundling en build)
 
 // Cliente Supabase simplificado
 async function getSupabaseClient() {

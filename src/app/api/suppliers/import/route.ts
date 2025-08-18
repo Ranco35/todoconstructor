@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { importSuppliers, SupplierImportData } from '@/actions/suppliers/import';
-import * as XLSX from 'xlsx';
+// Cargar XLSX dinámicamente dentro del handler si se necesita
 
 export async function POST(request: NextRequest) {
   try {

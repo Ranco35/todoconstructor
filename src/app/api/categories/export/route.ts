@@ -2,7 +2,7 @@ import { NextResponse } from 'next/server'
 
 export async function GET() {
   try {
-    // Endpoint para exportar categorías
+    // Endpoint para exportar categorías (placeholder)
     return NextResponse.json({
       success: true,
       message: 'Categories export endpoint',

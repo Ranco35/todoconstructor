@@ -1,5 +1,4 @@
 import { getSupabaseServerClient, getSupabaseServiceClient } from '@/lib/supabase-server';
-import * as XLSX from 'xlsx';
 import { ClientImportData, ClientType } from '@/types/client';
 
 export interface ImportResult {
@@ -26,6 +25,7 @@ export interface ImportResult {
 // Función para parsear Excel de clientes
 export async function parseClientsExcel(fileBuffer: ArrayBuffer): Promise<ClientImportData[]> {
   try {
+    const XLSX = await import('xlsx');
     const workbook = XLSX.read(fileBuffer, { type: 'array' });
     
     // Buscar la hoja de datos (primera hoja o la que tenga "Plantilla" en el nombre)

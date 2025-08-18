@@ -1,7 +1,7 @@
 'use server';
 
 import { getSupabaseServerClient } from '@/lib/supabase-server';
-import * as XLSX from 'xlsx';
+// Cargar XLSX dinámicamente al usarlo
 
 // Interfaces para filtros de exportación
 export interface SupplierExportFilters {

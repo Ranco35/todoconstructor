@@ -52,8 +52,10 @@ export async function generateIntelligentSKU(productData: {
     let categoryName = '';
     if (productData.categoryId) {
       try {
-        const { data: category } = await supabase
-          .from('Category')
+        const { getCategoryTableName } = await import('@/lib/table-resolver');
+        const categoryTable = await getCategoryTableName(supabase as any);
+        const { data: category } = await (supabase as any)
+          .from(categoryTable)
           .select('name')
           .eq('id', productData.categoryId)
           .single();

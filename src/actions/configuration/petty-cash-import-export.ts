@@ -4,7 +4,7 @@ import { getSupabaseServerClient } from '@/lib/supabase-server';
 import { getCurrentUser } from '@/actions/configuration/auth-actions';
 import { getAllCategories } from '@/actions/configuration/category-actions';
 import { getActiveCostCenters } from '@/actions/configuration/cost-center-actions';
-import * as XLSX from 'xlsx';
+// Evitar import estático de XLSX; cargarlo bajo demanda
 
 export interface PettyCashTransactionRow {
   // Campos básicos

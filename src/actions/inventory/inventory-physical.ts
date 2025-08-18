@@ -200,8 +200,10 @@ export async function exportInventoryPhysicalTemplate(warehouseId: number, categ
 
   if (includeAllProducts && categoryId) {
     // Obtener información de la categoría
-    const { data: category, error: categoryError } = await supabase
-      .from('Category')
+    const { getCategoryTableName } = await import('@/lib/table-resolver');
+    const categoryTable = await getCategoryTableName(supabase as any);
+    const { data: category, error: categoryError } = await (supabase as any)
+      .from(categoryTable)
       .select('name')
       .eq('id', categoryId)
       .single()

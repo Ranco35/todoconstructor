@@ -444,8 +444,10 @@ export async function createProductFromSuggestion(suggestion: {
 
     // Buscar o crear categoría
     let categoryId = null;
-    const { data: category } = await supabase
-      .from('Category')
+    const { getCategoryTableName } = await import('@/lib/table-resolver');
+    const categoryTable = await getCategoryTableName(supabase as any);
+    const { data: category } = await (supabase as any)
+      .from(categoryTable)
       .select('id')
       .ilike('name', `%${suggestion.category}%`)
       .single();
@@ -454,8 +456,8 @@ export async function createProductFromSuggestion(suggestion: {
       categoryId = category.id;
     } else {
       // Crear categoría si no existe
-      const { data: newCategory } = await supabase
-        .from('Category')
+      const { data: newCategory } = await (supabase as any)
+        .from(categoryTable)
         .insert({
           name: suggestion.category,
           description: `Categoría creada automáticamente para: ${suggestion.category}`

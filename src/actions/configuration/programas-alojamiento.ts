@@ -337,8 +337,11 @@ export async function verificarCategoriaPrograms(): Promise<{
   error?: string;
 }> {
   try {
-    const { data, error } = await (await getSupabaseServerClient())
-      .from('Category')
+    const supabase = await getSupabaseServerClient();
+    const { getCategoryTableName } = await import('@/lib/table-resolver');
+    const categoryTable = await getCategoryTableName(supabase as any);
+    const { data, error } = await (supabase as any)
+      .from(categoryTable)
       .select('id, name')
       .eq('id', PROGRAMAS_ALOJAMIENTO_CATEGORY_ID)
       .single();

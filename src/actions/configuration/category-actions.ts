@@ -6,6 +6,7 @@ import { cookies } from 'next/headers';
 import { revalidatePath } from 'next/cache';
 import { redirect } from 'next/navigation';
 import { CategoryImportData } from "@/lib/import-parsers";
+import { getCategoryTableName } from '@/lib/table-resolver';
 
 async function getSupabaseClient() {
   const cookieStore = await cookies();
@@ -51,8 +52,9 @@ export async function createCategory(formData: FormData) {
     }
     
     // Verificar que la categoría padre existe
-    const { data: parentCategory, error: parentError } = await supabase
-      .from('Category')
+    const categoryTable = await getCategoryTableName(supabase as any);
+    const { data: parentCategory, error: parentError } = await (supabase as any)
+      .from(categoryTable)
       .select('id')
       .eq('id', parsedParentId)
       .single();
@@ -63,8 +65,8 @@ export async function createCategory(formData: FormData) {
   }
 
   try {
-    const { error } = await supabase
-      .from('Category')
+    const { error } = await (supabase as any)
+      .from(categoryTable)
       .insert({
         name: name.trim(),
         description: description?.trim() || null,
@@ -119,8 +121,9 @@ export async function updateCategory(id: number, formData: FormData) {
       throw new Error('Una categoría no puede ser su propia padre.');
     }
     
-    const { data: parentCategory, error: parentError } = await supabase
-      .from('Category')
+    const categoryTable = await getCategoryTableName(supabase as any);
+    const { data: parentCategory, error: parentError } = await (supabase as any)
+      .from(categoryTable)
       .select('id')
       .eq('id', parsedParentId)
       .single();
@@ -131,8 +134,8 @@ export async function updateCategory(id: number, formData: FormData) {
   }
 
   try {
-    const { error } = await supabase
-      .from('Category')
+    const { error } = await (supabase as any)
+      .from(categoryTable)
       .update({
         name: name.trim(),
         description: description?.trim() || null,
@@ -164,8 +167,9 @@ export async function deleteCategory(id: number) {
     const supabase = await getSupabaseClient();
     
     // Verificar si la categoría tiene productos asociados
-    const { data: categoryWithProducts, error: categoryError } = await supabase
-      .from('Category')
+    const categoryTable = await getCategoryTableName(supabase as any);
+    const { data: categoryWithProducts, error: categoryError } = await (supabase as any)
+      .from(categoryTable)
       .select('id, name')
       .eq('id', id)
       .single();
@@ -198,8 +202,8 @@ export async function deleteCategory(id: number) {
       };
     }
 
-    const { error: deleteError } = await supabase
-      .from('Category')
+    const { error: deleteError } = await (supabase as any)
+      .from(categoryTable)
       .delete()
       .eq('id', id);
 
@@ -263,8 +267,9 @@ export async function getCategories({ page = 1, pageSize = 10, search }: GetCate
 
   try {
     // Obtener todas las categorías sin paginación para ordenarlas correctamente
-    let query = supabase.from('Category').select('*');
-    let countQuery = supabase.from('Category').select('*', { count: 'exact', head: true });
+    const categoryTable = await getCategoryTableName(supabase as any);
+    let query = (supabase as any).from(categoryTable).select('*');
+    let countQuery = (supabase as any).from(categoryTable).select('*', { count: 'exact', head: true });
 
     // Aplicar filtro de búsqueda si se proporciona
     if (search && search.trim()) {
@@ -283,7 +288,7 @@ export async function getCategories({ page = 1, pageSize = 10, search }: GetCate
     const categoriesWithInfo = await Promise.all(
       allCategories.map(async (category) => {
         // Obtener conteo de productos
-        const { count: productCount } = await supabase
+        const { count: productCount } = await (supabase as any)
           .from('Product')
           .select('*', { count: 'exact', head: true })
           .eq('categoryid', category.id);
@@ -291,8 +296,8 @@ export async function getCategories({ page = 1, pageSize = 10, search }: GetCate
         // Obtener información de la categoría padre si existe
         let parentInfo = null;
         if (category.parentId) {
-          const { data: parentCategory } = await supabase
-            .from('Category')
+          const { data: parentCategory } = await (supabase as any)
+            .from(categoryTable)
             .select('name')
             .eq('id', category.parentId)
             .single();
@@ -365,8 +370,9 @@ export async function getCategoryById(id: number) {
   try {
     const supabase = await getSupabaseClient();
     
-    const { data: category, error } = await supabase
-      .from('Category')
+    const categoryTable = await getCategoryTableName(supabase as any);
+    const { data: category, error } = await (supabase as any)
+      .from(categoryTable)
       .select('*')
       .eq('id', id)
       .single();
@@ -408,8 +414,9 @@ export async function importCategories(categories: CategoryImportData[]): Promis
   let skippedCount = 0;
 
   try {
-    const { data: allCategories, error: fetchError } = await supabase
-      .from('Category')
+    const categoryTable = await getCategoryTableName(supabase as any);
+    const { data: allCategories, error: fetchError } = await (supabase as any)
+      .from(categoryTable)
       .select('id, name');
 
     if (fetchError) {
@@ -444,8 +451,8 @@ export async function importCategories(categories: CategoryImportData[]): Promis
 
       if (cat.id && idMap.has(cat.id)) {
         // Actualizar categoría existente
-        const { error: updateError } = await supabase
-          .from('Category')
+        const { error: updateError } = await (supabase as any)
+          .from(categoryTable)
           .update(data)
           .eq('id', cat.id);
 
@@ -455,8 +462,8 @@ export async function importCategories(categories: CategoryImportData[]): Promis
         updatedCount++;
       } else if (!nameMap.has(cat.name.toLowerCase())) {
         // Crear nueva categoría
-        const { data: newCategory, error: createError } = await supabase
-          .from('Category')
+        const { data: newCategory, error: createError } = await (supabase as any)
+          .from(categoryTable)
           .insert(data)
           .select()
           .single();
@@ -501,8 +508,9 @@ export async function getDashboardStats() {
   
   try {
     // Obtener conteo total de categorías
-    const { count: totalCategories } = await supabase
-      .from('Category')
+    const categoryTable = await getCategoryTableName(supabase as any);
+    const { count: totalCategories } = await (supabase as any)
+      .from(categoryTable)
       .select('*', { count: 'exact', head: true });
 
     // Obtener conteo total de productos
@@ -522,8 +530,8 @@ export async function getDashboardStats() {
       .lt('quantity', 10);
 
     // Obtener categorías con más productos
-    const { data: topCategories } = await supabase
-      .from('Category')
+    const { data: topCategories } = await (supabase as any)
+      .from(categoryTable)
       .select(`
         id,
         name,
@@ -555,8 +563,9 @@ export async function getAllCategories() {
   const supabase = await getSupabaseClient();
   
   try {
-    const { data: categories, error } = await supabase
-      .from('Category')
+    const categoryTable = await getCategoryTableName(supabase as any);
+    const { data: categories, error } = await (supabase as any)
+      .from(categoryTable)
       .select('*');
 
     if (error) {
@@ -570,8 +579,8 @@ export async function getAllCategories() {
       allCategories.map(async (category) => {
         let parentInfo = null;
         if (category.parentId) {
-          const { data: parentCategory } = await supabase
-            .from('Category')
+          const { data: parentCategory } = await (supabase as any)
+            .from(categoryTable)
             .select('name')
             .eq('id', category.parentId)
             .single();
