@@ -1,5 +1,4 @@
 import { getSupabaseServerClient, getSupabaseServiceClient } from '@/lib/supabase-server';
-import * as XLSX from 'xlsx';
 import { Client, ClientExportData } from '@/types/client';
 
 // Función para obtener todos los clientes para exportar
@@ -127,6 +126,7 @@ export async function generateClientsExcel(filters?: {
   selectedIds?: number[];
 }): Promise<Buffer> {
   const clients = await getClientsForExport(filters);
+  const XLSX = await import('xlsx');
   
   // Crear workbook
   const workbook = XLSX.utils.book_new();
@@ -254,6 +254,7 @@ export async function generateClientsExcel(filters?: {
 
 // Función para generar plantilla Excel para importar clientes
 export async function generateClientTemplate(): Promise<Buffer> {
+  const XLSX = await import('xlsx');
   const workbook = XLSX.utils.book_new();
   
   // Datos de ejemplo para la plantilla
