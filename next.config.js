@@ -75,6 +75,16 @@ const nextConfig = {
           self: 'globalThis',
         })
       );
+
+      // Asegurar polyfill en bundles de servidor
+      const originalEntry = config.entry;
+      config.entry = async () => {
+        const entries = await originalEntry();
+        if (entries['main-app']) {
+          entries['main-app'].unshift('./src/server-polyfill.js');
+        }
+        return entries;
+      };
     }
     // Optimizaciones para desarrollo
     if (dev) {
