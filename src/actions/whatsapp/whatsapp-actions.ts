@@ -1,9 +1,23 @@
 'use server';
 
-import type {
-  WhatsAppMessage,
-  WhatsAppResponse
-} from '@/lib/whatsapp-client';
+// Importar tipos localmente para evitar bundling del cliente en server
+type WhatsAppMessage = {
+  id: string;
+  from: string;
+  to: string;
+  body: string;
+  timestamp: number;
+  isFromMe: boolean;
+  contact?: { name?: string; pushname?: string; number: string };
+  chat?: { name?: string; isGroup: boolean };
+};
+
+type WhatsAppResponse = {
+  success: boolean;
+  data?: any;
+  error?: string;
+  messageId?: string;
+};
 import { chatWithOpenAI } from '@/actions/ai/openai-actions';
 import { ChatMessage } from '@/lib/openai-client';
 
