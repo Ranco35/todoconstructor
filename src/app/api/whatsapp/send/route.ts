@@ -1,4 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
+export const runtime = 'nodejs';
 import { sendMessage, sendBroadcastMessage, sendWelcomeMessage } from '@/actions/whatsapp/whatsapp-actions';
 
 interface SendMessageRequest {
