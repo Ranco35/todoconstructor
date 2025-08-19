@@ -142,11 +142,11 @@ export async function POST(request: NextRequest) {
     const { action } = await request.json();
     
     console.log('🔧 Acción de debug solicitada:', action);
+    const { whatsappManager } = await import('@/lib/whatsapp-client');
     
     switch (action) {
       case 'restart':
         console.log('🔄 Reiniciando cliente de WhatsApp...');
-        const { whatsappManager } = await import('@/lib/whatsapp-client');
         await whatsappManager.destroy();
         await whatsappManager.initialize();
         return NextResponse.json({
@@ -157,7 +157,6 @@ export async function POST(request: NextRequest) {
         
       case 'destroy':
         console.log('🗑️ Destruyendo cliente de WhatsApp...');
-        const { whatsappManager } = await import('@/lib/whatsapp-client');
         await whatsappManager.destroy();
         return NextResponse.json({
           success: true,
@@ -167,7 +166,6 @@ export async function POST(request: NextRequest) {
         
       case 'initialize':
         console.log('🚀 Inicializando cliente de WhatsApp...');
-        const { whatsappManager } = await import('@/lib/whatsapp-client');
         await whatsappManager.initialize();
         return NextResponse.json({
           success: true,
