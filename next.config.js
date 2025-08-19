@@ -30,6 +30,7 @@ const nextConfig = {
   experimental: {
     // 🔥 HABILITADO: Server Actions explícitamente para Vercel (Next 15 requiere objeto)
     serverActions: {},
+    instrumentationHook: true,
     // Optimizar imports de paquetes pesados
     optimizePackageImports: [
       'lucide-react', 
@@ -76,7 +77,16 @@ const nextConfig = {
         })
       );
 
-      // Asegurar polyfill en bundles de servidor
+      // Asegurar polyfill en bundles de servidor con banner (primeras líneas de cada chunk)
+      config.plugins.push(
+        new webpack.BannerPlugin({
+          banner: 'if (typeof globalThis!=="undefined" && typeof globalThis.self === "undefined") { globalThis.self = globalThis; }',
+          raw: true,
+          entryOnly: false,
+        })
+      );
+
+      // Inyectar polyfill al entry principal del servidor por si Next lo soporta
       const originalEntry = config.entry;
       config.entry = async () => {
         const entries = await originalEntry();
