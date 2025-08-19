@@ -57,7 +57,13 @@ const nextConfig = {
     'whatsapp-web.js',
     'fluent-ffmpeg',
     '@prisma/client',
-    'sharp'
+    'sharp',
+    // Evitar que estos paquetes se bundleen en el servidor (algunos referencian self/window)
+    'xlsx',
+    'exceljs',
+    'jspdf',
+    'jspdf-autotable',
+    'qrcode'
   ],
   
   // Configuración webpack optimizada
