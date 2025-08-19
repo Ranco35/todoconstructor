@@ -1,15 +1,8 @@
 'use server';
 
-import { 
-  whatsappManager, 
-  WHATSAPP_BOT_CONFIG, 
-  HOTEL_COMMANDS,
-  WhatsAppMessage, 
-  WhatsAppResponse,
-  isBusinessHours,
-  formatPhoneNumber,
-  isCommand,
-  extractCommand
+import type {
+  WhatsAppMessage,
+  WhatsAppResponse
 } from '@/lib/whatsapp-client';
 import { chatWithOpenAI } from '@/actions/ai/openai-actions';
 import { ChatMessage } from '@/lib/openai-client';
@@ -17,6 +10,7 @@ import { ChatMessage } from '@/lib/openai-client';
 // Sistema de respuestas automáticas con ChatGPT
 export async function processIncomingMessage(message: WhatsAppMessage): Promise<WhatsAppResponse> {
   try {
+    const { isCommand, isBusinessHours } = await import('@/lib/whatsapp-client');
     console.log('🔄 Procesando mensaje de WhatsApp:', {
       from: message.contact?.number,
       body: message.body.substring(0, 100),
@@ -46,6 +40,7 @@ export async function processIncomingMessage(message: WhatsAppMessage): Promise<
 
 // Manejar comandos específicos del hotel
 async function handleCommand(message: WhatsAppMessage): Promise<WhatsAppResponse> {
+  const { HOTEL_COMMANDS, WHATSAPP_BOT_CONFIG, whatsappManager, isBusinessHours } = await import('@/lib/whatsapp-client');
   const command = extractCommand(message.body);
   const number = message.contact?.number || message.from.replace('@c.us', '');
 
@@ -273,6 +268,7 @@ O simplemente escribe tu consulta y te ayudo inmediatamente.`;
 
 // Mensaje para fuera de horario comercial
 async function sendOutOfHoursMessage(message: WhatsAppMessage): Promise<WhatsAppResponse> {
+  const { WHATSAPP_BOT_CONFIG } = await import('@/lib/whatsapp-client');
   const number = message.contact?.number || message.from.replace('@c.us', '');
   
   const outOfHoursMessage = `🌙 *Fuera de horario comercial*
@@ -401,6 +397,7 @@ Intenta nuevamente en unos minutos o usa:
 // Función para enviar mensajes
 export async function sendMessage(to: string, message: string): Promise<WhatsAppResponse> {
   try {
+    const { formatPhoneNumber, whatsappManager } = await import('@/lib/whatsapp-client');
     const formattedNumber = formatPhoneNumber(to);
     console.log('📤 Enviando mensaje WhatsApp a:', formattedNumber);
     
@@ -425,6 +422,7 @@ export async function sendMessage(to: string, message: string): Promise<WhatsApp
 // Función para inicializar el bot de WhatsApp
 export async function initializeWhatsAppBot(): Promise<{ success: boolean; error?: string }> {
   try {
+    const { whatsappManager } = await import('@/lib/whatsapp-client');
     console.log('🚀 Inicializando bot de WhatsApp...');
     
     // Registrar el handler de mensajes
@@ -454,6 +452,7 @@ export async function initializeWhatsAppBot(): Promise<{ success: boolean; error
 // Obtener estado del bot
 export async function getWhatsAppStatus() {
   try {
+    const { whatsappManager, isBusinessHours, WHATSAPP_BOT_CONFIG } = await import('@/lib/whatsapp-client');
     const status = whatsappManager.getStatus();
     const clientInfo = await whatsappManager.getClientInfo();
     
@@ -481,6 +480,7 @@ export async function getWhatsAppStatus() {
 
 // Enviar mensaje de bienvenida manual
 export async function sendWelcomeMessage(phoneNumber: string): Promise<WhatsAppResponse> {
+  const { WHATSAPP_BOT_CONFIG } = await import('@/lib/whatsapp-client');
   return await sendMessage(phoneNumber, WHATSAPP_BOT_CONFIG.welcomeMessage);
 }
 
