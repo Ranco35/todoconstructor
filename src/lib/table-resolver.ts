@@ -54,6 +54,10 @@ export async function resolveTableName(
  * Helper específico para Categorías. Prueba 'Category' y luego 'category'.
  */
 export async function getCategoryTableName(supabase: SupabaseLikeClient): Promise<string> {
+  const envOverride = process.env.CATEGORY_TABLE_NAME || process.env.NEXT_PUBLIC_CATEGORY_TABLE_NAME;
+  if (envOverride && typeof envOverride === 'string' && envOverride.trim().length > 0) {
+    return envOverride.trim();
+  }
   // Probar varias variantes comunes
   const candidates = [
     'category',
