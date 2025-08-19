@@ -1,5 +1,4 @@
 import type { Message } from 'whatsapp-web.js';
-import * as qrcode from 'qrcode';
 
 // Polyfill para fetch en Node.js
 if (!global.fetch) {
@@ -285,6 +284,7 @@ class WhatsAppManager {
       console.log('📱 ¡EVENTO QR DISPARADO! Código QR generado para WhatsApp');
       console.log('📱 QR String length:', qr.length);
       try {
+        const qrcode = await import('qrcode');
         this.currentQR = await qrcode.toDataURL(qr);
         console.log('✅ QR Code convertido a base64 exitosamente');
         console.log('✅ QR Data URL length:', this.currentQR.length);
