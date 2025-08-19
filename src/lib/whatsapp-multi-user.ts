@@ -56,7 +56,7 @@ class WhatsAppMultiUserManager {
     }
   }
 
-  private initializeClient() {
+  private async initializeClient() {
     if (this.isInitialized) return;
 
     console.log('🟢 Inicializando cliente WhatsApp multi-usuario...');
@@ -425,7 +425,7 @@ class WhatsAppMultiUserManager {
 
   async initialize(): Promise<void> {
     if (!this.client) {
-      this.initializeClient();
+      await this.initializeClient();
     }
 
     try {
