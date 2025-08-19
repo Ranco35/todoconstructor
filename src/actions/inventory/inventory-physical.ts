@@ -1,7 +1,4 @@
 import { getSupabaseServerClient } from '@/lib/supabase-server'
-import * as XLSX from 'xlsx'
-import { parseExcel } from '@/lib/import-parsers'
-import * as ExcelJS from 'exceljs'
 
 // Interfaz específica para productos de inventario físico
 interface InventoryPhysicalProduct {
@@ -18,8 +15,9 @@ interface InventoryPhysicalProduct {
 }
 
 // Función para parsear Excel específicamente para inventario físico
-function parseInventoryPhysicalExcel(fileBuffer: ArrayBuffer): InventoryPhysicalProduct[] {
+async function parseInventoryPhysicalExcel(fileBuffer: ArrayBuffer): Promise<InventoryPhysicalProduct[]> {
   try {
+    const XLSX = await import('xlsx')
     const workbook = XLSX.read(fileBuffer, { type: 'array' });
     console.log('🔍 [PARSER] Hojas detectadas:', workbook.SheetNames);
     
@@ -262,6 +260,7 @@ export async function exportInventoryPhysicalTemplate(warehouseId: number, categ
   }
 
   // Crear libro y hoja Excel con ExcelJS
+  const ExcelJS = await import('exceljs')
   const workbook = new ExcelJS.Workbook()
   const worksheet = workbook.addWorksheet('Inventario Fisico')
   

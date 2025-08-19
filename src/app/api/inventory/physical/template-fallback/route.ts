@@ -1,8 +1,8 @@
 import { NextRequest, NextResponse } from 'next/server'
-import * as XLSX from 'xlsx'
 
 export async function POST(request: NextRequest) {
   try {
+    const XLSX = await import('xlsx')
     const { warehouseId, warehouseName } = await request.json()
 
     // Crear plantilla de ejemplo sin consultar la base de datos

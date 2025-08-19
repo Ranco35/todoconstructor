@@ -19,30 +19,35 @@ export async function resolveTableName(
   const key = cacheKey || candidates.join('|');
   if (tableNameCache[key]) return tableNameCache[key];
 
+  let successful: string | null = null;
   for (const candidate of candidates) {
     const { error } = await supabase
       .from(candidate)
       .select('*', { head: true, count: 'exact' });
 
     if (!error) {
-      tableNameCache[key] = candidate;
-      return candidate;
+      successful = candidate;
+      break;
     }
 
     const errMsg: string = error?.message || '';
     const errCode: string = error?.code || '';
     const relationMissing = errCode === '42P01' || /relation .* does not exist/i.test(errMsg);
-    if (!relationMissing) {
-      // Cualquier otro error (p.ej. permisos RLS) implica que la tabla existe
-      tableNameCache[key] = candidate;
-      return candidate;
+    if (relationMissing) {
+      continue;
     }
-    // Probar siguiente candidato
+    // Si no es relación inexistente, no asumimos existencia; probamos siguiente
   }
 
-  // Fallback: primer candidato
-  tableNameCache[key] = candidates[0];
-  return candidates[0];
+  if (successful) {
+    tableNameCache[key] = successful;
+    return successful;
+  }
+
+  // Fallback preferente: minúsculas si está en la lista
+  const fallback = candidates.includes('category') ? 'category' : candidates[0];
+  tableNameCache[key] = fallback;
+  return fallback;
 }
 
 /**

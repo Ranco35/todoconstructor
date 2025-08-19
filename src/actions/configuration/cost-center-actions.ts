@@ -3,7 +3,7 @@
 import { revalidatePath } from 'next/cache';
 import { getSupabaseServerClient } from '@/lib/supabase-server';
 import { redirect } from 'next/navigation';
-import { PostgrestError } from '@supabase/supabase-js';
+import type { PostgrestError } from '@supabase/supabase-js';
 
 // Interfaz para los parámetros de obtención
 interface GetCostCentersParams {

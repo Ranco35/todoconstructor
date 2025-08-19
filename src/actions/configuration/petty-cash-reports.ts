@@ -1,6 +1,4 @@
 'use server';
-
-import { createClient } from '@supabase/supabase-js';
 // Carga dinámica cuando se usa (evita bundling en build)
 
 // Cliente Supabase simplificado

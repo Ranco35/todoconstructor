@@ -1,9 +1,9 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { getSupabaseServerClient } from '@/lib/supabase-server'
-import * as XLSX from 'xlsx'
 
 export async function POST(request: NextRequest) {
   try {
+    const XLSX = await import('xlsx')
     const { warehouseId } = await request.json()
 
     if (!warehouseId) {
