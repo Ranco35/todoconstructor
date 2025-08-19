@@ -1,5 +1,4 @@
-import jsPDF from 'jspdf';
-import 'jspdf-autotable';
+// Cargar jsPDF dinámicamente donde se use para evitar bundling en server
 
 // Extender el tipo jsPDF para incluir autoTable
 declare module 'jspdf' {
@@ -54,6 +53,8 @@ export const exportBudgetToPDF = async (
   budgetData: BudgetFormData,
   clientData?: ClientData
 ) => {
+  const { default: jsPDF } = await import('jspdf');
+  await import('jspdf-autotable');
   const doc = new jsPDF();
   
   // Verificar que autoTable esté disponible
@@ -446,6 +447,8 @@ export const generateBudgetPDFBuffer = async (
   budgetData: BudgetFormData,
   clientData?: ClientData
 ): Promise<Buffer> => {
+  const { default: jsPDF } = await import('jspdf');
+  await import('jspdf-autotable');
   const doc = new jsPDF();
   
   // Verificar que autoTable esté disponible
@@ -682,6 +685,8 @@ export const generateBudgetPDFWithCustomHTML = async (
   customHTML: string,
   budgetNumber: string
 ): Promise<Buffer> => {
+  const { default: jsPDF } = await import('jspdf');
+  await import('jspdf-autotable');
   const doc = new jsPDF();
   
   // Verificar que autoTable esté disponible

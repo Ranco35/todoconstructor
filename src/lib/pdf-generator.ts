@@ -1,5 +1,4 @@
-// Generador de PDFs para adjuntos de email
-import jsPDF from 'jspdf';
+// Generador de PDFs para adjuntos de email (importación dinámica de jsPDF)
 
 export interface BudgetItem {
   name: string;
@@ -39,7 +38,8 @@ export interface PurchaseOrderData {
 }
 
 // Generar PDF de presupuesto
-export function generateBudgetPDF(data: BudgetData): Promise<Buffer> {
+export async function generateBudgetPDF(data: BudgetData): Promise<Buffer> {
+  const { default: jsPDF } = await import('jspdf');
   return new Promise((resolve, reject) => {
     try {
       const doc = new jsPDF();
@@ -200,7 +200,8 @@ export function generateBudgetPDF(data: BudgetData): Promise<Buffer> {
 }
 
 // Generar PDF de orden de compra
-export function generatePurchaseOrderPDF(data: PurchaseOrderData): Promise<Buffer> {
+export async function generatePurchaseOrderPDF(data: PurchaseOrderData): Promise<Buffer> {
+  const { default: jsPDF } = await import('jspdf');
   return new Promise((resolve, reject) => {
     try {
       const doc = new jsPDF();

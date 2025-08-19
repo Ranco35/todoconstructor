@@ -409,7 +409,7 @@ export async function importInventoryPhysicalExcel({
   
   try {
     // Parsear Excel específicamente para inventario físico
-    const productosRaw = parseInventoryPhysicalExcel(fileBuffer);
+    const productosRaw = await parseInventoryPhysicalExcel(fileBuffer);
   let updated = 0;
   let errors = 0;
   const differences: InventoryPhysicalImportResult['differences'] = [];
