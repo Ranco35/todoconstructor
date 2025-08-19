@@ -1,11 +1,12 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { whatsappManager } from '@/lib/whatsapp-client';
+export const runtime = 'nodejs';
 
 export async function POST(request: NextRequest) {
   try {
     console.log('🧪 Iniciando prueba de inicialización...');
     
     // Paso 1: Verificar estado inicial
+    const { whatsappManager } = await import('@/lib/whatsapp-client');
     const initialStatus = whatsappManager.getStatus();
     console.log('📊 Estado inicial:', initialStatus);
     

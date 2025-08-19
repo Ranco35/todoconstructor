@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { whatsappManager } from '@/lib/whatsapp-client';
+export const runtime = 'nodejs';
 
 export async function POST(request: NextRequest) {
   try {
@@ -15,6 +15,7 @@ export async function POST(request: NextRequest) {
     console.log('📤 Enviando mensaje de prueba:', { phoneNumber, message });
 
     // Verificar que el cliente esté conectado usando solo el status del manager
+    const { whatsappManager } = await import('@/lib/whatsapp-client');
     const status = whatsappManager.getStatus();
     console.log('🔍 Estado actual del manager:', status);
 

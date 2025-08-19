@@ -1,10 +1,11 @@
 import { NextResponse } from 'next/server';
-import { whatsappManager } from '@/lib/whatsapp-client';
+export const runtime = 'nodejs';
 
 export async function GET() {
   try {
     console.log('🔄 API WhatsApp Status: Verificando estado del bot...');
     
+    const { whatsappManager } = await import('@/lib/whatsapp-client');
     const status = whatsappManager.getStatus();
     const qrCode = whatsappManager.getQRCode();
     
@@ -48,6 +49,7 @@ export async function POST(request: NextRequest) {
 
     console.log('🔍 API WhatsApp Status: Obteniendo información detallada...');
 
+    const { whatsappManager } = await import('@/lib/whatsapp-client');
     const client = whatsappManager.getClient();
     
     if (!client) {

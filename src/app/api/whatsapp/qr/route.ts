@@ -1,10 +1,11 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { whatsappManager } from '@/lib/whatsapp-client';
+export const runtime = 'nodejs';
 
 export async function GET() {
   try {
     console.log('📱 Endpoint QR solicitado - Iniciando...');
     
+    const { whatsappManager } = await import('@/lib/whatsapp-client');
     // Verificar que el manager existe
     if (!whatsappManager) {
       console.error('❌ whatsappManager no está disponible');

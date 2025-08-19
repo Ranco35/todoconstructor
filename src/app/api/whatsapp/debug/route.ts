@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { whatsappManager } from '@/lib/whatsapp-client';
+export const runtime = 'nodejs';
 
 export async function GET(request: NextRequest) {
   try {
@@ -16,6 +16,7 @@ export async function GET(request: NextRequest) {
     };
 
     // Obtener estado del manager de WhatsApp
+    const { whatsappManager } = await import('@/lib/whatsapp-client');
     const managerStatus = whatsappManager.getStatus();
     const client = whatsappManager.getClient();
     const qrCode = whatsappManager.getQRCode();
@@ -145,6 +146,7 @@ export async function POST(request: NextRequest) {
     switch (action) {
       case 'restart':
         console.log('🔄 Reiniciando cliente de WhatsApp...');
+        const { whatsappManager } = await import('@/lib/whatsapp-client');
         await whatsappManager.destroy();
         await whatsappManager.initialize();
         return NextResponse.json({
@@ -155,6 +157,7 @@ export async function POST(request: NextRequest) {
         
       case 'destroy':
         console.log('🗑️ Destruyendo cliente de WhatsApp...');
+        const { whatsappManager } = await import('@/lib/whatsapp-client');
         await whatsappManager.destroy();
         return NextResponse.json({
           success: true,
@@ -164,6 +167,7 @@ export async function POST(request: NextRequest) {
         
       case 'initialize':
         console.log('🚀 Inicializando cliente de WhatsApp...');
+        const { whatsappManager } = await import('@/lib/whatsapp-client');
         await whatsappManager.initialize();
         return NextResponse.json({
           success: true,

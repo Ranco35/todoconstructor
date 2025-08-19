@@ -1,11 +1,12 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { whatsappManager } from '@/lib/whatsapp-client';
+export const runtime = 'nodejs';
 
 export async function POST(request: NextRequest) {
   try {
     console.log('🚀 Forzando inicialización del cliente WhatsApp...');
     
     // Destruir cliente existente si existe
+    const { whatsappManager } = await import('@/lib/whatsapp-client');
     await whatsappManager.destroy();
     console.log('✅ Cliente anterior destruido');
     
@@ -47,6 +48,7 @@ export async function POST(request: NextRequest) {
 
 export async function GET() {
   try {
+    const { whatsappManager } = await import('@/lib/whatsapp-client');
     const status = whatsappManager.getStatus();
     const qrCode = whatsappManager.getQRCode();
     

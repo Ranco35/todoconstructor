@@ -1,11 +1,12 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { whatsappManager } from '@/lib/whatsapp-client';
+export const runtime = 'nodejs';
 
 export async function POST() {
   try {
     console.log('🚀 API WhatsApp Init: Forzando inicialización del bot...');
     
     // Reinicializar el cliente
+    const { whatsappManager } = await import('@/lib/whatsapp-client');
     await whatsappManager.initialize();
     
     console.log('✅ Cliente de WhatsApp inicializado exitosamente');
@@ -30,6 +31,7 @@ export async function GET() {
     console.log('🔍 API WhatsApp Init: Obteniendo información de inicialización...');
 
     // Obtener estado actual
+    const { whatsappManager } = await import('@/lib/whatsapp-client');
     const status = whatsappManager.getStatus();
 
     return NextResponse.json({

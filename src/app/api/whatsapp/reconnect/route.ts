@@ -1,11 +1,12 @@
 import { NextResponse } from 'next/server';
-import { whatsappManager } from '@/lib/whatsapp-client';
+export const runtime = 'nodejs';
 
 export async function POST() {
   try {
     console.log('🔄 API WhatsApp Reconnect: Intentando reconectar...');
     
     // Obtener estado actual
+    const { whatsappManager } = await import('@/lib/whatsapp-client');
     const status = whatsappManager.getStatus();
     console.log('📊 Estado actual:', status);
     

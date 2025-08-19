@@ -1,5 +1,5 @@
 import { NextResponse } from 'next/server';
-import { whatsappManager } from '@/lib/whatsapp-client';
+export const runtime = 'nodejs';
 import fs from 'fs';
 import path from 'path';
 
@@ -48,6 +48,7 @@ export async function POST() {
     console.log('🔴 API WhatsApp Unlink: Desvinculando bot...');
     
     // Paso 1: Destruir el cliente actual completamente
+    const { whatsappManager } = await import('@/lib/whatsapp-client');
     await whatsappManager.destroy();
     console.log('✅ Cliente destruido exitosamente');
     
