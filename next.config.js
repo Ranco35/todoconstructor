@@ -1,3 +1,25 @@
+// Fix de build en Vercel: algunos paquetes de navegador referencian `self`
+// durante el render/SSG en servidor. Reescribimos `self` -> `globalThis` en bundles del servidor.
+// Esto previene "ReferenceError: self is not defined" al recolectar datos de páginas.
+
+const webpack = require('webpack');
+
+/** @type {import('next').NextConfig} */
+const nextConfig = {
+	webpack: (config, { isServer }) => {
+		if (isServer) {
+			config.plugins.push(
+				new webpack.DefinePlugin({
+					self: 'globalThis',
+				})
+			);
+		}
+		return config;
+	},
+};
+
+module.exports = nextConfig;
+
 /** @type {import('next').NextConfig} */
 const nextConfig = {
   typescript: {
