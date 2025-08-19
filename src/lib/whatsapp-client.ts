@@ -1,4 +1,4 @@
-import { Client, LocalAuth, Message } from 'whatsapp-web.js';
+import type { Message } from 'whatsapp-web.js';
 import * as qrcode from 'qrcode';
 
 // Polyfill para fetch en Node.js
@@ -186,6 +186,7 @@ class WhatsAppManager {
 
       console.log('🔧 Configuración Puppeteer optimizada aplicada');
 
+      const { Client, LocalAuth } = await import('whatsapp-web.js');
       this.client = new Client({
         authStrategy: new LocalAuth({
           clientId: 'admintermas-bot',

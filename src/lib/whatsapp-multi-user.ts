@@ -1,4 +1,4 @@
-import { Client, LocalAuth, Message } from 'whatsapp-web.js';
+import type { Message } from 'whatsapp-web.js';
 import qrcode from 'qrcode';
 
 // Configuración del sistema multi-usuario
@@ -61,6 +61,7 @@ class WhatsAppMultiUserManager {
 
     console.log('🟢 Inicializando cliente WhatsApp multi-usuario...');
 
+    const { Client, LocalAuth } = await import('whatsapp-web.js');
     this.client = new Client({
       authStrategy: new LocalAuth({
         clientId: 'admintermas-multi-user',
