@@ -4,21 +4,7 @@
 
 const webpack = require('webpack');
 
-/** @type {import('next').NextConfig} */
-const nextConfig = {
-	webpack: (config, { isServer }) => {
-		if (isServer) {
-			config.plugins.push(
-				new webpack.DefinePlugin({
-					self: 'globalThis',
-				})
-			);
-		}
-		return config;
-	},
-};
-
-module.exports = nextConfig;
+// (Eliminado nextConfig duplicado; integrar en la configuración principal de abajo)
 
 /** @type {import('next').NextConfig} */
 const nextConfig = {
@@ -38,20 +24,7 @@ const nextConfig = {
   poweredByHeader: false,
   reactStrictMode: true,
   
-  // Configuración de cookies para producción
-  async headers() {
-    return [
-      {
-        source: '/(.*)',
-        headers: [
-          {
-            key: 'Set-Cookie',
-            value: 'SameSite=Lax; Secure; HttpOnly',
-          },
-        ],
-      },
-    ];
-  },
+  // headers combinados se definen más abajo
   
   // Optimizaciones experimentales para performance
   experimental: {
@@ -89,6 +62,14 @@ const nextConfig = {
   
   // Configuración webpack optimizada
   webpack: (config, { dev, isServer }) => {
+    // Definir self como globalThis en el bundle del servidor para evitar errores en SSG/ISR
+    if (isServer) {
+      config.plugins.push(
+        new webpack.DefinePlugin({
+          self: 'globalThis',
+        })
+      );
+    }
     // Optimizaciones para desarrollo
     if (dev) {
       // Optimizar watching
@@ -167,6 +148,16 @@ const nextConfig = {
   // Headers para mejorar caching
   async headers() {
     return [
+      // Configuración de cookies para producción (aplica a todas las rutas)
+      {
+        source: '/(.*)',
+        headers: [
+          {
+            key: 'Set-Cookie',
+            value: 'SameSite=Lax; Secure; HttpOnly',
+          },
+        ],
+      },
       {
         source: '/dashboard/:path*',
         headers: [
