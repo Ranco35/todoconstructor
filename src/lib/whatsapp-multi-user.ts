@@ -51,9 +51,7 @@ class WhatsAppMultiUserManager {
   private isProcessingQueue = false;
 
   constructor() {
-    if (typeof window === 'undefined') {
-      this.initializeClient();
-    }
+    // No inicializar automáticamente; el llamador debe invocar initialize() explícitamente
   }
 
   private async initializeClient() {
@@ -450,8 +448,14 @@ class WhatsAppMultiUserManager {
   }
 }
 
-// Instancia singleton
-export const whatsappMultiUser = new WhatsAppMultiUserManager();
+// Singleton perezoso
+let multiUserSingleton: WhatsAppMultiUserManager | null = null;
+export async function getWhatsAppMultiUser(): Promise<WhatsAppMultiUserManager> {
+  if (!multiUserSingleton) {
+    multiUserSingleton = new WhatsAppMultiUserManager();
+  }
+  return multiUserSingleton;
+}
 
 // Funciones de utilidad
 export function isBusinessHours(): boolean {

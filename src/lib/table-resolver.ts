@@ -54,7 +54,9 @@ export async function resolveTableName(
  * Helper específico para Categorías. Prueba 'Category' y luego 'category'.
  */
 export async function getCategoryTableName(supabase: SupabaseLikeClient): Promise<string> {
-  return resolveTableName(supabase, ['Category', 'category'], 'Category|category');
+  // Preferir minúsculas primero y usar una clave de caché nueva para invalidar versiones anteriores
+  const name = await resolveTableName(supabase, ['category', 'Category'], 'Category|category|v2');
+  return name;
 }
 
 

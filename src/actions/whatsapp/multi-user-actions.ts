@@ -1,6 +1,6 @@
 'use server';
 
-import { whatsappMultiUser, WhatsAppUser, ClientAssignment, MultiUserStatus } from '@/lib/whatsapp-multi-user';
+import type { WhatsAppUser, ClientAssignment, MultiUserStatus } from '@/lib/whatsapp-multi-user';
 import { getCurrentUser } from '@/actions/configuration/auth-actions';
 
 // ===============================
@@ -29,6 +29,8 @@ export async function registerWhatsAppUser(userData: {
       isActive: true,
     };
 
+    const { getWhatsAppMultiUser } = await import('@/lib/whatsapp-multi-user');
+    const whatsappMultiUser = await getWhatsAppMultiUser();
     const success = await whatsappMultiUser.registerUser(user);
     
     if (success) {
@@ -58,6 +60,8 @@ export async function unregisterWhatsAppUser(): Promise<{ success: boolean; data
       return { success: false, error: 'Usuario no autenticado' };
     }
 
+    const { getWhatsAppMultiUser } = await import('@/lib/whatsapp-multi-user');
+    const whatsappMultiUser = await getWhatsAppMultiUser();
     const success = await whatsappMultiUser.unregisterUser(currentUser.id);
     
     if (success) {
@@ -84,6 +88,8 @@ export async function updateWhatsAppUserStatus(status: 'online' | 'busy' | 'offl
       return { success: false, error: 'Usuario no autenticado' };
     }
 
+    const { getWhatsAppMultiUser } = await import('@/lib/whatsapp-multi-user');
+    const whatsappMultiUser = await getWhatsAppMultiUser();
     const success = await whatsappMultiUser.updateUserStatus(currentUser.id, status);
     
     if (success) {
@@ -127,6 +133,8 @@ export async function sendWhatsAppMessageAsUser(to: string, message: string): Pr
       return { success: false, error: 'El mensaje no puede estar vacío' };
     }
 
+    const { getWhatsAppMultiUser } = await import('@/lib/whatsapp-multi-user');
+    const whatsappMultiUser = await getWhatsAppMultiUser();
     const success = await whatsappMultiUser.sendMessageAsUser(currentUser.id, to, message);
     
     if (success) {
@@ -156,6 +164,8 @@ export async function sendWhatsAppMessageAsUser(to: string, message: string): Pr
  */
 export async function getWhatsAppUsers(): Promise<{ success: boolean; data?: WhatsAppUser[]; error?: string }> {
   try {
+    const { getWhatsAppMultiUser } = await import('@/lib/whatsapp-multi-user');
+    const whatsappMultiUser = await getWhatsAppMultiUser();
     const users = whatsappMultiUser.getUsers();
     return { success: true, data: users };
   } catch (error) {
@@ -174,6 +184,8 @@ export async function getCurrentWhatsAppUser(): Promise<{ success: boolean; data
       return { success: false, error: 'Usuario no autenticado' };
     }
 
+    const { getWhatsAppMultiUser } = await import('@/lib/whatsapp-multi-user');
+    const whatsappMultiUser = await getWhatsAppMultiUser();
     const user = whatsappMultiUser.getUser(currentUser.id);
     
     if (user) {
@@ -197,6 +209,8 @@ export async function getCurrentUserAssignments(): Promise<{ success: boolean; d
       return { success: false, error: 'Usuario no autenticado' };
     }
 
+    const { getWhatsAppMultiUser } = await import('@/lib/whatsapp-multi-user');
+    const whatsappMultiUser = await getWhatsAppMultiUser();
     const assignments = whatsappMultiUser.getUserAssignments(currentUser.id);
     return { success: true, data: assignments };
   } catch (error) {
@@ -210,6 +224,8 @@ export async function getCurrentUserAssignments(): Promise<{ success: boolean; d
  */
 export async function getAllClientAssignments(): Promise<{ success: boolean; data?: ClientAssignment[]; error?: string }> {
   try {
+    const { getWhatsAppMultiUser } = await import('@/lib/whatsapp-multi-user');
+    const whatsappMultiUser = await getWhatsAppMultiUser();
     const assignments = whatsappMultiUser.getClientAssignments();
     return { success: true, data: assignments };
   } catch (error) {
@@ -223,6 +239,8 @@ export async function getAllClientAssignments(): Promise<{ success: boolean; dat
  */
 export async function getMultiUserStatus(): Promise<{ success: boolean; data?: MultiUserStatus; error?: string }> {
   try {
+    const { getWhatsAppMultiUser } = await import('@/lib/whatsapp-multi-user');
+    const whatsappMultiUser = await getWhatsAppMultiUser();
     const status = whatsappMultiUser.getSystemStatus();
     return { success: true, data: status };
   } catch (error) {
@@ -240,6 +258,8 @@ export async function getMultiUserStatus(): Promise<{ success: boolean; data?: M
  */
 export async function initializeMultiUserSystem(): Promise<{ success: boolean; data?: any; error?: string }> {
   try {
+    const { getWhatsAppMultiUser } = await import('@/lib/whatsapp-multi-user');
+    const whatsappMultiUser = await getWhatsAppMultiUser();
     await whatsappMultiUser.initialize();
     return { 
       success: true, 
@@ -256,6 +276,8 @@ export async function initializeMultiUserSystem(): Promise<{ success: boolean; d
  */
 export async function destroyMultiUserSystem(): Promise<{ success: boolean; data?: any; error?: string }> {
   try {
+    const { getWhatsAppMultiUser } = await import('@/lib/whatsapp-multi-user');
+    const whatsappMultiUser = await getWhatsAppMultiUser();
     await whatsappMultiUser.destroy();
     return { 
       success: true, 
@@ -281,6 +303,8 @@ export async function isUserRegistered(): Promise<{ success: boolean; data?: boo
       return { success: false, error: 'Usuario no autenticado' };
     }
 
+    const { getWhatsAppMultiUser } = await import('@/lib/whatsapp-multi-user');
+    const whatsappMultiUser = await getWhatsAppMultiUser();
     const user = whatsappMultiUser.getUser(currentUser.id);
     return { success: true, data: !!user };
   } catch (error) {
@@ -304,6 +328,8 @@ export async function getCurrentUserStats(): Promise<{ success: boolean; data?: 
       return { success: false, error: 'Usuario no registrado en WhatsApp' };
     }
 
+    const { getWhatsAppMultiUser } = await import('@/lib/whatsapp-multi-user');
+    const whatsappMultiUser = await getWhatsAppMultiUser();
     const assignments = whatsappMultiUser.getUserAssignments(currentUser.id);
     const activeAssignments = assignments.filter(a => a.status === 'active');
     const urgentAssignments = assignments.filter(a => a.priority === 'urgent');

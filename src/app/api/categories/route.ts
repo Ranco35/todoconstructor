@@ -6,13 +6,32 @@ export async function GET() {
   try {
     const supabase = await getSupabaseServerClient();
     
-    const categoryTable = await getCategoryTableName(supabase as any);
-    const { data: categories, error } = await (supabase as any)
-      .from(categoryTable)
-      .select('*');
+    const primaryTable = await getCategoryTableName(supabase as any);
+    const fallbacks = [primaryTable, primaryTable === 'category' ? 'Category' : 'category'];
+    let categories: any[] | null = null;
+    let lastError: any = null;
 
-    if (error) {
-      throw new Error(`Error obteniendo categorías: ${error.message}`);
+    for (const tableName of fallbacks) {
+      console.log('[API /categories] Trying table:', tableName);
+      const { data, error } = await (supabase as any)
+        .from(tableName)
+        .select('*');
+      if (!error) {
+        categories = data || [];
+        break;
+      }
+      lastError = error;
+      const errMsg: string = error?.message || '';
+      const errCode: string = error?.code || '';
+      const isRelationMissing = errCode === '42P01' || /relation .* does not exist/i.test(errMsg);
+      if (!isRelationMissing) {
+        // Error distinto: no seguir intentando
+        break;
+      }
+    }
+
+    if (!categories) {
+      throw new Error(`Error obteniendo categorías: ${lastError?.message || 'desconocido'}`);
     }
 
     const allCategories = categories || [];
