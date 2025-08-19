@@ -3,6 +3,7 @@ import { NextResponse } from 'next/server';
 
 export async function GET() {
   try {
+    const XLSX = await import('xlsx');
     // Datos de ejemplo para la plantilla
     const data = [
       { 

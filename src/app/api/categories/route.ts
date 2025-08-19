@@ -7,7 +7,15 @@ export async function GET() {
     const supabase = await getSupabaseServerClient();
     
     const primaryTable = await getCategoryTableName(supabase as any);
-    const fallbacks = [primaryTable, primaryTable === 'category' ? 'Category' : 'category'];
+    const fallbacks = [
+      primaryTable,
+      primaryTable === 'category' ? 'Category' : 'category',
+      'categories',
+      'Categories',
+      'product_category',
+      'ProductCategory',
+      'product_categories'
+    ];
     let categories: any[] | null = null;
     let lastError: any = null;
 
@@ -24,14 +32,14 @@ export async function GET() {
       const errMsg: string = error?.message || '';
       const errCode: string = error?.code || '';
       const isRelationMissing = errCode === '42P01' || /relation .* does not exist/i.test(errMsg);
-      if (!isRelationMissing) {
-        // Error distinto: no seguir intentando
-        break;
-      }
+      // Si es error distinto a relación inexistente (p.ej. permisos), seguimos probando siguientes
+      if (!isRelationMissing) continue;
     }
 
     if (!categories) {
-      throw new Error(`Error obteniendo categorías: ${lastError?.message || 'desconocido'}`);
+      console.warn('[API /categories] No se pudo resolver tabla de categorías. Último error:', lastError);
+      // Evitar bloquear la UI devolviendo lista vacía
+      return NextResponse.json([]);
     }
 
     const allCategories = categories || [];
