@@ -30,7 +30,6 @@ const nextConfig = {
   experimental: {
     // 🔥 HABILITADO: Server Actions explícitamente para Vercel (Next 15 requiere objeto)
     serverActions: {},
-    instrumentationHook: true,
     // Optimizar imports de paquetes pesados
     optimizePackageImports: [
       'lucide-react', 
@@ -133,40 +132,39 @@ const nextConfig = {
         path: false,
         child_process: false,
       };
+
+      // Optimizar chunks para mejor caching (en producción, solo cliente)
+      if (!dev) {
+        config.optimization.splitChunks = {
+          chunks: 'all',
+          cacheGroups: {
+            // Vendor chunks separados para mejor caching
+            vendor: {
+              test: /[\\/]node_modules[\\/]/,
+              name: 'vendors',
+              chunks: 'all',
+              priority: 10,
+            },
+            // Componentes UI en chunk separado
+            ui: {
+              test: /[\\/]components[\\/]/,
+              name: 'ui',
+              chunks: 'all',
+              priority: 5,
+            },
+            // Librerías comunes
+            common: {
+              minChunks: 2,
+              chunks: 'all',
+              name: 'common',
+              priority: 1,
+            },
+          },
+        };
+      }
     }
     
-         // Optimizar chunks para mejor caching (en producción)
-     if (!dev) {
-       config.optimization.splitChunks = {
-         chunks: 'all',
-         cacheGroups: {
-           // Vendor chunks separados para mejor caching
-           vendor: {
-             test: /[\\/]node_modules[\\/]/,
-             name: 'vendors',
-             chunks: 'all',
-             priority: 10,
-           },
-           // Componentes UI en chunk separado
-           ui: {
-             test: /[\\/]components[\\/]/,
-             name: 'ui',
-             chunks: 'all',
-             priority: 5,
-           },
-           // Librerías comunes
-           common: {
-             minChunks: 2,
-             chunks: 'all',
-             name: 'common',
-             priority: 1,
-           },
-         },
-       };
-     }
-    
-    // Optimizar resolución de módulos
-    config.resolve.modules = ['node_modules'];
+    // Mantener resolución por defecto de Next
     
     return config;
   },
