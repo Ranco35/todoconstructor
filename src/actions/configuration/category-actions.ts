@@ -2,6 +2,7 @@
 'use server';
 
 import { createServerClient } from '@supabase/ssr';
+import { createClient } from '@supabase/supabase-js';
 import { cookies } from 'next/headers';
 import { revalidatePath } from 'next/cache';
 import { redirect } from 'next/navigation';
@@ -17,6 +18,13 @@ async function getSupabaseClient() {
   );
 }
 
+async function getSupabaseServiceClient() {
+  const url = process.env.NEXT_PUBLIC_SUPABASE_URL!;
+  const key = process.env.SUPABASE_SERVICE_ROLE_KEY || process.env.SUPABASE_SERVICE_KEY;
+  if (!url || !key) return null as any;
+  return createClient(url, key);
+}
+
 // Helper para generar un slug simple
 // const generateSlug = (name: string) => {
 //   return name
@@ -29,6 +37,7 @@ async function getSupabaseClient() {
 // --- CREAR CATEGORÍA ---
 export async function createCategory(formData: FormData) {
   const supabase = await getSupabaseClient();
+  const categoryTable = (process.env.NEXT_PUBLIC_CATEGORY_TABLE_NAME || 'Category') as string;
   
   const name = formData.get('name') as string;
   const description = formData.get('description') as string;
@@ -52,7 +61,6 @@ export async function createCategory(formData: FormData) {
     }
     
     // Verificar que la categoría padre existe
-    const categoryTable = await getCategoryTableName(supabase as any);
     const { data: parentCategory, error: parentError } = await (supabase as any)
       .from(categoryTable)
       .select('id')
@@ -73,14 +81,36 @@ export async function createCategory(formData: FormData) {
         parentId: parsedParentId,
       });
 
-    if (error) {
+    if (error && (error as any).code) {
+      console.error('❌ Supabase insert Category error:', error || '(null)');
       if (error.code === '23505') { // Unique violation
         throw new Error('Ya existe una categoría con ese nombre.');
       }
       if (error.code === '23503') { // Foreign key violation
         throw new Error('La categoría padre seleccionada no existe.');
       }
-      throw new Error(`Error creando categoría: ${error.message}`);
+      // Intentar con Service Role como fallback si es problema de permisos/RLS
+      try {
+        const svc = await getSupabaseServiceClient();
+        if (!svc) {
+          const msg = (error as any)?.message || (error as any)?.hint || (error as any)?.details || 'Error desconocido en inserción (RLS/Permisos/Constraint)';
+          throw new Error(msg);
+        }
+        const { error: srvErr } = await (svc as any)
+          .from(categoryTable)
+          .insert({
+            name: name.trim(),
+            description: description?.trim() || null,
+            parentId: parsedParentId,
+          });
+        if (srvErr && (srvErr as any).code) {
+          console.error('❌ Service insert Category error:', srvErr || '(null)');
+          const srvMsg = (srvErr as any)?.message || (srvErr as any)?.hint || (srvErr as any)?.details || 'Error desconocido en inserción (Service)';
+          throw new Error(srvMsg);
+        }
+      } catch (svcCatch: any) {
+        throw new Error(`Error creando categoría: ${svcCatch?.message || svcCatch}`);
+      }
     }
     
     revalidatePath('/dashboard/configuration/category');
@@ -94,6 +124,7 @@ export async function createCategory(formData: FormData) {
 // --- ACTUALIZAR CATEGORÍA ---
 export async function updateCategory(id: number, formData: FormData) {
   const supabase = await getSupabaseClient();
+  const categoryTable = await getCategoryTableName(supabase as any);
   
   const name = formData.get('name') as string;
   const description = formData.get('description') as string;
@@ -121,7 +152,6 @@ export async function updateCategory(id: number, formData: FormData) {
       throw new Error('Una categoría no puede ser su propia padre.');
     }
     
-    const categoryTable = await getCategoryTableName(supabase as any);
     const { data: parentCategory, error: parentError } = await (supabase as any)
       .from(categoryTable)
       .select('id')
@@ -267,7 +297,7 @@ export async function getCategories({ page = 1, pageSize = 10, search }: GetCate
 
   try {
     // Obtener todas las categorías sin paginación para ordenarlas correctamente
-    const categoryTable = await getCategoryTableName(supabase as any);
+    const categoryTable = (process.env.NEXT_PUBLIC_CATEGORY_TABLE_NAME || 'Category') as string;
     let query = (supabase as any).from(categoryTable).select('*');
     let countQuery = (supabase as any).from(categoryTable).select('*', { count: 'exact', head: true });
 
@@ -563,7 +593,7 @@ export async function getAllCategories() {
   const supabase = await getSupabaseClient();
   
   try {
-    const categoryTable = await getCategoryTableName(supabase as any);
+    const categoryTable = (process.env.NEXT_PUBLIC_CATEGORY_TABLE_NAME || 'Category') as string;
     const { data: categories, error } = await (supabase as any)
       .from(categoryTable)
       .select('*');
