@@ -50,6 +50,21 @@ function formDataToObject(formData: FormData): ProductFormData {
       case 'maintenanceCost':
         result[key] = stringValue === '' ? undefined : Number(stringValue);
         break;
+      // Soporte para unidades: aceptar camelCase y snake_case
+      case 'salesUnitId':
+      case 'salesunitid': {
+        const num = stringValue === '' ? undefined : Number(stringValue);
+        result['salesUnitId'] = num;
+        result['salesunitid'] = num;
+        break;
+      }
+      case 'purchaseUnitId':
+      case 'purchaseunitid': {
+        const num = stringValue === '' ? undefined : Number(stringValue);
+        result['purchaseUnitId'] = num;
+        result['purchaseunitid'] = num;
+        break;
+      }
       case 'isEquipment':
       case 'isPOSEnabled':
       case 'isForSale':
@@ -68,6 +83,16 @@ function formDataToObject(formData: FormData): ProductFormData {
     }
   }
   
+  // Defaults de unidades si no vienen informadas (UND = id 1)
+  if (result['salesunitid'] === undefined && result['salesUnitId'] === undefined) {
+    result['salesunitid'] = 1;
+    result['salesUnitId'] = 1;
+  }
+  if (result['purchaseunitid'] === undefined && result['purchaseUnitId'] === undefined) {
+    result['purchaseunitid'] = 1;
+    result['purchaseUnitId'] = 1;
+  }
+
   return result as ProductFormData;
 }
 
@@ -315,6 +340,24 @@ export async function createProduct(data: ProductFormData | FormData) {
         // Los componentes se procesarán después de crear el producto
         // No agregar _componentsData al objeto que va a la base de datos
         break;
+    }
+
+    // Normalizar unidades desde camelCase/snake_case y aplicar defaults si corresponde
+    const normalizedSalesUnitId = (productData as any).salesunitid ?? (productData as any).salesUnitId;
+    const normalizedPurchaseUnitId = (productData as any).purchaseunitid ?? (productData as any).purchaseUnitId;
+
+    if (normalizedSalesUnitId !== undefined) {
+      finalProductData.salesunitid = finalProductData.salesunitid ?? normalizedSalesUnitId;
+    }
+    if (normalizedPurchaseUnitId !== undefined) {
+      finalProductData.purchaseunitid = finalProductData.purchaseunitid ?? normalizedPurchaseUnitId;
+    }
+
+    // Defaults a UND (id:1) cuando aplique y no fueron provistas
+    const typesWithUnits = [ProductType.CONSUMIBLE, ProductType.ALMACENABLE, ProductType.SERVICIO, ProductType.INVENTARIO, ProductType.COMBO];
+    if (typesWithUnits.includes(productData.type)) {
+      if (finalProductData.salesunitid === undefined) finalProductData.salesunitid = 1;
+      if (finalProductData.purchaseunitid === undefined) finalProductData.purchaseunitid = 1;
     }
 
     console.log('🔍 DEBUG - Datos finales para insertar:', {

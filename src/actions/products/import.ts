@@ -192,6 +192,10 @@ export async function importProducts(products: ProductImportData[], confirmDelet
         }
 
         // 3. Preparar payload y guardar (update o create)
+        // Normalizar unidades desde camelCase/snake_case
+        const normalizedSalesUnitId = (productData as any).salesUnitId ?? (productData as any).salesunitid ?? null;
+        const normalizedPurchaseUnitId = (productData as any).purchaseUnitId ?? (productData as any).purchaseunitid ?? null;
+
         const productPayload = {
           name: productName,
           description: productData.description ? String(productData.description).trim() || null : null,
@@ -212,9 +216,9 @@ export async function importProducts(products: ProductImportData[], confirmDelet
           isForSale: productData.isForSale ?? true, // Por defecto es para venta
           // AGREGADO: Incluir unidades de medida
           unit: productData.unit || 'UND',
-          // 🔧 AGREGADO: Incluir IDs de unidades específicas
-          salesunitid: productData.salesUnitId || null,
-          purchaseunitid: productData.purchaseUnitId || null,
+          // 🔧 AGREGADO: Incluir IDs de unidades específicas (acepta camelCase y snake_case)
+          salesunitid: normalizedSalesUnitId,
+          purchaseunitid: normalizedPurchaseUnitId,
         };
 
         let finalProductId: number;
