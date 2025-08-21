@@ -4,6 +4,7 @@ import { cookies } from 'next/headers';
 import { redirect } from 'next/navigation';
 import { revalidatePath } from 'next/cache';
 import { createServerClient, type CookieOptions } from '@supabase/ssr'
+import { createClient } from '@supabase/supabase-js'
 
 // Types
 interface LoginCredentials {
@@ -58,6 +59,53 @@ async function createSupabaseServerClient() {
       },
     }
   );
+}
+
+// Cliente normal (anon) para consultas públicas en server actions
+async function getSupabaseClient() {
+  return createSupabaseServerClient();
+}
+
+// Cliente con Service Role para operaciones administrativas (Auth Admin)
+async function getSupabaseServiceClient() {
+  const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL;
+  const serviceKey = process.env.SUPABASE_SERVICE_ROLE_KEY || process.env.SUPABASE_SERVICE_KEY;
+  if (!supabaseUrl || !serviceKey) {
+    console.error('Supabase Service Role Key no configurada. Define SUPABASE_SERVICE_ROLE_KEY en el entorno.');
+    return null as any;
+  }
+  // Service client no usa cookies
+  return createClient(supabaseUrl, serviceKey);
+}
+
+// Helper: resolver ID de rol de forma robusta ante múltiples/ningún resultado
+async function resolveRoleId(supabaseClient: any, roleName: string): Promise<number | null> {
+  const maybe = await supabaseClient
+    .from('Role')
+    .select('id')
+    .eq('roleName', roleName)
+    .maybeSingle();
+
+  if (maybe.error && maybe.error.code !== 'PGRST116') {
+    throw new Error(maybe.error.message);
+  }
+  if (maybe.data && (maybe.data as any).id) {
+    return (maybe.data as any).id as number;
+  }
+
+  const { data: rolesList, error: rolesListErr } = await supabaseClient
+    .from('Role')
+    .select('id')
+    .eq('roleName', roleName)
+    .order('id', { ascending: true })
+    .limit(1);
+  if (rolesListErr) {
+    throw new Error(rolesListErr.message);
+  }
+  if (!rolesList || rolesList.length === 0) {
+    return null;
+  }
+  return rolesList[0].id as number;
 }
 
 // Funciones de autenticación
@@ -271,8 +319,105 @@ export async function createUser(formData: FormData): Promise<CreateUserResult> 
 
     if (authError) {
       console.error('❌ createUser: Error creando usuario en Supabase Auth:', authError.message);
-      console.error('❌ createUser: Código de error:', authError.status);
-      return { success: false, error: `Error de autenticación: ${authError.message}` };
+      console.error('❌ createUser: Código de error:', (authError as any).status || (authError as any).code);
+
+      const msg = (authError as any).message || '';
+      const alreadyExists = /already been registered|already registered|User already registered/i.test(msg);
+
+      if (!alreadyExists) {
+        return { success: false, error: `Error de autenticación: ${msg}` };
+      }
+
+      // Caso: el correo ya existe en Auth. Intentar vincular/crear perfil en tabla pública.
+      console.log('ℹ️ createUser: Email ya registrado en Auth. Intentando obtener ID y crear/actualizar perfil público...');
+      let authUser: any = null;
+      try {
+        // Buscar usuario por email listando usuarios (requiere Service Role)
+        const pageSize = 1000;
+        let page = 1;
+        while (!authUser) {
+          const { data: listed, error: listErr } = await supabaseClient.auth.admin.listUsers({ page, perPage: pageSize });
+          if (listErr) {
+            console.error('❌ createUser: Error listando usuarios para encontrar email:', listErr);
+            break;
+          }
+          const found = listed?.users?.find((u: any) => (u.email || '').toLowerCase() === email.toLowerCase());
+          if (found) {
+            authUser = found;
+            break;
+          }
+          if (!listed || listed.users?.length < pageSize) break; // fin
+          page += 1;
+        }
+      } catch (e) {
+        console.error('❌ createUser: Excepción al buscar usuario por email:', e);
+      }
+
+      if (!authUser) {
+        return { success: false, error: 'El correo ya está registrado en autenticación. Usa la opción de editar usuario.' };
+      }
+
+      // Continuar flujo como si hubiéramos creado el usuario en Auth
+      const existingUserId = authUser.id;
+
+      // 5. Obtener el ID del rol desde la tabla 'Role'
+      console.log('🔍 createUser: Buscando rol (email existente):', roleName);
+      // Resolver rol de forma robusta (maneja duplicados o ausencia)
+      let roleId: number | null = null;
+      const maybe = await supabaseClient
+        .from('Role')
+        .select('id')
+        .eq('roleName', roleName)
+        .maybeSingle();
+
+      if (maybe.error && maybe.error.code !== 'PGRST116') {
+        return { success: false, error: `Error obteniendo rol: ${maybe.error.message}` };
+      }
+      if (maybe.data && (maybe.data as any).id) {
+        roleId = (maybe.data as any).id as number;
+      } else {
+        const { data: rolesList, error: rolesListErr } = await supabaseClient
+          .from('Role')
+          .select('id')
+          .eq('roleName', roleName)
+          .order('id', { ascending: true })
+          .limit(1);
+        if (rolesListErr) {
+          return { success: false, error: `Error obteniendo rol: ${rolesListErr.message}` };
+        }
+        if (!rolesList || rolesList.length === 0) {
+          return { success: false, error: `El rol "${roleName}" no existe en el sistema.` };
+        }
+        roleId = rolesList[0].id as number;
+      }
+
+      // 6. Upsert del perfil en la tabla pública 'User'
+      console.log('👤 createUser: Upsert perfil en tabla User (email existente)...');
+      const userProfileData = {
+        id: existingUserId,
+        name: `${firstName} ${lastName}`,
+        username: (formData.get('username') as string) || email,
+        email: email,
+        roleId: roleId,
+        department: department,
+        isCashier: isCashier,
+        isActive: true,
+      } as any;
+
+      const { data: upsertUser, error: upsertError } = await supabaseClient
+        .from('User')
+        .upsert(userProfileData, { onConflict: 'id' })
+        .select('id')
+        .single();
+
+      if (upsertError) {
+        console.error('❌ createUser: Error en upsert de perfil:', upsertError);
+        return { success: false, error: `Error al crear/actualizar perfil: ${upsertError.message}` };
+      }
+
+      console.log('✅ createUser: Perfil actualizado/creado para email existente. ID:', upsertUser?.id || existingUserId);
+      revalidatePath('/dashboard/configuration/users');
+      return { success: true, userId: upsertUser?.id || existingUserId };
     }
     
     if (!authData?.user) {
@@ -285,27 +430,19 @@ export async function createUser(formData: FormData): Promise<CreateUserResult> 
     
     // 5. Obtener el ID del rol desde la tabla 'Role'
     console.log('🔍 createUser: Buscando rol:', roleName);
-    const { data: roleData, error: roleError } = await supabaseClient
-      .from('Role')
-      .select('id')
-      .eq('roleName', roleName)
-      .single();
-
-    if (roleError) {
-      console.error('❌ createUser: Error obteniendo rol:', roleError.message);
+    let roleId: number | null = null;
+    try {
+      roleId = await resolveRoleId(supabaseClient, roleName);
+    } catch (e: any) {
       // Si falla, borramos el usuario de Auth para evitar inconsistencias
       await supabaseClient.auth.admin.deleteUser(authUser.id);
-      return { success: false, error: `Error obteniendo rol: ${roleError.message}` };
+      return { success: false, error: `Error obteniendo rol: ${e.message || e}` };
     }
-    
-    if (!roleData) {
-      console.error('❌ createUser: Rol no encontrado:', roleName);
-      // Si falla, borramos el usuario de Auth para evitar inconsistencias
+    if (!roleId) {
       await supabaseClient.auth.admin.deleteUser(authUser.id);
-      return { success: false, error: `El rol "${roleName}" no existe en el sistema.` };
+      return { success: false, error: `El rol \"${roleName}\" no existe en el sistema.` };
     }
-
-    console.log('✅ createUser: Rol encontrado con ID:', roleData.id);
+    console.log('✅ createUser: Rol encontrado con ID:', roleId);
 
     // 6. Crear el perfil en la tabla pública 'User'
     console.log('👤 createUser: Creando perfil en tabla User...');
@@ -314,7 +451,7 @@ export async function createUser(formData: FormData): Promise<CreateUserResult> 
       name: `${firstName} ${lastName}`,
       username: (formData.get('username') as string) || email,
       email: email,
-      roleId: roleData.id,
+      roleId: roleId,
       department: department,
       isCashier: isCashier,
       isActive: true,
@@ -372,14 +509,32 @@ export async function updateUser(userId: string, formData: FormData): Promise<Cr
     const supabaseClient = await getSupabaseServiceClient();
     
     // Obtener el ID del rol
-    const { data: roleData, error: roleError } = await supabaseClient
+    // Resolver rol de forma robusta también en update
+    let roleId: number | null = null;
+    const maybe = await supabaseClient
+      .from('Role')
+      .select('id')
+      .eq('roleName', roleName)
+      .maybeSingle();
+    if (maybe.error && maybe.error.code !== 'PGRST116') {
+      return { success: false, error: `Error obteniendo rol: ${maybe.error.message}` };
+    }
+    if (maybe.data && (maybe.data as any).id) {
+      roleId = (maybe.data as any).id as number;
+    } else {
+      const { data: rolesList, error: rolesListErr } = await supabaseClient
         .from('Role')
         .select('id')
         .eq('roleName', roleName)
-        .single();
-    
-    if (roleError || !roleData) {
+        .order('id', { ascending: true })
+        .limit(1);
+      if (rolesListErr) {
+        return { success: false, error: `Error obteniendo rol: ${rolesListErr.message}` };
+      }
+      if (!rolesList || rolesList.length === 0) {
         return { success: false, error: `El rol "${roleName}" no es válido.` };
+      }
+      roleId = rolesList[0].id as number;
     }
 
     // Actualizar perfil en tabla 'User'
@@ -388,7 +543,7 @@ export async function updateUser(userId: string, formData: FormData): Promise<Cr
       .update({
         name: `${firstName} ${lastName}`,
         email: email,
-        roleId: roleData.id,
+        roleId: roleId,
         department: department,
         isCashier: isCashier,
         isActive: isActive,

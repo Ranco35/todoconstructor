@@ -241,15 +241,18 @@ export async function getCurrentUser(): Promise<UserData | null> {
 
 // Funciones adicionales básicas (stubs temporales)
 export async function createUser(formData: FormData) {
-  return { success: false, error: 'Función no implementada temporalmente' };
+  const { createUser: impl } = await import('./auth-actions-backup');
+  return impl(formData);
 }
 
 export async function updateUser(id: string, formData: FormData) {
-  return { success: false, error: 'Función no implementada temporalmente' };
+  const { updateUser: impl } = await import('./auth-actions-backup');
+  return impl(id, formData);
 }
 
 export async function deleteUser(id: string) {
-  return { success: false, error: 'Función no implementada temporalmente' };
+  const { deleteUser: impl } = await import('./auth-actions-backup');
+  return impl(id);
 }
 
 export async function getAllUsers(): Promise<UserData[]> {
