@@ -1,7 +1,7 @@
 "use server";
 import { createServerClient } from '@supabase/ssr';
 import { cookies } from 'next/headers';
-import { PaginationParams } from '@/interface/actions';
+// import { PaginationParams } from '@/interface/actions';
 import { revalidatePath } from 'next/cache';
 import { mapProductsDBToFrontend, ProductDB } from '@/lib/product-mapper';
 import { getSupabaseClient } from '@/lib/supabase-server';
@@ -93,23 +93,31 @@ export async function getProducts(params: PaginationParams) {
     const to = from + currentPageSize - 1;
 
     // Construir consulta base con bodegas asociadas
+    // Evitar expandir relaciones (Category/Supplier) si no hay FKs
     let query = supabase
       .from('Product')
       .select(`
-        *,
-        Category (*),
-        Supplier (*),
+        id,
+        name,
+        sku,
+        description,
+        unit,
+        saleprice,
+        costprice,
+        vat,
+        isPOSEnabled,
+        isForSale,
+        salesunitid,
+        purchaseunitid,
+        categoryid,
+        supplierid,
         Warehouse_Products:Warehouse_Product${warehouseId ? '!inner' : ''} (
           id,
           quantity,
           "warehouseId",
           "productId",
           "minStock",
-          "maxStock",
-          Warehouse (
-            id,
-            name
-          )
+          "maxStock"
         )
       `);
 
@@ -177,17 +185,26 @@ export async function getProducts(params: PaginationParams) {
     // Obtener productos con paginación
     const { data: products, error, count } = await query
       .range(from, to)
-      .order('id', { ascending: false });
+      .order('name', { ascending: true });
 
     if (error) {
-      console.error('❌ Error en consulta de productos:', error);
-      console.error('❌ Detalles del error:', {
-        message: error.message,
-        details: error.details,
-        hint: error.hint,
-        code: error.code
-      });
-      throw new Error(`Error obteniendo productos: ${error.message}`);
+      // Algunos entornos pueden devolver un objeto de error vacío {}
+      const err: any = error as any;
+      const hasDetails = !!(err && (err.message || err.details || err.hint || err.code));
+      if (hasDetails) {
+        console.error('❌ Error en consulta de productos:', err);
+        console.error('❌ Detalles del error:', {
+          message: err.message,
+          details: err.details,
+          hint: err.hint,
+          code: err.code
+        });
+        throw new Error(`Error obteniendo productos: ${err.message || err.code || 'desconocido'}`);
+      } else {
+        // Tratar error vacío como "sin datos" para no romper la página
+        console.warn('⚠️ Supabase devolvió un error vacío en listado de productos; devolviendo lista vacía.');
+        return { products: [], totalCount: 0 };
+      }
     }
 
     // Obtener conteo total si no se proporcionó

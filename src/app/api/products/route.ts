@@ -26,9 +26,7 @@ export async function GET(request: NextRequest) {
         description,
         brand,
         categoryid,
-        supplierid,
-        Category(name),
-        Supplier(name)
+        supplierid
       `)
       .order('name');
 
@@ -45,8 +43,7 @@ export async function GET(request: NextRequest) {
         warehouseId,
         quantity,
         minStock,
-        maxStock,
-        Warehouse(id, name)
+        maxStock
       `);
 
     if (warehouseError) {
@@ -62,7 +59,6 @@ export async function GET(request: NextRequest) {
       }
       warehouseMap.get(assignment.productId).push({
         warehouseId: assignment.warehouseId,
-        warehouseName: assignment.Warehouse?.name,
         quantity: assignment.quantity,
         minStock: assignment.minStock,
         maxStock: assignment.maxStock
@@ -80,7 +76,6 @@ export async function GET(request: NextRequest) {
       categoryId: product.categoryid,
       categoryName: product.Category?.name,
       supplierId: product.supplierid,
-      supplierName: product.Supplier?.name,
       warehouses: warehouseMap.get(product.id) || []
     }));
 

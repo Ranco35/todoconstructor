@@ -1,17 +1,12 @@
 "use server";
-import { createServerClient } from '@supabase/ssr';
-import { cookies } from 'next/headers';
+import { getSupabaseServerClient } from '@/lib/supabase-server';
 import { ProductFormData, ProductType } from '@/types/product';
 import { generateIntelligentSKU, ensureUniqueSKU } from '@/actions/products/sku';
 import { revalidatePath } from 'next/cache';
 
+// Usar el cliente centralizado con getAll/setAll cookies para evitar 429 y warnings
 async function getSupabaseClient() {
-  const cookieStore = await cookies();
-  return createServerClient(
-    process.env.NEXT_PUBLIC_SUPABASE_URL!,
-    process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
-    { cookies: { get: (name) => cookieStore.get(name)?.value } }
-  );
+  return await getSupabaseServerClient();
 }
 
 // Función auxiliar para convertir FormData a objeto
@@ -184,6 +179,8 @@ export async function createProduct(data: ProductFormData | FormData) {
       ...baseData,
       type: productData.type,
     };
+    // Mantener datos de stock fuera del objeto insertado para evitar columnas inexistentes
+    let pendingStockData: any | null = null;
 
     // Generar SKU automáticamente si no se proporciona
     let finalSku = productData.sku;
@@ -247,8 +244,8 @@ export async function createProduct(data: ProductFormData | FormData) {
           
           console.log('🔍 DEBUG - Payload de Warehouse_Product:', warehouseProductPayload);
           
-          // Guardar los datos de stock para asignarlos después de crear el producto
-          finalProductData._stockData = warehouseProductPayload;
+          // Guardar los datos de stock para asignarlos después de crear el producto (fuera del insert)
+          pendingStockData = warehouseProductPayload;
         }
         break;
 
@@ -303,8 +300,8 @@ export async function createProduct(data: ProductFormData | FormData) {
           
           console.log('🔍 DEBUG - Payload de Warehouse_Product inventario:', warehouseProductPayload);
           
-          // Guardar los datos de stock para asignarlos después de crear el producto
-          finalProductData._stockData = warehouseProductPayload;
+          // Guardar los datos de stock para asignarlos después de crear el producto (fuera del insert)
+          pendingStockData = warehouseProductPayload;
         }
         break;
 
@@ -376,10 +373,15 @@ export async function createProduct(data: ProductFormData | FormData) {
 
     if (productError) {
       console.error('Error detallado al crear producto:', productError);
-      
+
+      // Normalizar mensaje evitando undefined
+      const rawMessage = (productError as any)?.message
+        ?? (productError as any)?.error
+        ?? (productError as any)?.details
+        ?? '';
+      let errorMessage = typeof rawMessage === 'string' ? rawMessage : JSON.stringify(productError);
+
       // Traducir errores comunes de Supabase/PostgreSQL a español
-      let errorMessage = productError.message;
-      
       if (errorMessage.includes('duplicate key value violates unique constraint')) {
         if (errorMessage.includes('sku')) {
           errorMessage = 'Ya existe un producto con este SKU. Por favor, genera un SKU diferente.';
@@ -402,8 +404,10 @@ export async function createProduct(data: ProductFormData | FormData) {
         errorMessage = 'No tienes permisos para crear productos. Contacta al administrador del sistema.';
       } else if (errorMessage.includes('column') && errorMessage.includes('does not exist')) {
         errorMessage = 'Error interno del sistema. Contacta al administrador técnico.';
+      } else if (errorMessage.trim() === '') {
+        errorMessage = 'Ha ocurrido un error al crear el producto (sin detalle).';
       }
-      
+
       return { success: false, error: `Error al crear el producto: ${errorMessage}` };
     }
 
@@ -429,11 +433,11 @@ export async function createProduct(data: ProductFormData | FormData) {
     }
 
     // Crear registro en Warehouse_Product si hay datos de stock
-    if (finalProductData._stockData && productId) {
+    if (pendingStockData && productId) {
       console.log('🔍 DEBUG - Creando Warehouse_Product con productId:', productId);
       
       const warehouseProductPayload = {
-        ...finalProductData._stockData,
+        ...pendingStockData,
         productId: productId
       };
       
@@ -500,18 +504,22 @@ export async function createProduct(data: ProductFormData | FormData) {
       message: `✅ Producto "${createdProduct.name}" creado exitosamente con SKU: ${createdProduct.sku}`
     };
 
-    // Sincronizar productos POS automáticamente
-    console.log('🔄 Sincronizando productos POS...');
-    try {
-      const { syncPOSProducts } = await import('@/actions/pos/pos-actions');
-      const syncResult = await syncPOSProducts();
-      if (syncResult.success) {
-        console.log('✅ Sincronización POS completada:', syncResult.data?.message);
-      } else {
-        console.warn('⚠️ Error en sincronización POS:', syncResult.error);
+    // Sincronizar productos POS solo si el nuevo producto está habilitado para POS
+    if (finalProductData.isPOSEnabled === true) {
+      console.log('🔄 Sincronizando productos POS...');
+      try {
+        const { syncPOSProducts } = await import('@/actions/pos/pos-actions');
+        const syncResult = await syncPOSProducts();
+        if (syncResult.success) {
+          console.log('✅ Sincronización POS completada:', syncResult.data?.message);
+        } else {
+          console.warn('⚠️ Error en sincronización POS:', syncResult.error);
+        }
+      } catch (syncError) {
+        console.error('❌ Error importando o ejecutando syncPOSProducts:', syncError);
       }
-    } catch (syncError) {
-      console.error('❌ Error importando o ejecutando syncPOSProducts:', syncError);
+    } else {
+      console.log('⏭️ Sincronización POS omitida: producto no habilitado para POS');
     }
 
     return result;

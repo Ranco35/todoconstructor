@@ -74,6 +74,11 @@ export async function getAllWarehouses(): Promise<Warehouse[]> {
       .order('name');
     
     if (error) {
+      // Si la tabla no existe aún, devolver lista vacía silenciosamente
+      if ((error as any)?.code === '42P01' || /does not exist/i.test((error as any)?.message || '')) {
+        console.warn('⚠️ Tabla Warehouse no existe todavía. Retornando lista vacía.');
+        return [];
+      }
       console.error('Error obteniendo bodegas:', error);
       throw new Error(`Error obteniendo bodegas: ${error.message}`);
     }
@@ -118,8 +123,16 @@ export async function getWarehouses(params?: { page?: number; pageSize?: number 
       .order('name');
 
     if (error) {
+      const err: any = error as any;
+      const code = err?.code;
+      const msg = err?.message || '';
+      const isMissing = code === '42P01' || /does not exist/i.test(msg) || (!code && !msg);
+      if (isMissing) {
+        console.warn('⚠️ Tabla Warehouse no disponible o error vacío; devolviendo lista vacía.');
+        return { data: [], success: true, totalCount: 0 };
+      }
       console.error('Error obteniendo bodegas:', error);
-      throw new Error(`Error obteniendo bodegas: ${error.message}`);
+      throw new Error(`Error obteniendo bodegas: ${err?.message || err?.code || 'desconocido'}`);
     }
 
     // Para cada bodega, obtener conteos de productos, inventarios y bodegas hijas

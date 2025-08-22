@@ -62,8 +62,9 @@ export default function CategorySelector({
 
   // Función para crear la estructura jerárquica
   const createHierarchicalOptions = () => {
-    const rootCategories = categories.filter(cat => !cat.parentId);
-    const childCategories = categories.filter(cat => cat.parentId);
+    const safeCategories: Category[] = Array.isArray(categories) ? categories : [];
+    const rootCategories = safeCategories.filter(cat => !cat.parentId);
+    const childCategories = safeCategories.filter(cat => cat.parentId);
     
     const options: JSX.Element[] = [];
     

@@ -98,7 +98,7 @@ export default function EmailAnalysisPopup({
       ]);
 
       // Procesar análisis de correos
-      if (analysisResult.success && analysisResult.data) {
+      if (analysisResult && (analysisResult as any).success && (analysisResult as any).data) {
         console.log('✅ EmailAnalysisPopup - datos de análisis recibidos:', analysisResult.data);
         
         const mappedData = analysisResult.data.map((item: any) => {
@@ -181,13 +181,13 @@ export default function EmailAnalysisPopup({
       }
 
       // Procesar información de sincronización
-      if (syncResult.success && syncResult.data) {
+      if (syncResult && (syncResult as any).success && (syncResult as any).data) {
         setSyncInfo(syncResult.data);
         console.log('✅ Información de sincronización cargada:', syncResult.data);
       }
 
       // Procesar reservas que llegan hoy
-      if (arrivalsResult.success && arrivalsResult.data) {
+      if (arrivalsResult && (arrivalsResult as any).success && (arrivalsResult as any).data) {
         const mappedArrivals = arrivalsResult.data.map(item => ({
           id: item.id,
           client_nombre: item.client_nombre || 'Sin nombre',
@@ -201,7 +201,7 @@ export default function EmailAnalysisPopup({
       }
 
       // Procesar reservas que se van hoy
-      if (departuresResult.success && departuresResult.data) {
+      if (departuresResult && (departuresResult as any).success && (departuresResult as any).data) {
         const mappedDepartures = departuresResult.data.map(item => ({
           id: item.id,
           client_nombre: item.client_nombre || 'Sin nombre',
