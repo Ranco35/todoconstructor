@@ -153,8 +153,8 @@ export default function ProductFormModern({ initialData, action, isEdit = false 
       supplierId: initialData?.supplierId || undefined,
       supplierCode: initialData?.supplierCode || '',
       unit: initialData?.unit || 'Pieza',
-      salesUnitId: initialData?.salesUnitId || undefined, // Unidad de venta
-      purchaseUnitId: initialData?.purchaseUnitId || undefined, // Unidad de compra
+      salesUnitId: initialData?.salesUnitId || 1, // Unidad de venta - por defecto 1 (Unidad)
+      purchaseUnitId: initialData?.purchaseUnitId || 1, // Unidad de compra - por defecto 1 (Unidad)
       isPOSEnabled: initialData?.isPOSEnabled || false,
       isForSale: initialData?.isForSale !== false, // Por defecto true
       posCategoryId: initialData?.posCategoryId || undefined,
@@ -323,10 +323,29 @@ export default function ProductFormModern({ initialData, action, isEdit = false 
 
   const handleInputChange = (field: string, value: any) => {
     console.log(`🔍 DEBUG - handleInputChange: ${field} =`, value);
-    setFormData(prev => ({
-      ...prev,
-      [field]: value
-    }));
+    
+    // Si se cambia la unidad de venta, actualizar también la unidad de compra si no se ha seleccionado una específica
+    if (field === 'salesUnitId') {
+      setFormData(prev => {
+        const newData = {
+          ...prev,
+          [field]: value
+        };
+        
+        // Si purchaseUnitId no se ha cambiado específicamente (es el valor por defecto), actualizarlo también
+        if (prev.purchaseUnitId === 1 || prev.purchaseUnitId === undefined) {
+          newData.purchaseUnitId = value;
+          console.log('🔍 DEBUG - Actualizando purchaseUnitId automáticamente a:', value);
+        }
+        
+        return newData;
+      });
+    } else {
+      setFormData(prev => ({
+        ...prev,
+        [field]: value
+      }));
+    }
   };
 
   // Manejar cambios en componentes del combo
@@ -456,7 +475,10 @@ export default function ProductFormModern({ initialData, action, isEdit = false 
       stock: formData.stock ? {
         ...formData.stock,
         current: undefined // NO enviar el stock actual al servidor
-      } : undefined
+      } : undefined,
+      // Corregir nombres de campos para que coincidan con la base de datos
+      salesunitid: formData.salesUnitId,
+      purchaseunitid: formData.purchaseUnitId
     };
     console.log('🔍 DEBUG - Neto a guardar:', neto, 'Final con IVA:', finalPriceInput);
     console.log('🔍 DEBUG - FormData a enviar:', {

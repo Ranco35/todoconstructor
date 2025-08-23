@@ -141,12 +141,16 @@ export async function createProduct(data: ProductFormData | FormData) {
         isForSaleType: typeof productData.isForSale
       });
       
-      // Solo requerir precio de venta si el producto es para venta
-      if (productData.isForSale === true) { // Solo si está explícitamente marcado como para venta
-        console.log('🔍 DEBUG - Producto es para venta, validando precio');
-        if (!productData.salePrice || productData.salePrice <= 0) {
-          throw new Error('El precio de venta es obligatorio y debe ser mayor a cero para este tipo de producto.');
+      // Solo requerir precio de venta si el producto es para venta Y tiene un precio definido
+      if (productData.isForSale === true && productData.salePrice !== undefined && productData.salePrice !== null) {
+        console.log('🔍 DEBUG - Producto es para venta con precio definido, validando');
+        if (productData.salePrice <= 0) {
+          throw new Error('El precio de venta debe ser mayor a cero para este tipo de producto.');
         }
+      } else if (productData.isForSale === true && (productData.salePrice === undefined || productData.salePrice === null || productData.salePrice === 0)) {
+        console.log('🔍 DEBUG - Producto marcado para venta pero sin precio, estableciendo precio en 0');
+        // Si está marcado para venta pero no tiene precio, establecer en 0
+        productData.salePrice = 0;
       } else {
         console.log('🔍 DEBUG - Producto NO es para venta, no requiere precio');
       }
