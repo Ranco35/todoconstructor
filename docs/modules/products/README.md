@@ -57,6 +57,15 @@ Sistema completo de gestión de productos para Hotel/Spa Admintermas con funcion
 - **Solución**: `useRouter().refresh()` con delay
 - **Estado**: ✅ Experiencia fluida sin acciones manuales
 
+### 🔥 Duplicación de Productos en Importación - RESUELTO ✅
+- **Problema**: Productos duplicados durante importación desde Excel
+- **Causa**: Búsqueda case-sensitive de SKUs y falta de fallback por nombre
+- **Solución**: Búsqueda case-insensitive + búsqueda por nombre + preservación de SKUs originales
+- **Estado**: ✅ Sin duplicación, actualización correcta de productos existentes
+
+**Archivos afectados**:
+- `src/actions/products/import.ts` - Lógica de búsqueda y actualización mejorada
+
 ## Archivos Principales
 
 ### Componentes
