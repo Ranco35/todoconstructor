@@ -59,14 +59,6 @@ export async function getProductsForExport(filters?: { categoryId?: number; sear
       .from('Product')
       .select(`
         *,
-        Category (
-          id,
-          name
-        ),
-        Supplier (
-          id,
-          name
-        ),
         Warehouse_Products:Warehouse_Product (
           id,
           warehouseId,
@@ -102,6 +94,8 @@ export async function getProductsForExport(filters?: { categoryId?: number; sear
     const productIds = (products || []).map(p => p.id);
     const posProductsMap = new Map<number, { categoryId: number; categoryName: string }>();
     
+    // Comentado temporalmente - tabla POSProduct no existe
+    /*
     if (productIds.length > 0) {
       const { data: posProducts } = await supabase
         .from('POSProduct')
@@ -125,6 +119,7 @@ export async function getProductsForExport(filters?: { categoryId?: number; sear
         }
       });
     }
+    */
     
     // 🔧 AGREGADO: Obtener nombres de unidades de medida
     const { data: unitMeasures } = await supabase
@@ -163,9 +158,9 @@ export async function getProductsForExport(filters?: { categoryId?: number; sear
         salePrice: product.saleprice,
         vat: product.vat,
         barcode: product.barcode,
-        categoryName: product.Category?.name || null,
+        categoryName: null, // No hay relación Category en la BD
         categoryId: product.categoryid || null,
-        supplierName: product.Supplier?.name || null,
+        supplierName: null, // No hay relación Supplier en la BD
         supplierId: product.supplierid || null,
         supplierCode: product.supplierCode || '',
         // Stock info - calculado real
@@ -211,14 +206,6 @@ export async function getProductsByIds(ids: number[]): Promise<ProductExportData
       .from('Product')
       .select(`
         *,
-        Category (
-          id,
-          name
-        ),
-        Supplier (
-          id,
-          name
-        ),
         Warehouse_Products:Warehouse_Product (
           id,
           warehouseId,
@@ -238,6 +225,8 @@ export async function getProductsByIds(ids: number[]): Promise<ProductExportData
     }
     // Obtener info POS igual que en getProductsForExport
     const posProductsMap = new Map<number, { categoryId: number; categoryName: string }>();
+    // Comentado temporalmente - tabla POSProduct no existe
+    /*
     if (products && products.length > 0) {
       const { data: posProducts } = await supabase
         .from('POSProduct')
@@ -260,6 +249,7 @@ export async function getProductsByIds(ids: number[]): Promise<ProductExportData
         }
       });
     }
+    */
     return (products || []).map(product => {
       const warehouseProducts = product.Warehouse_Products || [];
       const totalStock = warehouseProducts.reduce((sum, wp) => sum + (wp.quantity || 0), 0);
@@ -276,9 +266,9 @@ export async function getProductsByIds(ids: number[]): Promise<ProductExportData
         salePrice: product.saleprice,
         vat: product.vat,
         barcode: product.barcode,
-        categoryName: product.Category?.name || null,
+        categoryName: null, // No hay relación Category en la BD
         categoryId: product.categoryid || null,
-        supplierName: product.Supplier?.name || null,
+        supplierName: null, // No hay relación Supplier en la BD
         supplierId: product.supplierid || null,
         supplierCode: product.supplierCode || '',
         currentStock: totalStock,

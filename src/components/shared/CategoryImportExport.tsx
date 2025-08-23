@@ -64,7 +64,7 @@ export default function CategoryImportExport({ onImportComplete }: CategoryImpor
       setImportResult(null);
 
       const arrayBuffer = await file.arrayBuffer();
-      const categories = parseCategoriesExcel(arrayBuffer);
+      const categories = await parseCategoriesExcel(arrayBuffer);
 
       if (categories.length === 0) {
         alert('No se encontraron categorías válidas en el archivo o el archivo está vacío. Revise la plantilla de ejemplo.');

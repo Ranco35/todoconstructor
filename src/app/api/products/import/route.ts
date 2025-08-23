@@ -43,7 +43,7 @@ export async function POST(request: NextRequest) {
     
     try {
       if (isExcel) {
-        products = parseExcel(buffer);
+        products = await parseExcel(buffer);
       } else {
         const csvText = new TextDecoder().decode(uint8Array);
         products = parseCSV(csvText);

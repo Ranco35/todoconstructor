@@ -176,20 +176,42 @@ export async function importProducts(products: ProductImportData[], confirmDelet
           if (foundById) {
             product = foundById;
             searchMethod = 'id';
+            console.log(`🔍 [IMPORT] Producto encontrado por ID ${productData.id}: ${foundById.name}`);
+          } else {
+            console.log(`🔍 [IMPORT] No se encontró producto con ID ${productData.id}`);
           }
         }
         if (!product && finalSku) {
-          // Buscar por SKU (normalizado)
+          // Buscar por SKU (case-insensitive)
           const { data: foundBySku, error: errorBySku } = await supabase
             .from('Product')
             .select('*')
-            .eq('sku', finalSku)
+            .ilike('sku', finalSku)
             .single();
           if (foundBySku) {
             product = foundBySku;
             searchMethod = 'sku';
+            console.log(`🔍 [IMPORT] Producto encontrado por SKU ${finalSku}: ${foundBySku.name} (SKU en BD: ${foundBySku.sku})`);
+          } else {
+            console.log(`🔍 [IMPORT] No se encontró producto con SKU ${finalSku}`);
           }
         }
+        
+        // 3. Búsqueda adicional por nombre si no se encontró por ID o SKU
+        if (!product && productName) {
+          const { data: foundByName, error: errorByName } = await supabase
+            .from('Product')
+            .select('*')
+            .ilike('name', productName.trim())
+            .single();
+          if (foundByName) {
+            product = foundByName;
+            searchMethod = 'name';
+            console.log(`🔍 [IMPORT] Producto encontrado por nombre "${productName}": ${foundByName.name} (SKU: ${foundByName.sku})`);
+          }
+        }
+        
+        console.log(`🔍 [IMPORT] Producto: ${productName} | SKU: ${finalSku} | Encontrado: ${product ? 'SÍ' : 'NO'} | Método: ${searchMethod}`);
 
         // 3. Preparar payload y guardar (update o create)
         // Normalizar unidades desde camelCase/snake_case
@@ -207,15 +229,18 @@ export async function importProducts(products: ProductImportData[], confirmDelet
           costprice: productData.costPrice || null,
           saleprice: productData.salePrice || null,
           vat: productData.vat || null,
-          barcode: productData.barcode ? String(productData.barcode).trim() || null : null,
+          // Comentado temporalmente - columna barcode no existe en la BD
+          // barcode: productData.barcode ? String(productData.barcode).trim() || null : null,
           // AGREGADO: Incluir contador de servicios vendidos
-          servicesSold: productData.servicesSold || null,
+          // Comentado temporalmente - columna servicesSold no existe en la BD
+          // servicesSold: productData.servicesSold || null,
           // AGREGADO: Incluir campo POS
           isPOSEnabled: productData.isPOSEnabled || false,
           // 🆕 NUEVO: Incluir campo para venta
           isForSale: productData.isForSale ?? true, // Por defecto es para venta
           // AGREGADO: Incluir unidades de medida
-          unit: productData.unit || 'UND',
+          // Comentado temporalmente - columna unit no existe en la BD
+          // unit: productData.unit || 'UND',
           // 🔧 AGREGADO: Incluir IDs de unidades específicas (acepta camelCase y snake_case)
           salesunitid: normalizedSalesUnitId,
           purchaseunitid: normalizedPurchaseUnitId,
@@ -225,10 +250,14 @@ export async function importProducts(products: ProductImportData[], confirmDelet
 
         // 3. Crear o actualizar
         if (product) {
-          // Actualizar producto existente
+          // Actualizar producto existente - mantener el SKU original de la BD
+          const updatePayload = { ...productPayload };
+          if (product.sku) {
+            updatePayload.sku = product.sku; // Mantener SKU original
+          }
           const { error: updateError } = await supabase
             .from('Product')
-            .update(productPayload)
+            .update(updatePayload)
             .eq('id', product.id);
           if (updateError) {
             result.errors.push(`Fila ${rowNumber}: Error al actualizar producto por ${searchMethod}: ${updateError.message}`);

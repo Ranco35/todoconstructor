@@ -213,23 +213,17 @@ export async function createProduct(data: ProductFormData | FormData) {
     switch (productData.type) {
       case ProductType.CONSUMIBLE:
       case ProductType.ALMACENABLE:
-        // Campos para Consumible y Almacenable
+        // Campos para Consumible y Almacenable - solo usar columnas que existen en la BD
         if (productData.brand) finalProductData.brand = productData.brand;
-        if (productData.unit) finalProductData.unit = productData.unit;
         if (productData.supplierId) finalProductData.supplierid = productData.supplierId;
         if (productData.supplierCode) finalProductData.supplierCode = productData.supplierCode;
-        if (productData.barcode) finalProductData.barcode = productData.barcode;
+        // Comentado temporalmente - columna barcode no reconocida por Supabase
+        // if (productData.barcode) finalProductData.barcode = productData.barcode;
         if (productData.costPrice) finalProductData.costprice = productData.costPrice;
         if (productData.salePrice) finalProductData.saleprice = productData.salePrice;
         if (productData.vat) finalProductData.vat = productData.vat;
-        if (productData.storageid) finalProductData.storageid = productData.storageid;
-        if (productData.acquisitionid) finalProductData.acquisitionid = productData.acquisitionid;
-        if (productData.stateid) finalProductData.stateid = productData.stateid;
-        if (productData.invoicepolicyid) finalProductData.invoicepolicyid = productData.invoicepolicyid;
-        if (productData.salelinewarnid) finalProductData.salelinewarnid = productData.salelinewarnid;
         if (productData.isPOSEnabled !== undefined) finalProductData.isPOSEnabled = productData.isPOSEnabled;
         if (productData.isForSale !== undefined) finalProductData.isForSale = productData.isForSale;
-        if (productData.posCategoryId) finalProductData.posCategoryId = productData.posCategoryId;
         if (productData.salesunitid) finalProductData.salesunitid = productData.salesunitid;
         if (productData.purchaseunitid) finalProductData.purchaseunitid = productData.purchaseunitid;
         
@@ -254,20 +248,16 @@ export async function createProduct(data: ProductFormData | FormData) {
         break;
 
       case ProductType.INVENTARIO:
-        // Campos para Inventario
+        // Campos para Inventario - solo usar columnas que existen en la BD
         if (productData.brand) finalProductData.brand = productData.brand;
-        if (productData.unit) finalProductData.unit = productData.unit;
-        if (productData.barcode) finalProductData.barcode = productData.barcode;
+        // Comentado temporalmente - columna barcode no reconocida por Supabase
+        // if (productData.barcode) finalProductData.barcode = productData.barcode;
         if (productData.costPrice) finalProductData.costprice = productData.costPrice;
         if (productData.vat) finalProductData.vat = productData.vat;
         if (productData.supplierId) finalProductData.supplierid = productData.supplierId;
         if (productData.supplierCode) finalProductData.supplierCode = productData.supplierCode;
-        if (productData.storageid) finalProductData.storageid = productData.storageid;
-        if (productData.acquisitionid) finalProductData.acquisitionid = productData.acquisitionid;
-        if (productData.stateid) finalProductData.stateid = productData.stateid;
         if (productData.isPOSEnabled !== undefined) finalProductData.isPOSEnabled = productData.isPOSEnabled;
         if (productData.isForSale !== undefined) finalProductData.isForSale = productData.isForSale;
-        if (productData.posCategoryId) finalProductData.posCategoryId = productData.posCategoryId;
         if (productData.salesunitid) finalProductData.salesunitid = productData.salesunitid;
         if (productData.purchaseunitid) finalProductData.purchaseunitid = productData.purchaseunitid;
         

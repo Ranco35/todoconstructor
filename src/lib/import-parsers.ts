@@ -70,8 +70,9 @@ export interface CategoryImportData {
 }
 
 // Función helper para parsear Excel
-export function parseExcel(fileBuffer: ArrayBuffer): ProductImportData[] {
+export async function parseExcel(fileBuffer: ArrayBuffer): Promise<ProductImportData[]> {
   try {
+    const XLSX = await import('xlsx');
     const workbook = XLSX.read(fileBuffer, { type: 'array' });
     // Log hojas detectadas
     console.log('🔍 [PARSER] Hojas detectadas:', workbook.SheetNames);
@@ -174,9 +175,10 @@ export function parseExcel(fileBuffer: ArrayBuffer): ProductImportData[] {
         costPrice: parseFloat(rowData['Precio Costo'] || rowData['P. Costo'] || rowData['Cost Price'] || rowData['costPrice'] || '0') || undefined,
         salePrice: parseFloat(rowData['Precio Venta'] || rowData['P. Venta'] || rowData['Sale Price'] || rowData['salePrice'] || '0') || undefined,
         vat: parseFloat(rowData['IVA (%)'] || rowData['VAT (%)'] || rowData['vat'] || '0') || undefined,
-        barcode: rowData['Código Barras'] !== undefined ? String(rowData['Código Barras']).trim() : 
-                 rowData['Barcode'] !== undefined ? String(rowData['Barcode']).trim() : 
-                 rowData['barcode'] !== undefined ? String(rowData['barcode']).trim() : undefined,
+        // Comentado temporalmente - columna barcode no existe en la BD
+        // barcode: rowData['Código Barras'] !== undefined ? String(rowData['Código Barras']).trim() : 
+        //          rowData['Barcode'] !== undefined ? String(rowData['Barcode']).trim() : 
+        //          rowData['barcode'] !== undefined ? String(rowData['barcode']).trim() : undefined,
         categoryName: rowData['Categoría'] !== undefined ? String(rowData['Categoría']).trim() : 
                       rowData['Category'] !== undefined ? String(rowData['Category']).trim() : 
                       rowData['category'] !== undefined ? String(rowData['category']).trim() : undefined,
@@ -197,7 +199,8 @@ export function parseExcel(fileBuffer: ArrayBuffer): ProductImportData[] {
         currentStock: parseInt(rowData['Stock Actual'] || rowData['Current Stock'] || rowData['currentStock'] || '0') || undefined,
         minStock: parseInt(rowData['Stock Mínimo'] || rowData['Min Stock'] || rowData['minStock'] || '0') || undefined,
         maxStock: parseInt(rowData['Stock Máximo'] || rowData['Max Stock'] || rowData['maxStock'] || '0') || undefined,
-        servicesSold: parseInt(rowData['Servicios Vendidos'] || rowData['Services Sold'] || rowData['servicesSold'] || '0') || undefined,
+        // Comentado temporalmente - columna servicesSold no existe en la BD
+        // servicesSold: parseInt(rowData['Servicios Vendidos'] || rowData['Services Sold'] || rowData['servicesSold'] || '0') || undefined,
         // Campos POS
         isPOSEnabled: rowData['Punto de Venta'] !== undefined ? 
                       (String(rowData['Punto de Venta']).toUpperCase() === 'SI' || 
@@ -241,9 +244,10 @@ export function parseExcel(fileBuffer: ArrayBuffer): ProductImportData[] {
         responsiblePerson: rowData['Responsable'] !== undefined ? String(rowData['Responsable']).trim() : undefined,
         operationalStatus: rowData['Estado Operacional'] !== undefined ? String(rowData['Estado Operacional']).trim() : undefined,
         // Campos de unidades
-        unit: rowData['Unidad'] !== undefined ? String(rowData['Unidad']).trim() : 
-              rowData['Unit'] !== undefined ? String(rowData['Unit']).trim() : 
-              rowData['unit'] !== undefined ? String(rowData['unit']).trim() : 'UND',
+        // Comentado temporalmente - columna unit no existe en la BD
+        // unit: rowData['Unidad'] !== undefined ? String(rowData['Unidad']).trim() : 
+        //       rowData['Unit'] !== undefined ? String(rowData['Unit']).trim() : 
+        //       rowData['unit'] !== undefined ? String(rowData['unit']).trim() : 'UND',
         salesunitid: parseInt(rowData['ID Unidad Venta'] || rowData['Sales Unit ID'] || rowData['salesunitid'] || '1') || 1,
         purchaseunitid: parseInt(rowData['ID Unidad Compra'] || rowData['Purchase Unit ID'] || rowData['purchaseunitid'] || '1') || 1,
         // Campo para venta
@@ -280,8 +284,9 @@ export function parseExcel(fileBuffer: ArrayBuffer): ProductImportData[] {
 }
 
 // Función helper para parsear Excel de Categorías
-export function parseCategoriesExcel(fileBuffer: ArrayBuffer): CategoryImportData[] {
+export async function parseCategoriesExcel(fileBuffer: ArrayBuffer): Promise<CategoryImportData[]> {
   try {
+    const XLSX = await import('xlsx');
     const workbook = XLSX.read(fileBuffer, { type: 'array' });
     
     let worksheetName = workbook.SheetNames[0];
