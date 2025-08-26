@@ -8,6 +8,8 @@ import MovementFilters from '@/components/inventory/MovementFilters'
 import CreateMovementButton from '@/components/inventory/CreateMovementButton'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Badge } from '@/components/ui/badge'
+import Link from 'next/link'
+import { Button } from '@/components/ui/button'
 import { Package, TrendingUp, Activity, Warehouse, ArrowRightLeft, Plus, Minus } from 'lucide-react'
 
 interface MovementsPageProps {
@@ -116,6 +118,13 @@ export default async function MovementsPage({ searchParams }: MovementsPageProps
                   <p className="text-blue-100 text-sm">Mover entre bodegas</p>
                 </div>
                 <div className="text-3xl font-bold">🔄</div>
+              </div>
+              <div className="mt-4">
+                <Link href="/dashboard/inventory/movements/transfers">
+                  <Button variant="secondary" size="sm" className="gap-2">
+                    Ver transferencias
+                  </Button>
+                </Link>
               </div>
             </CardContent>
           </Card>

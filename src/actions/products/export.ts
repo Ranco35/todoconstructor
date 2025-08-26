@@ -361,10 +361,12 @@ export async function generateProductsExcel(
       'ID Unidad Compra': product.purchaseunitid || '',
       'Unidad Compra': product.purchaseUnitName || '' // 🔧 AGREGADO: Nombre de unidad de compra
     };
-    // 3. Agregar columna de stock por cada bodega
+    // 3. Agregar columnas por cada bodega: Stock, Min, Max
     allWarehouses.forEach(whName => {
       const found = (product.Warehouse_Products || []).find(wp => wp.Warehouse?.name === whName);
-      base[`Stock ${whName}`] = found ? found.quantity || 0 : 0;
+      base[`Stock ${whName}`] = found ? (found.quantity ?? 0) : 0;
+      base[`Min ${whName}`] = found ? (found.minStock ?? '') : '';
+      base[`Max ${whName}`] = found ? (found.maxStock ?? '') : '';
     });
     return base;
   });
@@ -402,8 +404,13 @@ export async function generateProductsExcel(
     { wch: 15 },  // ID Unidad Compra
     { wch: 15 },  // Unidad Compra
   ];
-  // Ancho para cada bodega
-  const warehouseWidths = allWarehouses.map(() => ({ wch: 14 }));
+  // Ancho para cada bodega: 3 columnas por bodega (Stock/Min/Max)
+  const warehouseWidths: Array<{ wch: number }> = [];
+  allWarehouses.forEach(() => {
+    warehouseWidths.push({ wch: 16 }); // Stock
+    warehouseWidths.push({ wch: 14 }); // Min
+    warehouseWidths.push({ wch: 14 }); // Max
+  });
   productSheet['!cols'] = [...baseWidths, ...warehouseWidths];
   
   // Agregar hoja al workbook

@@ -1,3 +1,135 @@
+"use server";
+
+import {
+  assignProductToWarehouse,
+  assignProductToMultipleWarehouses,
+  bulkAssignProductsToWarehouse,
+  updateProductStockInWarehouse,
+  removeProductFromWarehouse,
+} from '@/actions/configuration/warehouse-actions';
+
+export async function assignProductToWarehouseAction(formData: FormData) {
+  try {
+    const productId = parseInt(String(formData.get('productId') || ''));
+    const warehouseId = parseInt(String(formData.get('warehouseId') || ''));
+    const quantity = formData.get('quantity') != null ? parseInt(String(formData.get('quantity'))) : 0;
+    const minStock = formData.get('minStock') != null ? parseInt(String(formData.get('minStock'))) : 0;
+    const maxStock = formData.get('maxStock') != null ? parseInt(String(formData.get('maxStock'))) : 100;
+
+    if (!productId || !warehouseId) {
+      return { success: false, error: 'productId y warehouseId son requeridos' };
+    }
+
+    const result = await assignProductToWarehouse(productId, warehouseId, { quantity, minStock, maxStock });
+    return { success: true, message: result.message || 'Producto asignado exitosamente', data: result.data };
+  } catch (error: any) {
+    return { success: false, error: error?.message || 'Error asignando producto a bodega' };
+  }
+}
+
+export async function assignProductToMultipleWarehousesAction(formData: FormData) {
+  try {
+    const productId = parseInt(String(formData.get('productId') || ''));
+    const warehouseIds = formData.getAll('warehouseIds').map(v => parseInt(String(v)));
+    const quantities = formData.getAll('quantities').map(v => parseInt(String(v)));
+    const minStocks = formData.getAll('minStocks').map(v => parseInt(String(v)));
+    const maxStocks = formData.getAll('maxStocks').map(v => parseInt(String(v)));
+
+    if (!productId || warehouseIds.length === 0) {
+      return { success: false, error: 'Faltan datos: productId y warehouseIds' };
+    }
+
+    const assignments = warehouseIds.map((warehouseId, idx) => ({
+      warehouseId,
+      quantity: quantities[idx] ?? 0,
+      minStock: minStocks[idx] ?? 0,
+      maxStock: maxStocks[idx] ?? 100,
+    }));
+
+    const result = await assignProductToMultipleWarehouses(productId, assignments);
+    return { success: true, message: 'Asignaciones realizadas', data: result };
+  } catch (error: any) {
+    return { success: false, error: error?.message || 'Error en asignación múltiple' };
+  }
+}
+
+export async function bulkAssignProductsToWarehouseAction(formData: FormData) {
+  try {
+    const warehouseId = parseInt(String(formData.get('warehouseId') || ''));
+    const productIds = formData.getAll('productIds').map(v => parseInt(String(v)));
+    const quantities = formData.getAll('quantities').map(v => parseInt(String(v)));
+    const minStocks = formData.getAll('minStocks').map(v => parseInt(String(v)));
+    const maxStocks = formData.getAll('maxStocks').map(v => parseInt(String(v)));
+
+    if (!warehouseId || productIds.length === 0) {
+      return { success: false, error: 'Faltan datos: warehouseId y productIds' };
+    }
+
+    const assignments = productIds.map((productId, idx) => ({
+      productId,
+      quantity: quantities[idx] ?? 0,
+      minStock: minStocks[idx] ?? 0,
+      maxStock: maxStocks[idx] ?? 100,
+    }));
+
+    const result = await bulkAssignProductsToWarehouse(warehouseId, assignments);
+    return { success: true, message: 'Productos asignados a la bodega', data: result };
+  } catch (error: any) {
+    return { success: false, error: error?.message || 'Error en asignación masiva' };
+  }
+}
+
+export async function updateProductStockInWarehouseAction(formData: FormData) {
+  try {
+    const productId = parseInt(String(formData.get('productId') || ''));
+    const warehouseId = parseInt(String(formData.get('warehouseId') || ''));
+    const quantity = formData.get('quantity') != null ? parseInt(String(formData.get('quantity'))) : undefined;
+    const minStock = formData.get('minStock') != null ? parseInt(String(formData.get('minStock'))) : undefined;
+    const maxStock = formData.get('maxStock') != null ? parseInt(String(formData.get('maxStock'))) : undefined;
+
+    if (!productId || !warehouseId) {
+      return { success: false, error: 'productId y warehouseId son requeridos' };
+    }
+
+    const result = await updateProductStockInWarehouse(productId, warehouseId, { quantity, minStock, maxStock });
+    return { success: true, message: result.message || 'Stock actualizado', data: result.data };
+  } catch (error: any) {
+    return { success: false, error: error?.message || 'Error actualizando stock' };
+  }
+}
+
+export async function removeProductFromWarehouseAction(formData: FormData) {
+  try {
+    const productId = parseInt(String(formData.get('productId') || ''));
+    const warehouseId = parseInt(String(formData.get('warehouseId') || ''));
+
+    if (!productId || !warehouseId) {
+      return { success: false, error: 'productId y warehouseId son requeridos' };
+    }
+
+    const result = await removeProductFromWarehouse(productId, warehouseId);
+    return { success: true, message: result.message || 'Producto removido de la bodega' };
+  } catch (error: any) {
+    return { success: false, error: error?.message || 'Error removiendo producto de bodega' };
+  }
+}
+
+export async function quickAssignProductAction(formData: FormData) {
+  try {
+    const productId = parseInt(String(formData.get('productId') || ''));
+    const warehouseId = parseInt(String(formData.get('warehouseId') || ''));
+
+    if (!productId || !warehouseId) {
+      return { success: false, error: 'productId y warehouseId son requeridos' };
+    }
+
+    const result = await assignProductToWarehouse(productId, warehouseId, { quantity: 0, minStock: 0, maxStock: 100 });
+    return { success: true, message: result.message || 'Producto asignado (rápido)' };
+  } catch (error: any) {
+    return { success: false, error: error?.message || 'Error en asignación rápida' };
+  }
+}
+
 'use server';
 
 import { getSupabaseServerClient } from '@/lib/supabase-server';

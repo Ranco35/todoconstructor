@@ -10,6 +10,7 @@ import { Badge } from '@/components/ui/badge'
 import { MovementFiltersType } from '@/types/inventory'
 import { MOVEMENT_TYPE_LABELS } from '@/types/inventory'
 import { Filter, X, Search, Calendar, Package, Warehouse } from 'lucide-react'
+import ProductFilterSearch from '@/components/inventory/ProductFilterSearch'
 
 interface MovementFiltersProps {
   warehouses: Array<{ id: number; name: string }>
@@ -145,33 +146,17 @@ export default function MovementFilters({ warehouses, products, currentFilters }
 
       {/* Formulario de Filtros */}
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-6 gap-4">
-        {/* Producto */}
+        {/* Producto - buscador inteligente */}
         <div className="space-y-2">
           <Label htmlFor="productId" className="flex items-center gap-2 text-sm font-medium text-gray-700">
             <Package className="h-4 w-4" />
             Producto
           </Label>
-          <Select
-            value={filters.productId?.toString() || 'all'}
-            onValueChange={(value) => updateFilters({ productId: value === 'all' ? undefined : parseInt(value) })}
-          >
-            <SelectTrigger className="bg-white border-gray-300 hover:border-gray-400 focus:border-blue-500">
-              <SelectValue placeholder="Seleccionar producto" />
-            </SelectTrigger>
-            <SelectContent>
-              <SelectItem value="all">Todos los productos</SelectItem>
-              {products.map((product) => (
-                <SelectItem key={product.id} value={product.id.toString()}>
-                  <div className="flex items-center justify-between w-full">
-                    <span className="truncate">{product.name}</span>
-                    <Badge variant="outline" className="ml-2 text-xs">
-                      {product.sku}
-                    </Badge>
-                  </div>
-                </SelectItem>
-              ))}
-            </SelectContent>
-          </Select>
+          <ProductFilterSearch
+            placeholder="Buscar producto..."
+            initialValue={filters.productId}
+            onSelect={(product) => updateFilters({ productId: product?.id })}
+          />
         </div>
 
         {/* Bodega Origen */}

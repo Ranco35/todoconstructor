@@ -3,6 +3,8 @@
 import { getSupabaseServerClient } from '@/lib/supabase-server'
 import { revalidatePath } from 'next/cache'
 import { MultiTransferFormData, ProductTransfer } from '@/types/inventory'
+import { getCurrentUser } from '@/actions/configuration/auth-actions'
+import { randomUUID } from 'crypto'
 
 export interface InventoryMovement {
   id?: number
@@ -151,6 +153,17 @@ export async function createMultiProductTransfer(form: MultiTransferFormData) {
       }
     }
 
+    // Obtener usuario actual para trazabilidad
+    const currentUser = await getCurrentUser()
+    if (!currentUser) {
+      return { success: false, error: 'Usuario no autenticado' }
+    }
+
+    // Generar batch_id para agrupar la operación
+    const batchId = (typeof crypto !== 'undefined' && (crypto as any).randomUUID)
+      ? (crypto as any).randomUUID()
+      : randomUUID()
+
     // Registrar movimientos en "transacción" (no real, pero secuencial)
     const movimientos = []
     for (const prod of products) {
@@ -164,7 +177,10 @@ export async function createMultiProductTransfer(form: MultiTransferFormData) {
           movementType: 'TRANSFER',
           quantity: prod.quantity,
           reason,
-          notes
+          notes,
+          batch_id: batchId,
+          userId: currentUser.id,
+          createdAt: new Date().toISOString()
         }])
         .select()
         .single()
@@ -185,9 +201,77 @@ export async function createMultiProductTransfer(form: MultiTransferFormData) {
       movimientos.push(data)
     }
     revalidatePath('/dashboard/inventory/movements')
-    return { success: true, movimientos }
+    return { success: true, movimientos, batchId }
   } catch (error) {
     console.error('Error en createMultiProductTransfer:', error)
+    return { success: false, error: 'Error interno del servidor' }
+  }
+}
+
+// Obtener transferencias agrupadas por batch_id
+export async function getGroupedTransfers(page: number = 1, limit: number = 20) {
+  try {
+    const supabase = await getSupabaseServerClient()
+
+    // Obtener todos los movimientos que tengan batch_id
+    const { data: movements, error } = await supabase
+      .from('InventoryMovement')
+      .select(`
+        *,
+        Product:Product(name),
+        FromWarehouse:Warehouse!InventoryMovement_fromWarehouseId_fkey(name),
+        ToWarehouse:Warehouse!InventoryMovement_toWarehouseId_fkey(name),
+        User:User(id, name, email)
+      `)
+      .not('batch_id', 'is', null)
+      .order('createdAt', { ascending: false })
+
+    if (error) {
+      console.error('Error al obtener transferencias agrupadas:', error)
+      return { success: false, error: 'Error al obtener transferencias agrupadas' }
+    }
+
+    // Agrupar por batch_id
+    const grouped: Record<string, any> = {}
+    ;(movements || []).forEach((m) => {
+      const key = (m as any).batch_id as string
+      if (!grouped[key]) {
+        grouped[key] = {
+          batch_id: key,
+          fromWarehouse: (m as any).FromWarehouse?.name || 'N/A',
+          toWarehouse: (m as any).ToWarehouse?.name || 'N/A',
+          reason: (m as any).reason || '',
+          createdAt: (m as any).createdAt,
+          user: (m as any).User || null,
+          products: [] as Array<{ name: string; quantity: number }>,
+          productCount: 0,
+          totalQuantity: 0,
+        }
+      }
+      grouped[key].products.push({
+        name: (m as any).Product?.name || 'Producto',
+        quantity: (m as any).quantity || 0
+      })
+      grouped[key].productCount += 1
+      grouped[key].totalQuantity += (m as any).quantity || 0
+    })
+
+    const allTransfers = Object.values(grouped)
+    const offset = (page - 1) * limit
+    const paginated = allTransfers.slice(offset, offset + limit)
+
+    return {
+      success: true,
+      transfers: paginated,
+      pagination: {
+        page,
+        limit,
+        total: allTransfers.length,
+        totalPages: Math.ceil(allTransfers.length / limit)
+      }
+    }
+  } catch (error) {
+    console.error('Error en getGroupedTransfers:', error)
     return { success: false, error: 'Error interno del servidor' }
   }
 }
