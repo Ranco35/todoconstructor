@@ -3,8 +3,13 @@ import { getGroupedTransfers } from '@/actions/inventory/movements'
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
 
-export default async function GroupedTransfersPage() {
-  const result = await getGroupedTransfers(1, 20)
+interface PageProps {
+  searchParams?: { page?: string }
+}
+
+export default async function GroupedTransfersPage({ searchParams }: PageProps) {
+  const page = searchParams?.page ? parseInt(String(searchParams.page)) : 1
+  const result = await getGroupedTransfers(page, 20)
 
   return (
     <div className="container mx-auto px-6 py-8">
@@ -46,6 +51,21 @@ export default async function GroupedTransfersPage() {
               ))
             ) : (
               <div className="p-6 text-gray-600">No hay transferencias agrupadas</div>
+            )}
+            {result.success && result.pagination && result.pagination.total > 20 && (
+              <div className="p-4 flex items-center justify-center gap-3">
+                {page > 1 && (
+                  <Link href={`/dashboard/inventory/movements/transfers?page=${page - 1}`}>
+                    <Button variant="outline" size="sm">Anterior</Button>
+                  </Link>
+                )}
+                <span className="text-sm text-gray-600">Página {page} de {result.pagination.totalPages}</span>
+                {page < result.pagination.totalPages && (
+                  <Link href={`/dashboard/inventory/movements/transfers?page=${page + 1}`}>
+                    <Button variant="outline" size="sm">Siguiente</Button>
+                  </Link>
+                )}
+              </div>
             )}
           </div>
         </CardContent>

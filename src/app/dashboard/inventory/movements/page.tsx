@@ -256,11 +256,21 @@ export default async function MovementsPage({ searchParams }: MovementsPageProps
               </div>
             }>
               {movementsResult.success ? (
-                <MovementList 
-                  movements={movementsResult.data}
-                  pagination={movementsResult.pagination}
-                  currentPage={page}
-                />
+                <>
+                  <div className="p-4 flex justify-end">
+                    <a
+                      href={`/api/inventory/movements/export?${new URLSearchParams(searchParams as any).toString()}`}
+                      className="text-sm bg-blue-600 text-white px-3 py-2 rounded hover:bg-blue-700"
+                    >
+                      Descargar Excel
+                    </a>
+                  </div>
+                  <MovementList 
+                    movements={movementsResult.data}
+                    pagination={movementsResult.pagination}
+                    currentPage={page}
+                  />
+                </>
               ) : (
                 <div className="text-center py-12">
                   <div className="p-4 bg-gray-100 rounded-full w-16 h-16 mx-auto mb-4 flex items-center justify-center">
