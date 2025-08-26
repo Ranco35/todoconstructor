@@ -1,16 +1,11 @@
 "use server";
 
-import { createServerClient } from '@supabase/ssr';
-import { cookies } from 'next/headers';
 import { revalidatePath } from 'next/cache';
+import { getSupabaseServerClient } from '@/lib/supabase-server';
 
 async function getSupabaseClient() {
-  const cookieStore = await cookies();
-  return createServerClient(
-    process.env.NEXT_PUBLIC_SUPABASE_URL!,
-    process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
-    { cookies: { get: (name) => cookieStore.get(name)?.value } }
-  );
+  // Usar el cliente centralizado que preserva la sesión autenticada en Server Actions
+  return await getSupabaseServerClient();
 }
 
 export interface Warehouse {
@@ -233,9 +228,12 @@ export async function createWarehouseFromData(warehouseData: Omit<Warehouse, 'id
   try {
     const supabase = await getSupabaseClient();
     
+    // Algunas instalaciones no tienen columnas opcionales: omitirlas si existen
+    const { capacity: _omitCapacity, costCenterId: _omitCostCenter, ...dataToInsert } = (warehouseData as any) || {};
+
     const { data, error } = await supabase
       .from('Warehouse')
-      .insert(warehouseData)
+      .insert(dataToInsert)
       .select()
       .single();
     
@@ -284,16 +282,18 @@ export async function createWarehouse(formData: FormData) {
       location: location.trim(),
       type: type.trim(),
       parentId: parentIdStr && parentIdStr !== '' ? parseInt(parentIdStr) : null,
-      capacity: null,
       costCenterId: null,
       isActive: true
     };
     
     console.log('📝 Datos de bodega a crear:', warehouseData);
     
+    // Algunas instalaciones no tienen columnas opcionales: omitirlas explícitamente
+    const { capacity: _omitCapacity, costCenterId: _omitCostCenter, ...dataToInsert } = (warehouseData as any);
+
     const { data, error } = await supabase
       .from('Warehouse')
-      .insert(warehouseData)
+      .insert(dataToInsert)
       .select()
       .single();
     

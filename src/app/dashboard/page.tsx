@@ -6,7 +6,7 @@ function DashboardPage() {
   return (
     <div className="min-h-screen bg-gray-50 p-6">
       <div className="bg-blue-600 rounded-xl p-6 text-white mb-8">
-        <h1 className="text-3xl font-bold">🔨 Dashboard Todo Constructor - SISTEMA DE FERRETERÍA</h1>
+        <h1 className="text-3xl font-bold">🔨 Dashboard TC Constructor - SISTEMA DE FERRETERÍA</h1>
         <p>Bienvenido al sistema de gestión integral para construcción</p>
       </div>
 

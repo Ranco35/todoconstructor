@@ -37,7 +37,7 @@ export default function HomePage() {
       <div className="min-h-screen bg-[#FF7A00]/10 flex items-center justify-center">
         <div className="text-center">
           <div className="animate-spin rounded-full h-16 w-16 border-b-2 border-[#0B3555] mx-auto"></div>
-          <p className="mt-4 text-[#0B3555]">Cargando Todo Constructor...</p>
+          <p className="mt-4 text-[#0B3555]">Cargando TC Constructor...</p>
           <p className="mt-2 text-sm text-[#0B3555]/70">Inicializando aplicación</p>
         </div>
       </div>

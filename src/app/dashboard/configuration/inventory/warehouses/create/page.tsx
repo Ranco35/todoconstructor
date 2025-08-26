@@ -6,7 +6,11 @@ import { redirect } from "next/navigation"
 // Marcar como página dinámica para evitar errores en build
 export const dynamic = 'force-dynamic';
 
-export default async function CreateWarehousePage() {
+interface PageProps {
+  searchParams: Promise<{ [key: string]: string | string[] | undefined }>
+}
+
+export default async function CreateWarehousePage({ searchParams }: PageProps) {
   const parentWarehouses = await getWarehousesForParent();
 
   async function handleCreateWarehouse(formData: FormData) {
@@ -22,7 +26,8 @@ export default async function CreateWarehousePage() {
   }
   
   // Leer parámetros de error si existen
-  const errorMessage = undefined; // Los searchParams solo están disponibles en client components o page props
+  const sp = await searchParams;
+  const errorMessage = typeof sp?.error === 'string' ? sp.error : undefined;
   
   return (
     <div className="container mx-auto p-4">
@@ -38,6 +43,11 @@ export default async function CreateWarehousePage() {
         </div>
 
         <div className="bg-white shadow-md rounded-lg p-6">
+          {errorMessage && (
+            <div className="mb-4 rounded-md border border-red-200 bg-red-50 p-3 text-sm text-red-700">
+              {errorMessage}
+            </div>
+          )}
           <form action={handleCreateWarehouse} className="space-y-6">
             <div>
               <label htmlFor="name" className="block text-sm font-medium text-gray-700 mb-2">

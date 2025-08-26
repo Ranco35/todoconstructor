@@ -108,7 +108,7 @@ export default function UniversalHorizontalMenu({
                 <span className="text-white font-bold text-lg">🔨</span>
               </div>
               <div>
-                <h1 className="text-xl font-bold text-gray-900">TodoConstructor</h1>
+                <h1 className="text-xl font-bold text-gray-900">TC Constructor</h1>
                 <p className="text-xs text-gray-500">Sistema de Ferretería</p>
               </div>
             </Link>

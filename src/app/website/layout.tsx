@@ -6,11 +6,11 @@ import WebsiteFooter from '@/components/website/WebsiteFooter'
 const inter = Inter({ subsets: ['latin'] })
 
 export const metadata: Metadata = {
-  title: 'Hotel & Spa Todo Constructor - Experiencia Termal Única',
+  title: 'Hotel & Spa TC Constructor - Experiencia Termal Única',
   description: 'Descubre el paraíso termal en el corazón de Chile. Habitaciones de lujo, spa termal, restaurante gourmet y experiencias inolvidables.',
   keywords: 'hotel, spa, termal, Chile, alojamiento, relax, wellness',
   openGraph: {
-    title: 'Hotel & Spa Todo Constructor',
+    title: 'Hotel & Spa TC Constructor',
     description: 'Experiencia termal única en Chile',
     type: 'website',
   },
