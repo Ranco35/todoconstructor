@@ -33,7 +33,7 @@ export const Header = ({ currentUser }: HeaderProps) => {
         <header className={clsx('w-full h-20 bg-white shadow-md flex items-center justify-between px-6 sticky top-0 z-40')} data-testid='header'>
             <div className="flex items-center gap-4">
                 <Link href="/" className="text-2xl font-bold text-gray-900 hover:text-blue-600 transition-colors">
-                    Admintermas
+                    Todo Constructor
                 </Link>
             </div>
 

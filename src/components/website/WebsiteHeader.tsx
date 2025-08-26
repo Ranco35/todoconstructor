@@ -48,7 +48,7 @@ export default function WebsiteHeader() {
                 <span className="text-white font-bold text-xl">A</span>
               </div>
               <div>
-                <h1 className="text-2xl font-bold text-gray-900">Admintermas</h1>
+                <h1 className="text-2xl font-bold text-gray-900">Todo Constructor</h1>
                 <p className="text-sm text-gray-600">Hotel & Spa Termal</p>
               </div>
             </Link>

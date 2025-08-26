@@ -2,7 +2,7 @@ import { Metadata } from 'next';
 import AIAssistantClient from './AIAssistantClient';
 
 export const metadata: Metadata = {
-  title: 'Asistente de IA - ChatGPT | AdminTermas',
+  title: 'Asistente de IA - ChatGPT | Todo Constructor',
   description: 'Herramientas de inteligencia artificial para optimizar tareas del hotel/spa',
 };
 

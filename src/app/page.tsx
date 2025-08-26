@@ -34,11 +34,11 @@ export default function HomePage() {
 
   if (isLoading) {
     return (
-      <div className="min-h-screen bg-gray-50 flex items-center justify-center">
+      <div className="min-h-screen bg-[#FF7A00]/10 flex items-center justify-center">
         <div className="text-center">
-          <div className="animate-spin rounded-full h-16 w-16 border-b-2 border-blue-500 mx-auto"></div>
-          <p className="mt-4 text-gray-600">Cargando TodoConstructor...</p>
-          <p className="mt-2 text-sm text-gray-500">Inicializando aplicación</p>
+          <div className="animate-spin rounded-full h-16 w-16 border-b-2 border-[#0B3555] mx-auto"></div>
+          <p className="mt-4 text-[#0B3555]">Cargando Todo Constructor...</p>
+          <p className="mt-2 text-sm text-[#0B3555]/70">Inicializando aplicación</p>
         </div>
       </div>
     );
@@ -62,26 +62,34 @@ export default function HomePage() {
   }
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-blue-50 to-indigo-100 flex items-center justify-center">
+    <div className="min-h-screen bg-gradient-to-br from-[#FF7A00]/10 to-[#0B3555]/10 flex items-center justify-center">
       <div className="max-w-2xl mx-auto text-center p-8">
-        <div className="bg-white rounded-2xl shadow-xl p-8">
-          <h1 className="text-4xl font-bold text-gray-900 mb-4">
-            🔨 TodoConstructor
-          </h1>
-          <p className="text-xl text-gray-600 mb-8">
+        <div className="bg-white rounded-2xl shadow-xl p-8 border border-[#0B3555]/10">
+          <div className="flex flex-col items-center gap-3 mb-4">
+            <img
+              src="/images/logo-tc.png"
+              onError={(e: any) => { e.currentTarget.src = '/next.svg'; }}
+              alt="TC Constructor"
+              className="h-16 w-16 rounded-full ring-2 ring-[#0B3555]/20"
+            />
+            <h1 className="text-4xl font-extrabold tracking-tight text-[#0B3555]">
+              TC Constructor
+            </h1>
+          </div>
+          <p className="text-lg text-[#0B3555]/80 mb-8">
             Sistema de Gestión de Ferretería
           </p>
           
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-8">
             <a 
               href="/login" 
-              className="block bg-blue-500 hover:bg-blue-600 text-white font-medium py-4 px-6 rounded-lg transition-colors transform hover:scale-105"
+              className="block bg-[#0B3555] hover:bg-[#0A2C47] text-white font-medium py-4 px-6 rounded-lg transition-colors transform hover:scale-105"
             >
               🔐 Iniciar Sesión
             </a>
             <a 
               href="/dashboard" 
-              className="block bg-green-500 hover:bg-green-600 text-white font-medium py-4 px-6 rounded-lg transition-colors transform hover:scale-105"
+              className="block bg-[#FF7A00] hover:bg-[#E56E00] text-white font-medium py-4 px-6 rounded-lg transition-colors transform hover:scale-105"
             >
               📊 Dashboard
             </a>
@@ -90,19 +98,19 @@ export default function HomePage() {
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-8">
             <a 
               href="/test-simple" 
-              className="block bg-purple-500 hover:bg-purple-600 text-white font-medium py-3 px-4 rounded-lg transition-colors"
+              className="block bg-[#0B3555] hover:bg-[#0A2C47] text-white font-medium py-3 px-4 rounded-lg transition-colors"
             >
               🧪 Página de Prueba
             </a>
             <a 
               href="/api/test" 
-              className="block bg-orange-500 hover:bg-orange-600 text-white font-medium py-3 px-4 rounded-lg transition-colors"
+              className="block bg-[#FF7A00] hover:bg-[#E56E00] text-white font-medium py-3 px-4 rounded-lg transition-colors"
             >
               🔧 API Test
             </a>
           </div>
           
-          <div className="bg-gray-50 rounded-lg p-4 text-sm text-gray-500">
+          <div className="bg-[#0B3555]/5 rounded-lg p-4 text-sm text-[#0B3555]/80">
             <p>✅ Aplicación funcionando correctamente</p>
             <p>🕒 {new Date().toLocaleString()}</p>
             <p>🌐 Deployment exitoso en Vercel</p>

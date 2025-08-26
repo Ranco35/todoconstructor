@@ -3,6 +3,8 @@ import { createServerClient } from '@supabase/ssr';
 import { cookies } from 'next/headers';
 import { ProductType } from '@/types/product';
 import { mapProductDBToFrontend, ProductDB } from '@/lib/product-mapper';
+import { getSupabaseServiceClient } from '@/lib/supabase-server';
+import { getCategoryTableName } from '@/lib/table-resolver';
 
 async function getSupabaseClient() {
   const cookieStore = await cookies();
@@ -19,30 +21,36 @@ export async function getProductById(id: number) {
     
     console.log('🔍 DEBUG - Cargando producto ID:', id);
     
-    const { data: product, error } = await supabase
-      .from('Product')
-      .select(`
-        *,
-        Category (*),
-        Supplier (*),
-        Warehouse_Products:Warehouse_Product (
-          id,
-          quantity,
-          warehouseId,
-          productId,
-          minStock,
-          maxStock,
-          Warehouse (
-            id,
-            name
-          )
-        )
-      `)
-      .eq('id', id)
-      .single();
+    // Consulta SIMPLE (sin relaciones) para evitar errores de relaciones en PostgREST
+    let product: any = null;
+    let simpleError: any = null;
+    {
+      const { data, error } = await supabase
+        .from('Product')
+        .select('*')
+        .eq('id', id)
+        .single();
+      product = data;
+      simpleError = error;
+    }
 
-    if (error || !product) {
-      console.error('Error fetching product:', error);
+    // Fallback con service client si falla por RLS u otros motivos
+    if ((!product || simpleError) && !product) {
+      try {
+        const svc = await getSupabaseServiceClient();
+        const { data: svcProduct } = await svc
+          .from('Product')
+          .select('*')
+          .eq('id', id)
+          .single();
+        if (svcProduct) product = svcProduct;
+      } catch (e) {
+        console.error('Error fetching product with service client:', e);
+      }
+    }
+
+    if (!product) {
+      console.error('Error fetching product:', simpleError || 'Producto no encontrado');
       return null;
     }
 
@@ -78,13 +86,12 @@ export async function getProductById(id: number) {
       unit: mappedProduct.unit
     });
 
-    // Obtener el primer registro de stock desde Warehouse_Product
+    // Obtener registros de stock desde Warehouse_Product (sin joins)
     console.log('🔍 DEBUG - Buscando stock para producto:', id);
     const { data: warehouseProducts, error: stockError } = await supabase
       .from('Warehouse_Product')
       .select('*')
-      .eq('productId', id)
-      .limit(1);
+      .eq('productId', id);
 
     if (stockError) {
       console.error('Error obteniendo stock:', stockError);
@@ -105,19 +112,35 @@ export async function getProductById(id: number) {
       console.log('🔍 DEBUG - No se encontró stock para el producto');
     }
 
-    // Cargar categorías POS del producto
+    // Cargar categorías POS del producto (robusto, sin fallar si falta tabla/RLS)
     console.log('🔍 DEBUG - Cargando categorías POS para producto:', id);
-    const { data: posCategoriesData, error: posCategoriesError } = await supabase
-      .from('ProductPOSCategory')
-      .select('poscategoryid, cashregistertypeid')
-      .eq('productid', id);
-
-    if (posCategoriesError) {
-      console.error('Error cargando categorías POS:', posCategoriesError);
+    let posCategoriesRaw: any[] = [];
+    try {
+      const { data, error } = await supabase
+        .from('ProductPOSCategory')
+        .select('poscategoryid, cashregistertypeid')
+        .eq('productid', id);
+      if (!error && data) {
+        posCategoriesRaw = data;
+      } else {
+        // Fallback con service client
+        try {
+          const svc = await getSupabaseServiceClient();
+          const { data: svcData } = await svc
+            .from('ProductPOSCategory')
+            .select('poscategoryid, cashregistertypeid')
+            .eq('productid', id);
+          if (svcData) posCategoriesRaw = svcData;
+        } catch (e) {
+          // Ignorar silenciosamente: consideramos que no hay categorías POS
+        }
+      }
+    } catch (e) {
+      // Tabla inexistente u otras restricciones; continuar sin POS categories
     }
 
     // Mapear los nombres de columnas de snake_case a camelCase
-    const posCategories = (posCategoriesData || []).map(item => ({
+    const posCategories = (posCategoriesRaw || []).map(item => ({
       posCategoryId: item.poscategoryid,
       cashRegisterTypeId: item.cashregistertypeid
     }));
@@ -193,6 +216,32 @@ export async function getProductById(id: number) {
       }
     }
 
+    // Cargar categoría y proveedor con llamadas simples (sin joins)
+    let categoryObj: any = null;
+    if ((product as any).categoryid) {
+      try {
+        const categoryTable = await getCategoryTableName(supabase as any);
+        const { data: cat } = await (supabase as any)
+          .from(categoryTable)
+          .select('id, name')
+          .eq('id', (product as any).categoryid)
+          .single();
+        if (cat) categoryObj = cat;
+      } catch {}
+    }
+
+    let supplierObj: any = null;
+    if ((product as any).supplierid) {
+      try {
+        const { data: sup } = await supabase
+          .from('Supplier')
+          .select('id, name')
+          .eq('id', (product as any).supplierid)
+          .single();
+        if (sup) supplierObj = sup;
+      } catch {}
+    }
+
     // Convertir los datos para que sean compatibles con el formulario
     const result = {
       ...mappedProduct,
@@ -202,6 +251,11 @@ export async function getProductById(id: number) {
       components,
       // Agregar las categorías POS cargadas
       posCategories,
+      // Relacionados cargados manualmente
+      Category: categoryObj ? { id: categoryObj.id, name: categoryObj.name } : null,
+      Supplier: supplierObj ? { id: supplierObj.id, name: supplierObj.name } : null,
+      // Pasar también los registros de bodega
+      Warehouse_Products: warehouseProducts || [],
       // Campos de equipos/máquinas
       isEquipment: (product as any).isEquipment || false,
       model: (product as any).model || '',

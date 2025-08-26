@@ -15,6 +15,7 @@ const jetbrainsMono = JetBrains_Mono({
 export const metadata: Metadata = {
   title: "TodoConstructor - Sistema de Gestión de Ferretería",
   description: "Sistema integral de administración para gestión de ferretería y construcción",
+  themeColor: "#0B3555",
 };
 
 export default function RootLayout({
@@ -23,9 +24,9 @@ export default function RootLayout({
   children: React.ReactNode;
 }>) {
   return (
-    <html lang="en">
+    <html lang="es">
       <body
-        className={`${inter.variable} ${jetbrainsMono.variable} antialiased`}
+        className={`${inter.variable} ${jetbrainsMono.variable} antialiased bg-[#FF7A00]/5`}
       >
         {children}
       </body>

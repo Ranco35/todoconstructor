@@ -111,7 +111,7 @@ export default function LoginPage() {
           <div className="mx-auto h-20 w-20 bg-white rounded-full flex items-center justify-center mb-6 shadow-2xl">
             <div className="text-3xl font-bold text-indigo-600">A</div>
           </div>
-          <h1 className="text-4xl font-bold text-white mb-2">Admintermas</h1>
+          <h1 className="text-4xl font-bold text-white mb-2">Todo Constructor</h1>
           <p className="text-indigo-200">Sistema de Gestión Empresarial</p>
         </div>
 
@@ -185,22 +185,11 @@ export default function LoginPage() {
               )}
             </button>
           </form>
-
-          {/* Información adicional */}
-          <div className="mt-8 p-4 bg-gray-50 rounded-lg">
-            <h3 className="text-sm font-medium text-gray-700 mb-2">Roles del Sistema:</h3>
-            <div className="text-xs text-gray-600 space-y-1">
-              <div>🔸 <strong>Super Usuario:</strong> Acceso completo</div>
-              <div>🔸 <strong>Administrador:</strong> Gestión general</div>
-              <div>🔸 <strong>Jefe de Sección:</strong> Gestión departamental</div>
-              <div>🔸 <strong>Usuario Final:</strong> Operaciones básicas</div>
-            </div>
-          </div>
         </div>
 
         {/* Footer */}
         <div className="text-center text-indigo-200 text-sm">
-          <p>© 2024 Admintermas. Todos los derechos reservados.</p>
+          <p>© 2024 Todo Constructor. Todos los derechos reservados.</p>
         </div>
       </div>
     </div>
