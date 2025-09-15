@@ -179,29 +179,33 @@ interface InventoryPhysicalImportResult {
 }
 
 export async function exportInventoryPhysicalTemplate(warehouseId: number, categoryId?: number, includeAllProducts?: boolean) {
-  const supabase = await getSupabaseServerClient()
+  try {
+    console.log('🔍 [TEMPLATE] Iniciando generación de plantilla:', { warehouseId, categoryId, includeAllProducts })
+    
+    const supabase = await getSupabaseServerClient()
 
-  // Obtener información de la bodega
-  const { data: warehouse, error: warehouseError } = await supabase
-    .from('Warehouse')
-    .select('name')
-    .eq('id', warehouseId)
-    .single()
+    // Obtener información de la bodega
+    const { data: warehouse, error: warehouseError } = await supabase
+      .from('Warehouse')
+      .select('name')
+      .eq('id', warehouseId)
+      .single()
 
-  if (warehouseError) {
-    console.error('Error obteniendo información de bodega:', warehouseError)
-    throw new Error(`Error obteniendo información de la bodega: ${warehouseError.message}`)
-  }
+    if (warehouseError) {
+      console.error('❌ [TEMPLATE] Error obteniendo información de bodega:', warehouseError)
+      throw new Error(`Error obteniendo información de la bodega: ${warehouseError.message}`)
+    }
+
+    console.log('✅ [TEMPLATE] Bodega encontrada:', warehouse.name)
 
   let products: any[] = []
   let categoryName = ''
 
   if (includeAllProducts && categoryId) {
     // Obtener información de la categoría
-    const { getCategoryTableName } = await import('@/lib/table-resolver');
-    const categoryTable = await getCategoryTableName(supabase as any);
-    const { data: category, error: categoryError } = await (supabase as any)
-      .from(categoryTable)
+    console.log('🔍 [TEMPLATE] Consultando información de categoría:', categoryId)
+    const { data: category, error: categoryError } = await supabase
+      .from('Category')
       .select('name')
       .eq('id', categoryId)
       .single()
@@ -232,20 +236,23 @@ export async function exportInventoryPhysicalTemplate(warehouseId: number, categ
       Product: product
     })) || []
   } else {
-  // Obtener productos y stock de la bodega
-  const { data: warehouseProducts, error } = await supabase
-    .from('Warehouse_Product')
-    .select(`
-      quantity,
-        Product:Product(id, name, sku, brand, description, supplierid, image)
-    `)
-    .eq('warehouseId', warehouseId)
+    // Obtener productos y stock de la bodega
+    console.log('🔍 [TEMPLATE] Consultando productos de bodega:', warehouseId)
+    
+    const { data: warehouseProducts, error } = await supabase
+      .from('Warehouse_Product')
+      .select(`
+        quantity,
+        Product!inner(id, name, sku, brand, description, supplierid, image)
+      `)
+      .eq('warehouseId', warehouseId)
 
-  if (error) {
-      console.error('Error en consulta Warehouse_Product:', error)
+    if (error) {
+      console.error('❌ [TEMPLATE] Error en consulta Warehouse_Product:', error)
       throw new Error(`Error obteniendo productos de la bodega: ${error.message}`)
-  }
+    }
 
+    console.log('✅ [TEMPLATE] Productos encontrados:', warehouseProducts?.length || 0)
     products = warehouseProducts || []
   }
 
@@ -276,7 +283,14 @@ export async function exportInventoryPhysicalTemplate(warehouseId: number, categ
   // FILA 1: Título principal con merge y estilo azul
   worksheet.mergeCells('A1:I1')
   const titleCell = worksheet.getCell('A1')
-  titleCell.value = `TOMA FÍSICA DE INVENTARIO - ${(warehouse.name || 'BODEGA').toUpperCase()}`
+  
+  // Construir título con categoría si aplica
+  let titleText = `TOMA FÍSICA DE INVENTARIO - ${(warehouse.name || 'BODEGA').toUpperCase()}`
+  if (includeAllProducts && categoryName) {
+    titleText += ` - CATEGORÍA: ${categoryName.toUpperCase()}`
+  }
+  
+  titleCell.value = titleText
   titleCell.fill = {
     type: 'pattern',
     pattern: 'solid',
@@ -390,8 +404,15 @@ export async function exportInventoryPhysicalTemplate(warehouseId: number, categ
   ]
 
   // Generar buffer para descarga
+  console.log('🔍 [TEMPLATE] Generando archivo Excel...')
   const buffer = await workbook.xlsx.writeBuffer()
+  console.log('✅ [TEMPLATE] Archivo Excel generado exitosamente')
   return buffer
+  
+  } catch (error) {
+    console.error('💥 [TEMPLATE] Error en exportInventoryPhysicalTemplate:', error)
+    throw new Error(`Error generando plantilla de inventario: ${error instanceof Error ? error.message : 'Error desconocido'}`)
+  }
 }
 
 export async function importInventoryPhysicalExcel({

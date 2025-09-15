@@ -40,11 +40,11 @@ function DashboardContent({ children }: { children: React.ReactNode }) {
         
         console.log('✅ Dashboard Layout: Sesión encontrada:', session.user.email);
         
-        // Verificar usuario
-        const { data: { user }, error: authError } = await supabase.auth.getUser();
+        // Verificar usuario (usar la sesión que ya tenemos)
+        const user = session.user;
         
-        if (authError || !user) {
-          console.log('❌ Dashboard Layout: Usuario no encontrado, redirigiendo a login');
+        if (!user) {
+          console.log('❌ Dashboard Layout: Usuario no encontrado en sesión, redirigiendo a login');
           setShouldRedirect(true);
           return;
         }
@@ -88,6 +88,24 @@ function DashboardContent({ children }: { children: React.ReactNode }) {
     }
 
     loadUser();
+
+    // Escuchar cambios de autenticación
+    const supabase = createClient();
+    const { data: { subscription } } = supabase.auth.onAuthStateChange((event, session) => {
+      console.log('🔄 Dashboard Layout: Cambio de autenticación:', event, session?.user?.email);
+      
+      if (event === 'SIGNED_OUT' || !session) {
+        console.log('🚪 Dashboard Layout: Usuario deslogueado, redirigiendo...');
+        setShouldRedirect(true);
+      } else if (event === 'SIGNED_IN' && session) {
+        console.log('✅ Dashboard Layout: Usuario logueado, recargando datos...');
+        loadUser();
+      }
+    });
+
+    return () => {
+      subscription.unsubscribe();
+    };
   }, [showPopup]);
 
   // Handle redirects in a separate useEffect

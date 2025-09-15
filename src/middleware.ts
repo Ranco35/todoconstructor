@@ -1,9 +1,37 @@
 import { NextResponse, type NextRequest } from 'next/server'
+import { createServerClient, type CookieOptions } from '@supabase/ssr'
 
 export async function middleware(request: NextRequest) {
   const pathname = request.nextUrl.pathname
-  const cookies = request.cookies.getAll()
-  const hasSupabaseSession = cookies.some((c) => c.name === 'sb-access-token' || c.name === 'sb-refresh-token' || c.name.startsWith('sb-'))
+  
+  // Crear respuesta para manejar cookies de Supabase
+  let response = NextResponse.next({
+    request: {
+      headers: request.headers,
+    },
+  })
+
+  // Crear cliente Supabase con manejo de cookies
+  const supabase = createServerClient(
+    process.env.NEXT_PUBLIC_SUPABASE_URL!,
+    process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
+    {
+      cookies: {
+        getAll() {
+          return request.cookies.getAll()
+        },
+        setAll(cookiesToSet) {
+          cookiesToSet.forEach(({ name, value, options }) => {
+            response.cookies.set(name, value, options as CookieOptions)
+          })
+        },
+      },
+    }
+  )
+
+  // Verificar sesión de Supabase
+  const { data: { session } } = await supabase.auth.getSession()
+  const hasSupabaseSession = !!session
 
   // Proteger rutas del dashboard
   if (!hasSupabaseSession && pathname.startsWith('/dashboard')) {
@@ -17,7 +45,7 @@ export async function middleware(request: NextRequest) {
     return NextResponse.redirect(redirectUrl)
   }
 
-  return NextResponse.next({ request })
+  return response
 }
 
 export const config = {

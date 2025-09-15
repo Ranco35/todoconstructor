@@ -1,4 +1,4 @@
-import type { Metadata } from "next";
+import type { Metadata, Viewport } from "next";
 import "@/style/globals.css";
 import { Inter, JetBrains_Mono } from "next/font/google";
 
@@ -15,6 +15,9 @@ const jetbrainsMono = JetBrains_Mono({
 export const metadata: Metadata = {
   title: "TodoConstructor - Sistema de Gestión de Ferretería",
   description: "Sistema integral de administración para gestión de ferretería y construcción",
+};
+
+export const viewport: Viewport = {
   themeColor: "#0B3555",
 };
 

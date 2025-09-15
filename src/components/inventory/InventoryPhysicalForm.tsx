@@ -153,7 +153,8 @@ export default function InventoryPhysicalForm() {
       URL.revokeObjectURL(url)
     } catch (error) {
       console.error('Error descargando plantilla:', error)
-      alert('Error descargando plantilla')
+      const errorMessage = error instanceof Error ? error.message : 'Error desconocido al descargar plantilla'
+      alert(`Error descargando plantilla: ${errorMessage}`)
     } finally {
       setIsDownloading(false)
     }
