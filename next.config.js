@@ -1,13 +1,6 @@
-// Fix de build en Vercel: algunos paquetes de navegador referencian `self`
-// durante el render/SSG en servidor. Reescribimos `self` -> `globalThis` en bundles del servidor.
-// Esto previene "ReferenceError: self is not defined" al recolectar datos de páginas.
-
-const webpack = require('webpack');
-
-// (Eliminado nextConfig duplicado; integrar en la configuración principal de abajo)
-
 /** @type {import('next').NextConfig} */
 const nextConfig = {
+  // Configuración básica esencial
   typescript: {
     ignoreBuildErrors: true,
   },
@@ -18,104 +11,23 @@ const nextConfig = {
     unoptimized: true,
   },
   
-  // Configuración optimizada para producción
-  // 🔥 CORREGIDO: No usar output standalone que interfiere con Server Actions
-  // output: 'standalone',
+  // Configuración mínima para producción
   poweredByHeader: false,
   reactStrictMode: true,
   
-  // headers combinados se definen más abajo
-  
-  // Optimizaciones experimentales para performance
-  experimental: {
-    // 🔥 HABILITADO: Server Actions explícitamente para Vercel (Next 15 requiere objeto)
-    serverActions: {},
-    // Optimizar imports de paquetes pesados
-    optimizePackageImports: [
-      'lucide-react', 
-      '@radix-ui/react-icons',
-      '@radix-ui/react-dialog',
-      '@radix-ui/react-select',
-      '@radix-ui/react-dropdown-menu',
-      'date-fns',
-      'react-hook-form'
-    ],
-  },
-  
-  // Optimizar compilador
-  compiler: {
-    // 🔥 CORREGIDO: NO remover console.log en producción para debugging
-    // removeConsole: process.env.NODE_ENV === 'production',
-    removeConsole: false,
-    // Optimizar styled-components si se usa
-    styledComponents: true,
-  },
-  
-  // Configurar paquetes externos pesados
-  serverExternalPackages: [
-    'puppeteer',
-    'whatsapp-web.js',
-    'fluent-ffmpeg',
-    '@prisma/client',
-    'sharp',
-    // Evitar que estos paquetes se bundleen en el servidor (algunos referencian self/window)
-    'xlsx',
-    'exceljs',
-    'jspdf',
-    'jspdf-autotable',
-    'qrcode'
-  ],
-  
-  // Configuración webpack optimizada
+  // Configuración webpack mínima
   webpack: (config, { dev, isServer }) => {
-    // Definir self como globalThis en el bundle del servidor para evitar errores en SSG/ISR
+    // Fix básico para self en servidor
     if (isServer) {
       config.plugins.push(
-        new webpack.DefinePlugin({
+        new (require('webpack')).DefinePlugin({
           self: 'globalThis',
         })
       );
-
-      // Asegurar polyfill en bundles de servidor con banner (primeras líneas de cada chunk)
-      config.plugins.push(
-        new webpack.BannerPlugin({
-          banner: 'if (typeof globalThis!=="undefined" && typeof globalThis.self === "undefined") { globalThis.self = globalThis; }',
-          raw: true,
-          entryOnly: false,
-        })
-      );
-
-      // Inyectar polyfill al entry principal del servidor por si Next lo soporta
-      const originalEntry = config.entry;
-      config.entry = async () => {
-        const entries = await originalEntry();
-        if (entries['main-app']) {
-          entries['main-app'].unshift('./src/server-polyfill.js');
-        }
-        return entries;
-      };
-    }
-    // Optimizaciones para desarrollo
-    if (dev) {
-      // Optimizar watching
-      config.watchOptions = {
-        poll: 1000,
-        aggregateTimeout: 300,
-        ignored: ['**/node_modules/**', '**/.git/**', '**/.next/**'],
-      };
-      
-             // Cache mejorado para desarrollo
-       config.cache = {
-         type: 'filesystem',
-         buildDependencies: {
-           config: [__filename],
-         },
-       };
     }
     
-    // Optimizaciones para cliente
+    // Fallbacks mínimos para cliente
     if (!isServer) {
-      // Fallbacks para módulos Node.js
       config.resolve.fallback = {
         ...config.resolve.fallback,
         fs: false,
@@ -132,78 +44,12 @@ const nextConfig = {
         path: false,
         child_process: false,
       };
-
-      // Optimizar chunks para mejor caching (en producción, solo cliente)
-      if (!dev) {
-        config.optimization.splitChunks = {
-          chunks: 'all',
-          cacheGroups: {
-            // Vendor chunks separados para mejor caching
-            vendor: {
-              test: /[\\/]node_modules[\\/]/,
-              name: 'vendors',
-              chunks: 'all',
-              priority: 10,
-            },
-            // Componentes UI en chunk separado
-            ui: {
-              test: /[\\/]components[\\/]/,
-              name: 'ui',
-              chunks: 'all',
-              priority: 5,
-            },
-            // Librerías comunes
-            common: {
-              minChunks: 2,
-              chunks: 'all',
-              name: 'common',
-              priority: 1,
-            },
-          },
-        };
-      }
     }
-    
-    // Mantener resolución por defecto de Next
     
     return config;
   },
   
-  // Headers para mejorar caching
-  async headers() {
-    return [
-      // Configuración de cookies para producción (aplica a todas las rutas)
-      {
-        source: '/(.*)',
-        headers: [
-          {
-            key: 'Set-Cookie',
-            value: 'SameSite=Lax; Secure; HttpOnly',
-          },
-        ],
-      },
-      {
-        source: '/dashboard/:path*',
-        headers: [
-          {
-            key: 'Cache-Control',
-            value: 'public, max-age=31536000, immutable',
-          },
-        ],
-      },
-      {
-        source: '/_next/static/:path*',
-        headers: [
-          {
-            key: 'Cache-Control',
-            value: 'public, max-age=31536000, immutable',
-          },
-        ],
-      },
-    ];
-  },
-  
-  // Redirecciones optimizadas
+  // Redirección básica
   async redirects() {
     return [
       {
