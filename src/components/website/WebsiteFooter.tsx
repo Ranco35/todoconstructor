@@ -2,17 +2,17 @@ import Link from 'next/link'
 import { Phone, Mail, MapPin, Facebook, Instagram, Twitter, Youtube } from 'lucide-react'
 
 const footerLinks = {
-  hotel: [
-    { name: 'Habitaciones', href: '/website/rooms' },
-    { name: 'Servicios', href: '/website/services' },
-    { name: 'Sobre Nosotros', href: '/website/about' },
-    { name: 'Contacto', href: '/website/contact' },
+  productos: [
+    { name: 'Herramientas', href: '/website/category/herramientas' },
+    { name: 'Materiales', href: '/website/category/materiales' },
+    { name: 'Eléctricos', href: '/website/category/electricos' },
+    { name: 'Pinturas', href: '/website/category/pinturas' },
   ],
   servicios: [
-    { name: 'Spa Termal', href: '/website/spa' },
-    { name: 'Restaurante', href: '/website/restaurant' },
-    { name: 'Actividades', href: '/website/activities' },
-    { name: 'Eventos', href: '/website/events' },
+    { name: 'Asesoría Técnica', href: '/website/services' },
+    { name: 'Entrega a Domicilio', href: '/website/delivery' },
+    { name: 'Garantías', href: '/website/warranty' },
+    { name: 'Soporte', href: '/website/support' },
   ],
   información: [
     { name: 'Política de Privacidad', href: '/website/privacy' },
@@ -42,14 +42,14 @@ export default function WebsiteFooter() {
                 <span className="text-white font-bold text-xl">A</span>
               </div>
               <div>
-                <h3 className="text-2xl font-bold">Admintermas</h3>
-                <p className="text-sm text-gray-400">Hotel & Spa Termal</p>
+                <h3 className="text-2xl font-bold">TC Constructor</h3>
+                <p className="text-sm text-gray-400">Ferretería & Construcción</p>
               </div>
             </div>
             
             <p className="text-gray-300 mb-6 leading-relaxed">
-              Descubre el paraíso termal en el corazón de Chile. Ofrecemos una experiencia 
-              única combinando lujo, naturaleza y bienestar en un entorno incomparable.
+              Ferretería especializada en herramientas, materiales de construcción y productos eléctricos. 
+              Todo lo que necesitas para tus proyectos de construcción y reparación.
             </p>
 
             {/* Información de contacto */}
@@ -64,16 +64,16 @@ export default function WebsiteFooter() {
               </div>
               <div className="flex items-center space-x-3">
                 <MapPin className="w-4 h-4 text-green-400" />
-                <span className="text-gray-300">Valle del Elqui, Chile</span>
+                <span className="text-gray-300">Santiago, Chile</span>
               </div>
             </div>
           </div>
 
-          {/* Enlaces del hotel */}
+          {/* Enlaces de productos */}
           <div>
-            <h4 className="text-lg font-semibold mb-6">Hotel</h4>
+            <h4 className="text-lg font-semibold mb-6">Productos</h4>
             <ul className="space-y-3">
-              {footerLinks.hotel.map((link) => (
+              {footerLinks.productos.map((link) => (
                 <li key={link.name}>
                   <Link
                     href={link.href}
@@ -160,7 +160,7 @@ export default function WebsiteFooter() {
         <div className="container mx-auto px-4 py-6">
           <div className="flex flex-col md:flex-row justify-between items-center">
             <p className="text-gray-400 text-sm">
-              © 2024 Admintermas. Todos los derechos reservados.
+              © 2024 TC Constructor. Todos los derechos reservados.
             </p>
             <div className="flex space-x-6 mt-4 md:mt-0">
               <Link href="/website/privacy" className="text-gray-400 hover:text-green-400 text-sm transition-colors">

@@ -6,7 +6,7 @@ const supabaseClient = createClient();
 
 // Configuración del bucket para imágenes de clientes
 const CLIENT_BUCKET_NAME = 'client-images';
-const PRODUCT_BUCKET_NAME = 'product-images';
+const PRODUCT_BUCKET_NAME = 'Imagenes Productos';
 const WEBSITE_BUCKET_NAME = 'website-images';
 const MAX_FILE_SIZE = 5 * 1024 * 1024; // 5MB
 const ALLOWED_TYPES = ['image/jpeg', 'image/jpg', 'image/png', 'image/gif', 'image/webp'];

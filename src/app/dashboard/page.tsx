@@ -67,13 +67,6 @@ function DashboardPage() {
           </div>
         </Link>
 
-        <Link href="/dashboard/pos">
-          <div className="bg-cyan-100 rounded-xl p-6 hover:shadow-lg">
-            <div className="text-2xl mb-2">🏪</div>
-            <h3 className="text-lg font-bold text-gray-900">POS Ventas</h3>
-            <p className="text-sm text-gray-600">Punto de venta ferretería</p>
-          </div>
-        </Link>
 
         <Link href="/dashboard/inventory">
           <div className="bg-yellow-100 rounded-xl p-6 hover:shadow-lg">
@@ -144,6 +137,22 @@ function DashboardPage() {
             <div className="text-2xl mb-2">🤖</div>
             <h3 className="text-lg font-bold text-gray-900">Asistente AI</h3>
             <p className="text-sm text-gray-600">Asistente inteligente</p>
+          </div>
+        </Link>
+
+        <Link href="/admin/website">
+          <div className="bg-gradient-to-r from-green-100 to-blue-100 rounded-xl p-6 hover:shadow-lg border-2 border-green-200">
+            <div className="text-2xl mb-2">🌐</div>
+            <h3 className="text-lg font-bold text-gray-900">Website</h3>
+            <p className="text-sm text-gray-600">Página web de la ferretería</p>
+          </div>
+        </Link>
+
+        <Link href="/website" target="_blank">
+          <div className="bg-gradient-to-r from-blue-100 to-green-100 rounded-xl p-6 hover:shadow-lg border-2 border-blue-200">
+            <div className="text-2xl mb-2">🛒</div>
+            <h3 className="text-lg font-bold text-gray-900">Ver Tienda Online</h3>
+            <p className="text-sm text-gray-600">Abrir página web pública</p>
           </div>
         </Link>
 

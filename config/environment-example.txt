@@ -1,0 +1,29 @@
+# Ejemplo de configuración de variables de entorno
+# Copiar este archivo a .env.local y configurar los valores reales
+
+# Supabase Configuration
+NEXT_PUBLIC_SUPABASE_URL=your_supabase_url_here
+NEXT_PUBLIC_SUPABASE_ANON_KEY=your_supabase_anon_key_here
+
+# Supabase S3 Configuration (Opcional - para acceso directo S3)
+SUPABASE_S3_ENDPOINT=https://your-project-id.storage.supabase.co/storage/v1/s3
+SUPABASE_S3_REGION=us-east-2
+SUPABASE_S3_ACCESS_KEY_ID=your_s3_access_key_id_here
+SUPABASE_S3_SECRET_ACCESS_KEY=your_s3_secret_access_key_here
+
+# Bucket Configuration
+SUPABASE_PRODUCT_BUCKET=Imagenes Productos
+SUPABASE_CLIENT_BUCKET=client-images
+SUPABASE_WEBSITE_BUCKET=website-images
+
+# Database Configuration
+DATABASE_URL=your_database_url_here
+
+# Authentication
+NEXTAUTH_URL=http://localhost:3000
+NEXTAUTH_SECRET=your_nextauth_secret_here
+
+# ⚠️ IMPORTANTE: 
+# - Nunca subir .env.local a Git
+# - Mantener las credenciales seguras
+# - Rotar las claves periódicamente

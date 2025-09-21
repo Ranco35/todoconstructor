@@ -6,12 +6,12 @@ import WebsiteFooter from '@/components/website/WebsiteFooter'
 const inter = Inter({ subsets: ['latin'] })
 
 export const metadata: Metadata = {
-  title: 'Hotel & Spa TC Constructor - Experiencia Termal Única',
-  description: 'Descubre el paraíso termal en el corazón de Chile. Habitaciones de lujo, spa termal, restaurante gourmet y experiencias inolvidables.',
-  keywords: 'hotel, spa, termal, Chile, alojamiento, relax, wellness',
+  title: 'TC Constructor - Ferretería y Construcción',
+  description: 'Ferretería especializada en herramientas, materiales de construcción, productos eléctricos y más. Todo lo que necesitas para tus proyectos.',
+  keywords: 'ferretería, construcción, herramientas, materiales, eléctricos, Chile, TC Constructor',
   openGraph: {
-    title: 'Hotel & Spa TC Constructor',
-    description: 'Experiencia termal única en Chile',
+    title: 'TC Constructor - Ferretería y Construcción',
+    description: 'Ferretería especializada en herramientas y materiales de construcción',
     type: 'website',
   },
 }

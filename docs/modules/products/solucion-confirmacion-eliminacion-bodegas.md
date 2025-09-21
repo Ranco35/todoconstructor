@@ -215,3 +215,4 @@ const [pendingImport, setPendingImport] = useState(false);
 **Mantenimiento**: 🟢 **BAJO** - Código bien estructurado
 
 
+

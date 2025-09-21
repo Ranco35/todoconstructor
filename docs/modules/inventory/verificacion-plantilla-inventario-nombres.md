@@ -173,3 +173,4 @@ El logging agregado permitirá verificar:
 **Mejoras**: 🔧 **LOGGING AGREGADO** - Para debugging futuro
 
 
+

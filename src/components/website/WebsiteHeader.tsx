@@ -6,8 +6,8 @@ import { Menu, X, Phone, Mail } from 'lucide-react'
 
 const navigation = [
   { name: 'Inicio', href: '/website' },
-  { name: 'Habitaciones', href: '/website/rooms' },
-  { name: 'Servicios', href: '/website/services' },
+  { name: 'Productos', href: '/website' },
+  { name: 'Categorías', href: '/website/categories' },
   { name: 'Sobre Nosotros', href: '/website/about' },
   { name: 'Contacto', href: '/website/contact' },
 ]
@@ -49,7 +49,7 @@ export default function WebsiteHeader() {
               </div>
               <div>
                 <h1 className="text-2xl font-bold text-gray-900">TC Constructor</h1>
-                <p className="text-sm text-gray-600">Hotel & Spa Termal</p>
+                <p className="text-sm text-gray-600">Ferretería & Construcción</p>
               </div>
             </Link>
           </div>
@@ -67,13 +67,13 @@ export default function WebsiteHeader() {
             ))}
           </nav>
 
-          {/* Botón de reserva */}
+          {/* Botón de contacto */}
           <div className="hidden md:flex items-center space-x-4">
             <Link
-              href="/dashboard/reservations/create"
+              href="/website/contact"
               className="bg-gradient-to-r from-green-600 to-blue-600 text-white px-6 py-3 rounded-lg font-semibold hover:from-green-700 hover:to-blue-700 transition-all duration-200 shadow-lg hover:shadow-xl"
             >
-              Reservar Ahora
+              Contacto
             </Link>
           </div>
 
@@ -110,11 +110,11 @@ export default function WebsiteHeader() {
               ))}
               <div className="pt-4">
                 <Link
-                  href="/dashboard/reservations/create"
+                  href="/website/contact"
                   className="bg-gradient-to-r from-green-600 to-blue-600 text-white px-6 py-3 rounded-lg font-semibold block text-center"
                   onClick={() => setMobileMenuOpen(false)}
                 >
-                  Reservar Ahora
+                  Contacto
                 </Link>
               </div>
             </div>
