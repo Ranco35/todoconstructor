@@ -6,6 +6,7 @@ export async function POST(request: NextRequest) {
   try {
     const formData = await request.formData();
     const file = formData.get('file') as File;
+    const confirmDeletions = formData.get('confirmDeletions') === 'true';
 
     if (!file) {
       return NextResponse.json(
@@ -43,7 +44,7 @@ export async function POST(request: NextRequest) {
     
     try {
       if (isExcel) {
-        products = await parseExcel(buffer);
+        products = parseExcel(buffer);
       } else {
         const csvText = new TextDecoder().decode(uint8Array);
         products = parseCSV(csvText);
@@ -63,8 +64,8 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    // Importar productos usando la server action
-    const result = await importProducts(products);
+    // Importar productos usando la server action con confirmación
+    const result = await importProducts(products, confirmDeletions);
 
     return NextResponse.json(result);
 

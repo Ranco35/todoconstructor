@@ -264,6 +264,13 @@ export async function getPOSProductsByType(registerTypeId: number): Promise<{ su
     
     if (categoriesError) {
       console.error('Error fetching categories:', categoriesError)
+      // Si la tabla no existe, retornar un mensaje específico
+      if (categoriesError.message.includes('does not exist')) {
+        return { 
+          success: false, 
+          error: 'La tabla POSProductCategory no existe. Ejecuta el script fix_pos_category_table.sql en Supabase SQL Editor para crear la tabla.' 
+        }
+      }
       return { success: false, error: categoriesError.message }
     }
     
@@ -369,6 +376,13 @@ export async function getPOSProductCategories(registerTypeId: number): Promise<{
     
     if (error) {
       console.error('Error fetching POS categories:', error)
+      // Si la tabla no existe, retornar un mensaje específico
+      if (error.message.includes('does not exist')) {
+        return { 
+          success: false, 
+          error: 'La tabla POSProductCategory no existe. Ejecuta el script fix_pos_category_table.sql en Supabase SQL Editor para crear la tabla.' 
+        }
+      }
       return { success: false, error: error.message }
     }
     
@@ -1190,6 +1204,13 @@ export async function diagnosePOSIssues(registerTypeId: number): Promise<{ succe
     
     if (allCategoriesError) {
       console.error('❌ Error obteniendo categorías:', allCategoriesError);
+      // Si la tabla no existe, retornar un mensaje específico
+      if (allCategoriesError.message.includes('does not exist')) {
+        return { 
+          success: false, 
+          error: 'La tabla POSProductCategory no existe. Ejecuta el script fix_pos_category_table.sql en Supabase SQL Editor para crear la tabla.' 
+        }
+      }
       return { success: false, error: allCategoriesError.message }
     }
     

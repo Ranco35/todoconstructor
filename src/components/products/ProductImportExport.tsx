@@ -54,6 +54,8 @@ export default function ProductImportExport({ onImportComplete }: ProductImportE
   const [showPreview, setShowPreview] = useState(false);
   const [previewLoading, setPreviewLoading] = useState(false);
   const [analysis, setAnalysis] = useState<AnalysisResult | null>(null);
+  const [requiresConfirmation, setRequiresConfirmation] = useState(false);
+  const [pendingImport, setPendingImport] = useState(false);
 
   // Exportar productos a Excel
   const handleExport = async () => {
@@ -231,6 +233,12 @@ export default function ProductImportExport({ onImportComplete }: ProductImportE
   // Función para analizar productos con análisis detallado de bodegas
   const analyzeProducts = async (products: ProductImportData[]): Promise<AnalysisResult> => {
     try {
+      // Validar que products sea un array
+      if (!Array.isArray(products)) {
+        console.error('Error: products no es un array:', products);
+        throw new Error('Los datos de productos no están en el formato correcto');
+      }
+
       // Obtener productos existentes para comparar
       const response = await fetch('/api/products');
       if (!response.ok) {
@@ -327,12 +335,16 @@ export default function ProductImportExport({ onImportComplete }: ProductImportE
       return analysis;
     } catch (error) {
       console.error('Error analizando productos:', error);
+      
+      // Validar que products sea un array antes de usar map
+      const productsArray = Array.isArray(products) ? products : [];
+      
       return {
-        total: products.length,
-        toCreate: products.length,
+        total: productsArray.length,
+        toCreate: productsArray.length,
         toUpdate: 0,
         noChange: 0,
-        details: products.map(p => ({
+        details: productsArray.map(p => ({
           name: p.name,
           sku: p.sku || 'Auto-generado',
           action: 'create' as const,
@@ -351,7 +363,7 @@ export default function ProductImportExport({ onImportComplete }: ProductImportE
   };
 
   // Importar productos
-  const handleImport = async () => {
+  const handleImport = async (confirmDeletions: boolean = false) => {
     if (!file) {
       alert('Selecciona un archivo primero');
       return;
@@ -362,6 +374,7 @@ export default function ProductImportExport({ onImportComplete }: ProductImportE
 
       const formData = new FormData();
       formData.append('file', file);
+      formData.append('confirmDeletions', confirmDeletions.toString());
 
       const response = await fetch('/api/products/import', {
         method: 'POST',
@@ -374,9 +387,19 @@ export default function ProductImportExport({ onImportComplete }: ProductImportE
         throw new Error(result.error || 'Error al importar');
       }
 
+      // Verificar si requiere confirmación
+      if (!result.success && result.errors && result.errors.some((error: string) => error.includes('confirmación'))) {
+        setRequiresConfirmation(true);
+        setPendingImport(true);
+        setImportResult(result);
+        return;
+      }
+
       setImportResult(result);
       setShowPreview(false); // Ocultar vista previa después de importar
       setAnalysis(null); // Limpiar análisis
+      setRequiresConfirmation(false);
+      setPendingImport(false);
       
       // Auto-refresh para mostrar cambios inmediatamente
       if (result.success) {
@@ -396,6 +419,20 @@ export default function ProductImportExport({ onImportComplete }: ProductImportE
     } finally {
       setImporting(false);
     }
+  };
+
+  // Confirmar importación con eliminaciones
+  const handleConfirmImport = async () => {
+    if (pendingImport) {
+      await handleImport(true);
+    }
+  };
+
+  // Cancelar importación
+  const handleCancelImport = () => {
+    setRequiresConfirmation(false);
+    setPendingImport(false);
+    setImportResult(null);
   };
 
   // Descargar plantilla Excel con ejemplos
@@ -787,6 +824,42 @@ export default function ProductImportExport({ onImportComplete }: ProductImportE
                             </li>
                           ))}
                         </ul>
+                      </div>
+                    </div>
+                  )}
+
+                  {/* Botones de confirmación */}
+                  {requiresConfirmation && (
+                    <div className="mt-4 p-4 bg-yellow-50 border border-yellow-200 rounded-lg">
+                      <h5 className="text-sm font-medium text-yellow-800 mb-2">⚠️ Confirmación Requerida</h5>
+                      <p className="text-sm text-yellow-700 mb-3">
+                        Se detectaron asignaciones de bodegas que serían eliminadas. ¿Desea continuar con la importación?
+                      </p>
+                      <div className="flex gap-2">
+                        <button
+                          onClick={handleConfirmImport}
+                          disabled={importing}
+                          className="px-4 py-2 bg-red-600 text-white rounded-md hover:bg-red-700 disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-2"
+                        >
+                          {importing ? (
+                            <>
+                              <span className="animate-spin">⏳</span>
+                              Procesando...
+                            </>
+                          ) : (
+                            <>
+                              <span>✅</span>
+                              Sí, Continuar
+                            </>
+                          )}
+                        </button>
+                        <button
+                          onClick={handleCancelImport}
+                          disabled={importing}
+                          className="px-4 py-2 border border-gray-300 text-gray-700 rounded-md hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed"
+                        >
+                          Cancelar
+                        </button>
                       </div>
                     </div>
                   )}

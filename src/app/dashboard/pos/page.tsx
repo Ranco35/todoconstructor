@@ -16,22 +16,13 @@ export default function POSSelector() {
   // POS options configuration
   const posOptions = [
     {
-      id: 'recepcion',
-      name: 'POS Recepción',
-      description: 'Punto de venta para servicios hoteleros',
+      id: 'ferreteria',
+      name: 'POS Ferretería',
+      description: 'Punto de venta para productos de ferretería y construcción',
       icon: Home,
-      color: 'purple',
-      features: ['Servicios hoteleros', 'Amenidades y extras', 'Lavandería express', 'Tours y actividades'],
+      color: 'blue',
+      features: ['Herramientas y equipos', 'Materiales de construcción', 'Productos eléctricos', 'Ferretería general'],
       path: '/dashboard/pos/recepcion'
-    },
-    {
-      id: 'restaurante',
-      name: 'POS Restaurante',
-      description: 'Punto de venta para restaurante y bar',
-      icon: UtensilsCrossed,
-      color: 'orange',
-      features: ['Menús y platos', 'Bebidas y tragos', 'Mesas y comandas', 'Cocina integrada'],
-      path: '/dashboard/pos/restaurante'
     }
   ]
 
@@ -78,7 +69,7 @@ export default function POSSelector() {
         </div>
 
         {/* POS Options Grid */}
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-8 max-w-4xl mx-auto">
+        <div className="grid grid-cols-1 gap-8 max-w-2xl mx-auto">
           {posOptions.map((option) => {
             const Icon = option.icon
             const colors = {
@@ -93,6 +84,12 @@ export default function POSSelector() {
                 border: 'border-orange-200',
                 text: 'text-orange-600',
                 badge: 'bg-orange-100 text-orange-700'
+              },
+              blue: {
+                bg: 'bg-blue-50 hover:bg-blue-100',
+                border: 'border-blue-200',
+                text: 'text-blue-600',
+                badge: 'bg-blue-100 text-blue-700'
               }
             }[option.color]
 
@@ -135,7 +132,7 @@ export default function POSSelector() {
                           className={`w-full ${colors?.text} bg-white hover:bg-gray-50 border-2 ${colors?.border}`}
                           variant="outline"
                         >
-                          Acceder a {option.name}
+                          Acceder a POS Ferretería
                           <ArrowRight className="h-4 w-4 ml-2" />
                         </Button>
                       </Link>

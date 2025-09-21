@@ -70,9 +70,10 @@ export interface CategoryImportData {
 }
 
 // Función helper para parsear Excel
-export async function parseExcel(fileBuffer: ArrayBuffer): Promise<ProductImportData[]> {
+export function parseExcel(fileBuffer: ArrayBuffer): ProductImportData[] {
   try {
-    const XLSX = await import('xlsx');
+    // Importar XLSX de forma síncrona
+    const XLSX = require('xlsx');
     const workbook = XLSX.read(fileBuffer, { type: 'array' });
     // Log hojas detectadas
     console.log('🔍 [PARSER] Hojas detectadas:', workbook.SheetNames);
@@ -284,9 +285,10 @@ export async function parseExcel(fileBuffer: ArrayBuffer): Promise<ProductImport
 }
 
 // Función helper para parsear Excel de Categorías
-export async function parseCategoriesExcel(fileBuffer: ArrayBuffer): Promise<CategoryImportData[]> {
+export function parseCategoriesExcel(fileBuffer: ArrayBuffer): CategoryImportData[] {
   try {
-    const XLSX = await import('xlsx');
+    // Importar XLSX de forma síncrona
+    const XLSX = require('xlsx');
     const workbook = XLSX.read(fileBuffer, { type: 'array' });
     
     let worksheetName = workbook.SheetNames[0];

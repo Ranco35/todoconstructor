@@ -218,16 +218,29 @@ export async function exportInventoryPhysicalTemplate(warehouseId: number, categ
     categoryName = category.name || ''
 
     // Obtener todos los productos de la categoría
+    console.log('🔍 [TEMPLATE] Consultando productos de categoría:', categoryId)
     const { data: categoryProducts, error } = await supabase
       .from('Product')
       .select(`
         id, name, sku, brand, description, supplierid, image
       `)
       .eq('categoryid', categoryId)
+      .not('name', 'is', null) // Excluir productos sin nombre
+      .neq('name', '') // Excluir productos con nombre vacío
 
     if (error) {
       console.error('Error en consulta Product por categoría:', error)
       throw new Error(`Error obteniendo productos de la categoría: ${error.message}`)
+    }
+
+    console.log('🔍 [TEMPLATE] Productos raw de categoría:', categoryProducts?.length || 0)
+    if (categoryProducts && categoryProducts.length > 0) {
+      console.log('🔍 [TEMPLATE] Primer producto raw:', {
+        id: categoryProducts[0].id,
+        name: categoryProducts[0].name,
+        sku: categoryProducts[0].sku,
+        brand: categoryProducts[0].brand
+      })
     }
 
     // Formatear productos para que coincidan con el formato de bodega
@@ -235,6 +248,15 @@ export async function exportInventoryPhysicalTemplate(warehouseId: number, categ
       quantity: 0, // Los productos de categoría empiezan en 0
       Product: product
     })) || []
+    
+    console.log('✅ [TEMPLATE] Productos de categoría encontrados:', products?.length || 0)
+    console.log('🔍 [TEMPLATE] Primer producto de categoría de muestra:', products?.[0])
+    console.log('🔍 [TEMPLATE] Estructura del primer producto:', {
+      hasProduct: !!products?.[0]?.Product,
+      productName: products?.[0]?.Product?.name,
+      productSku: products?.[0]?.Product?.sku,
+      productId: products?.[0]?.Product?.id
+    })
   } else {
     // Obtener productos y stock de la bodega
     console.log('🔍 [TEMPLATE] Consultando productos de bodega:', warehouseId)
@@ -253,6 +275,7 @@ export async function exportInventoryPhysicalTemplate(warehouseId: number, categ
     }
 
     console.log('✅ [TEMPLATE] Productos encontrados:', warehouseProducts?.length || 0)
+    console.log('🔍 [TEMPLATE] Primer producto de muestra:', warehouseProducts?.[0])
     products = warehouseProducts || []
   }
 
@@ -349,7 +372,19 @@ export async function exportInventoryPhysicalTemplate(warehouseId: number, categ
 
   // FILAS DE DATOS: Productos
   let currentRow = 7
-  products?.forEach((wp: any) => {
+  products?.forEach((wp: any, index: number) => {
+    // Log del primer producto para debug
+    if (index === 0) {
+      console.log('🔍 [TEMPLATE] Mapeando primer producto:', {
+        sku: wp.Product?.sku,
+        name: wp.Product?.name,
+        brand: wp.Product?.brand,
+        description: wp.Product?.description,
+        supplierid: wp.Product?.supplierid,
+        quantity: wp.quantity
+      })
+    }
+    
     const rowData = [
       wp.Product?.sku || '',
       warehouse.name || '',

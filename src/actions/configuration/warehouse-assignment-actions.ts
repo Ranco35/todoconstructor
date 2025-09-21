@@ -130,18 +130,9 @@ export async function quickAssignProductAction(formData: FormData) {
   }
 }
 
-'use server';
-
 import { getSupabaseServerClient } from '@/lib/supabase-server';
 import { revalidatePath } from 'next/cache';
 import { redirect } from 'next/navigation';
-import { 
-  assignProductToWarehouse, 
-  assignProductToMultipleWarehouses,
-  bulkAssignProductsToWarehouse,
-  updateProductStockInWarehouse,
-  removeProductFromWarehouse
-} from './warehouse-actions';
 
 // --- ASIGNAR PRODUCTO A BODEGA (PARA FORMULARIOS) ---
 export async function assignProductToWarehouseAction(formData: FormData) {
