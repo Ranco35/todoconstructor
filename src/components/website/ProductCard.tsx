@@ -1,7 +1,7 @@
 'use client'
 
 import { useState } from 'react'
-import { ShoppingCart, Package, MapPin, Star } from 'lucide-react'
+import { ShoppingCart, Package, MapPin, Star, MessageCircle } from 'lucide-react'
 import { ProductWithStock } from '@/actions/website/products'
 
 interface ProductCardProps {
