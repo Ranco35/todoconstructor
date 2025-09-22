@@ -31,6 +31,15 @@ export default async function ProductDetailPage({ params }: ProductDetailPagePro
   const margin = product.salePrice && product.costPrice 
     ? ((product.salePrice - product.costPrice) / product.costPrice * 100).toFixed(1)
     : '0';
+  
+  // Calcular precio con IVA (sin decimales)
+  const vatRate = product.vat || 0;
+  const salePriceWithVAT = product.salePrice 
+    ? Math.round(product.salePrice * (1 + vatRate / 100))
+    : 0;
+  const costPriceWithVAT = product.costPrice 
+    ? Math.round(product.costPrice * (1 + vatRate / 100))
+    : 0;
 
   return (
     <div className="min-h-screen bg-gray-50">
@@ -183,28 +192,75 @@ export default async function ProductDetailPage({ params }: ProductDetailPagePro
                 Información Financiera
               </h3>
               
-              <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-                <div className="text-center p-4 bg-gray-50 rounded-lg">
-                  <div className="text-2xl font-bold text-gray-900">
-                    ${product.costPrice?.toLocaleString() || '0'}
+              {/* Precios Netos */}
+              <div className="mb-6">
+                <h4 className="text-md font-medium text-gray-700 mb-4">Precios Netos (sin IVA)</h4>
+                <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                  <div className="text-center p-4 bg-gray-50 rounded-lg">
+                    <div className="text-xl font-bold text-gray-900">
+                      ${product.costPrice?.toLocaleString() || '0'}
+                    </div>
+                    <div className="text-sm text-gray-500">Precio de Costo</div>
                   </div>
-                  <div className="text-sm text-gray-500">Precio de Costo</div>
-                </div>
-                
-                <div className="text-center p-4 bg-green-50 rounded-lg">
-                  <div className="text-2xl font-bold text-green-600">
-                    ${product.salePrice?.toLocaleString() || '0'}
+                  
+                  <div className="text-center p-4 bg-green-50 rounded-lg">
+                    <div className="text-xl font-bold text-green-600">
+                      ${product.salePrice?.toLocaleString() || '0'}
+                    </div>
+                    <div className="text-sm text-gray-500">Precio de Venta</div>
                   </div>
-                  <div className="text-sm text-gray-500">Precio de Venta</div>
-                </div>
-                
-                <div className="text-center p-4 bg-blue-50 rounded-lg">
-                  <div className="text-2xl font-bold text-blue-600">
-                    {margin}%
+                  
+                  <div className="text-center p-4 bg-blue-50 rounded-lg">
+                    <div className="text-xl font-bold text-blue-600">
+                      {margin}%
+                    </div>
+                    <div className="text-sm text-gray-500">Margen de Ganancia</div>
                   </div>
-                  <div className="text-sm text-gray-500">Margen de Ganancia</div>
                 </div>
               </div>
+
+              {/* Precios con IVA */}
+              {vatRate > 0 && (
+                <div className="mb-6">
+                  <h4 className="text-md font-medium text-gray-700 mb-4">Precios con IVA ({vatRate}%)</h4>
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <div className="text-center p-4 bg-orange-50 rounded-lg">
+                      <div className="text-xl font-bold text-orange-600">
+                        ${costPriceWithVAT.toLocaleString()}
+                      </div>
+                      <div className="text-sm text-gray-500">Precio de Costo con IVA</div>
+                    </div>
+                    
+                    <div className="text-center p-4 bg-purple-50 rounded-lg">
+                      <div className="text-xl font-bold text-purple-600">
+                        ${salePriceWithVAT.toLocaleString()}
+                      </div>
+                      <div className="text-sm text-gray-500">Precio de Venta con IVA</div>
+                    </div>
+                  </div>
+                </div>
+              )}
+
+              {/* Desglose de IVA */}
+              {vatRate > 0 && product.salePrice && (
+                <div className="p-4 bg-blue-50 rounded-lg">
+                  <h4 className="text-md font-medium text-gray-700 mb-3">Desglose de IVA</h4>
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4 text-sm">
+                    <div className="flex justify-between">
+                      <span className="text-gray-600">Precio neto de venta:</span>
+                      <span className="font-medium">${product.salePrice.toLocaleString()}</span>
+                    </div>
+                    <div className="flex justify-between">
+                      <span className="text-gray-600">IVA ({vatRate}%):</span>
+                      <span className="font-medium text-blue-600">${Math.round(salePriceWithVAT - product.salePrice).toLocaleString()}</span>
+                    </div>
+                    <div className="flex justify-between font-semibold border-t pt-2 md:col-span-2">
+                      <span className="text-gray-700">Precio total con IVA:</span>
+                      <span className="text-purple-600">${salePriceWithVAT.toLocaleString()}</span>
+                    </div>
+                  </div>
+                </div>
+              )}
             </div>
 
             {/* Stock por Bodegas */}

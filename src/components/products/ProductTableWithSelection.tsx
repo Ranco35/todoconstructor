@@ -13,6 +13,8 @@ import ProductDetailModal from './ProductDetailModal';
 import { Button } from '@/components/ui/button';
 import { Alert, AlertDescription } from '@/components/ui/alert';
 import CollapsibleSection from '@/components/shared/CollapsibleSection';
+import ColumnSelectorModal from '@/components/shared/ColumnSelectorModal';
+import { usePersistentState } from '@/hooks/usePersistentState';
 
 interface ProductTableWithSelectionProps {
   products: ProductFrontend[];
@@ -53,48 +55,24 @@ export default function ProductTableWithSelection({
   const [showActions, setShowActions] = useState(true);
   const [filtersOpen, setFiltersOpen] = useState(false);
   const [columnSelectorOpen, setColumnSelectorOpen] = useState(false);
-  const [visibleColumns, setVisibleColumns] = useState<string[]>(() => {
-    if (typeof window !== 'undefined') {
-      const saved = localStorage.getItem('productTableColumns');
-      if (saved) {
-        try {
-          const savedColumns = JSON.parse(saved);
-          const allColumnKeys = COLUMN_OPTIONS.map(c => c.key);
-          
-          // Verificar si hay nuevas columnas que no están en la configuración guardada
-          const missingColumns = allColumnKeys.filter(key => !savedColumns.includes(key));
-          
-          if (missingColumns.length > 0) {
-            // Agregar las nuevas columnas a la configuración existente
-            const updatedColumns = [...savedColumns, ...missingColumns];
-            localStorage.setItem('productTableColumns', JSON.stringify(updatedColumns));
-            return updatedColumns;
-          }
-          
-          return savedColumns;
-        } catch (error) {
-          console.error('Error parsing saved columns:', error);
-          // Si hay error, usar configuración por defecto
-          return COLUMN_OPTIONS.map(c => c.key);
-        }
-      }
-    }
-    // Por defecto todas visibles menos nombre (que es fija)
-    return COLUMN_OPTIONS.map(c => c.key);
-  });
+  
+  // Usar hook personalizado para estado persistente de columnas
+  const [visibleColumns, setVisibleColumns] = usePersistentState<string[]>(
+    'productTableColumns',
+    COLUMN_OPTIONS.map(c => c.key)
+  );
+  
+  // Usar hook personalizado para estado persistente del buscador
+  const [searchTerm, setSearchTerm] = usePersistentState<string>(
+    'productTableSearch',
+    ''
+  );
+  
   const router = useRouter();
   const [isExporting, setIsExporting] = useState(false);
 
-  const toggleColumn = (key: string) => {
-    setVisibleColumns(prev => {
-      const updated = prev.includes(key)
-        ? prev.filter(k => k !== key)
-        : [...prev, key];
-      if (typeof window !== 'undefined') {
-        localStorage.setItem('productTableColumns', JSON.stringify(updated));
-      }
-      return updated;
-    });
+  const handleColumnsChange = (newColumns: string[]) => {
+    setVisibleColumns(newColumns);
   };
 
   // Función para manejar doble clic en el nombre del producto
@@ -431,6 +409,11 @@ export default function ProductTableWithSelection({
         showColumnsButton={true}
         onFiltersToggle={() => setFiltersOpen(!filtersOpen)}
         onColumnsToggle={() => setColumnSelectorOpen(!columnSelectorOpen)}
+        // Agregar búsqueda persistente
+        searchPlaceholder="Buscar productos..."
+        showSearchControls={true}
+        persistentSearchKey="productTableSearch"
+        onSearchChange={setSearchTerm}
       />
 
       {/* Modal de detalles */}
@@ -536,6 +519,16 @@ export default function ProductTableWithSelection({
           </div>
         </div>
       )}
+
+      {/* Modal de selector de columnas */}
+      <ColumnSelectorModal
+        isOpen={columnSelectorOpen}
+        onClose={() => setColumnSelectorOpen(false)}
+        columns={COLUMN_OPTIONS}
+        visibleColumns={visibleColumns}
+        onColumnsChange={handleColumnsChange}
+        storageKey="productTableColumns"
+      />
     </div>
   );
 } 

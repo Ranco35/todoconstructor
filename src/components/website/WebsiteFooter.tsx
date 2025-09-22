@@ -3,10 +3,10 @@ import { Phone, Mail, MapPin, Facebook, Instagram, Twitter, Youtube } from 'luci
 
 const footerLinks = {
   productos: [
-    { name: 'Herramientas', href: '/website/category/herramientas' },
-    { name: 'Materiales', href: '/website/category/materiales' },
-    { name: 'Eléctricos', href: '/website/category/electricos' },
-    { name: 'Pinturas', href: '/website/category/pinturas' },
+    { name: 'Ver Todas las Categorías', href: '/website/categories' },
+    { name: 'Herramientas', href: '/website/categories' },
+    { name: 'Materiales', href: '/website/categories' },
+    { name: 'Eléctricos', href: '/website/categories' },
   ],
   servicios: [
     { name: 'Asesoría Técnica', href: '/website/services' },

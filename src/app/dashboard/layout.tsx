@@ -65,7 +65,7 @@ function DashboardContent({ children }: { children: React.ReactNode }) {
           .single();
         
         const profileTimeoutPromise = new Promise((_, reject) => 
-          setTimeout(() => reject(new Error('Profile timeout')), 3000)
+          setTimeout(() => reject(new Error('Profile timeout')), 10000)
         );
         
         const { data: userProfile, error: profileError } = await Promise.race([
@@ -97,9 +97,32 @@ function DashboardContent({ children }: { children: React.ReactNode }) {
         
       } catch (err: any) {
         console.error('💥 Dashboard Layout Error:', err);
-        setError(err.message);
-        // En caso de error, redirigir a login
-        setShouldRedirect(true);
+        
+        // Si es timeout o error de perfil, usar datos básicos de la sesión
+        if (err.message === 'Profile timeout' || err.message.includes('Profile')) {
+          console.log('⚠️ Dashboard Layout: Usando datos básicos de sesión debido a timeout');
+          
+          // Crear datos básicos del usuario desde la sesión
+          const basicUserData = {
+            id: user.id,
+            username: user.email?.split('@')[0] || 'Usuario',
+            email: user.email || '',
+            firstName: user.email?.split('@')[0] || 'Usuario',
+            lastName: '',
+            role: 'ADMINISTRADOR', // Rol por defecto
+            department: null,
+            isCashier: false,
+            isActive: true,
+            lastLogin: null
+          };
+          
+          setCurrentUser(basicUserData);
+          console.log('✅ Dashboard Layout: Usuario básico configurado:', basicUserData.email);
+        } else {
+          // Para otros errores, mostrar error y redirigir
+          setError(err.message);
+          setShouldRedirect(true);
+        }
       } finally {
         setIsLoading(false);
       }

@@ -131,11 +131,19 @@ export default function DashboardModules({
         stats: { label: 'En stock', value: '89 items' }
       },
       {
+        title: 'Gestión de Precios',
+        description: 'Ajustar precios, utilidades y promociones',
+        icon: '💲',
+        href: '/dashboard/pricing',
+        color: 'bg-emerald-100 text-emerald-600',
+        stats: { label: 'Módulo', value: 'Nuevo' }
+      },
+      {
         title: 'Contabilidad',
         description: 'Gestión financiera y contable',
         icon: '💰',
         href: '/dashboard/accounting',
-        color: 'bg-emerald-100 text-emerald-600',
+        color: 'bg-cyan-100 text-cyan-600',
         stats: { label: 'Utilidad', value: '$21,780' }
       },
       {

@@ -76,8 +76,16 @@ function DashboardPage() {
           </div>
         </Link>
 
+        <Link href="/dashboard/pricing">
+          <div className="bg-emerald-100 border-4 border-emerald-500 rounded-xl p-6 hover:shadow-lg">
+            <div className="text-2xl mb-2">💲</div>
+            <h3 className="text-lg font-bold text-gray-900">🟢 NUEVO: Gestión de Precios</h3>
+            <p className="text-sm text-gray-600">Ajustar precios, utilidades y promociones</p>
+          </div>
+        </Link>
+
         <Link href="/dashboard/accounting">
-          <div className="bg-emerald-100 rounded-xl p-6 hover:shadow-lg">
+          <div className="bg-cyan-100 rounded-xl p-6 hover:shadow-lg">
             <div className="text-2xl mb-2">💰</div>
             <h3 className="text-lg font-bold text-gray-900">Contabilidad</h3>
             <p className="text-sm text-gray-600">Gestión financiera</p>

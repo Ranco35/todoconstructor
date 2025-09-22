@@ -65,6 +65,9 @@ interface ModernTableProps<T> {
   onColumnsToggle?: () => void;
   showFiltersButton?: boolean;
   showColumnsButton?: boolean;
+  // Props para búsqueda persistente
+  persistentSearchKey?: string;
+  onSearchChange?: (search: string) => void;
 }
 
 type SortDirection = 'asc' | 'desc' | 'none';
@@ -96,12 +99,45 @@ export function ModernTable<T>({
   onColumnsToggle,
   showFiltersButton = false,
   showColumnsButton = false,
+  // Props para búsqueda persistente
+  persistentSearchKey,
+  onSearchChange,
 }: ModernTableProps<T>) {
-  const [searchTerm, setSearchTerm] = useState('');
+  // Usar estado persistente si se proporciona la clave, sino usar estado local
+  const [searchTerm, setSearchTerm] = useState(() => {
+    if (persistentSearchKey && typeof window !== 'undefined') {
+      try {
+        const saved = localStorage.getItem(persistentSearchKey);
+        return saved ? JSON.parse(saved) : '';
+      } catch {
+        return '';
+      }
+    }
+    return '';
+  });
   const [internalSelectedItems, setInternalSelectedItems] = useState<(string | number)[]>([]);
   const [sortField, setSortField] = useState<keyof T | null>(null);
   const [sortDirection, setSortDirection] = useState<SortDirection>('none');
   const [showBulkActionsBar, setShowBulkActionsBar] = useState(false);
+
+  // Función para manejar cambio de búsqueda
+  const handleSearchChange = (newSearchTerm: string) => {
+    setSearchTerm(newSearchTerm);
+    
+    // Guardar en localStorage si hay clave persistente
+    if (persistentSearchKey && typeof window !== 'undefined') {
+      try {
+        localStorage.setItem(persistentSearchKey, JSON.stringify(newSearchTerm));
+      } catch (error) {
+        console.warn('Error saving search term:', error);
+      }
+    }
+    
+    // Notificar al componente padre si hay callback
+    if (onSearchChange) {
+      onSearchChange(newSearchTerm);
+    }
+  };
 
   // Usar selectedRowIds si está disponible, sino usar estado interno
   const selectedItems = selectedRowIds.length > 0 ? selectedRowIds : internalSelectedItems;
@@ -297,7 +333,7 @@ export function ModernTable<T>({
                       type="text"
                       placeholder={searchPlaceholder}
                       value={searchTerm}
-                      onChange={(e) => setSearchTerm(e.target.value)}
+                      onChange={(e) => handleSearchChange(e.target.value)}
                       className="w-full pl-12 pr-4 py-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-transparent text-sm"
                     />
                   </div>

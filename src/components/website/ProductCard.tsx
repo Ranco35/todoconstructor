@@ -22,6 +22,13 @@ export default function ProductCard({ product, onAddToCart }: ProductCardProps) 
     }).format(price)
   }
 
+  // Función para calcular precio con IVA
+  const getPriceWithVAT = (price: number | null, vat: number | null) => {
+    if (!price) return 0
+    if (!vat || vat === 0) return price
+    return Math.round(price * (1 + vat / 100))
+  }
+
   // Función para obtener imagen genérica por categoría
   const getGenericImage = (categoryName: string | null) => {
     const categoryImages: { [key: string]: string } = {
@@ -108,24 +115,13 @@ export default function ProductCard({ product, onAddToCart }: ProductCardProps) 
 
         {/* Precio */}
         <div className="mb-3">
-          {product.finalPrice ? (
+          {product.saleprice ? (
             <div>
               <span className="text-2xl font-bold text-green-600">
-                {formatPrice(product.finalPrice)}
-              </span>
-              {product.vat && (
-                <span className="text-sm text-gray-500 ml-2">
-                  (IVA {product.vat}% incluido)
-                </span>
-              )}
-            </div>
-          ) : product.saleprice ? (
-            <div>
-              <span className="text-2xl font-bold text-green-600">
-                {formatPrice(product.saleprice)}
+                {formatPrice(getPriceWithVAT(product.saleprice, product.vat))}
               </span>
               <span className="text-sm text-gray-500 ml-2">
-                (sin IVA)
+                (IVA {product.vat || 0}% incluido)
               </span>
             </div>
           ) : (
