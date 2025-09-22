@@ -105,3 +105,4 @@ Si el problema persiste después de seguir estos pasos:
 2. Verificar que `supabase start` haya completado exitosamente
 3. Verificar que las variables de entorno estén configuradas
 4. Revisar los logs de `supabase status` para errores adicionales
+

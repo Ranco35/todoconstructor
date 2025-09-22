@@ -27,3 +27,4 @@ NEXTAUTH_SECRET=your_nextauth_secret_here
 # - Nunca subir .env.local a Git
 # - Mantener las credenciales seguras
 # - Rotar las claves periódicamente
+

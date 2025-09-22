@@ -56,3 +56,4 @@ export function getS3ClientConfig() {
     signatureVersion: 'v4'
   };
 }
+

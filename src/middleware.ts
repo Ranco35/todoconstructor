@@ -4,6 +4,15 @@ import { createServerClient, type CookieOptions } from '@supabase/ssr'
 export async function middleware(request: NextRequest) {
   const pathname = request.nextUrl.pathname
   
+  // Optimización: Solo procesar rutas que necesitan autenticación
+  const isProtectedRoute = pathname.startsWith('/dashboard') || pathname === '/login'
+  const isApiRoute = pathname.startsWith('/api/')
+  
+  // Si no es una ruta protegida ni API, continuar sin verificar autenticación
+  if (!isProtectedRoute && !isApiRoute) {
+    return NextResponse.next()
+  }
+
   // Crear respuesta para manejar cookies de Supabase
   let response = NextResponse.next({
     request: {
@@ -11,7 +20,7 @@ export async function middleware(request: NextRequest) {
     },
   })
 
-  // Crear cliente Supabase con manejo de cookies
+  // Crear cliente Supabase con manejo de cookies optimizado
   const supabase = createServerClient(
     process.env.NEXT_PUBLIC_SUPABASE_URL!,
     process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
@@ -29,9 +38,15 @@ export async function middleware(request: NextRequest) {
     }
   )
 
-  // Verificar sesión de Supabase
-  const { data: { session } } = await supabase.auth.getSession()
-  const hasSupabaseSession = !!session
+  // Verificar sesión de Supabase con timeout
+  let hasSupabaseSession = false
+  try {
+    const { data: { session }, error } = await supabase.auth.getSession()
+    hasSupabaseSession = !!session && !error
+  } catch (error) {
+    console.warn('Middleware: Error verificando sesión:', error)
+    hasSupabaseSession = false
+  }
 
   // Proteger rutas del dashboard
   if (!hasSupabaseSession && pathname.startsWith('/dashboard')) {

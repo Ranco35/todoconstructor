@@ -42,42 +42,40 @@ export async function POST(request: NextRequest) {
       }
     );
 
-    // Determinar email del usuario
+    // Determinar email del usuario con timeout
     let userEmail: string = normalizedUsername;
     if (!normalizedUsername.includes('@')) {
       try {
         // Usar cliente de servicio para bypassear RLS al resolver username → email
         const serviceClient = await getSupabaseServiceClient();
 
-        // Buscar por username exacto primero
-        const { data: byUsername } = await serviceClient
+        // Crear promise con timeout para la búsqueda de usuario
+        const userSearchPromise = serviceClient
           .from('User')
           .select('email')
-          .eq('username', normalizedUsername)
+          .or(`username.eq.${normalizedUsername},name.eq.${normalizedUsername}`)
           .single();
 
-        if (byUsername?.email) {
-          userEmail = byUsername.email;
-        } else {
-          // Fallback: buscar por name exacto
-          const { data: byName } = await serviceClient
-            .from('User')
-            .select('email')
-            .eq('name', normalizedUsername)
-            .single();
+        const timeoutPromise = new Promise((_, reject) => 
+          setTimeout(() => reject(new Error('User search timeout')), 3000)
+        );
 
-          if (byName?.email) {
-            userEmail = byName.email;
-          } else {
-            const final401 = NextResponse.json(
-              { success: false, message: 'Usuario no encontrado' },
-              { status: 401 }
-            );
-            cookieCarrier.cookies.getAll().forEach((c) => {
-              final401.cookies.set(c.name, c.value, c as unknown as CookieOptions);
-            });
-            return final401;
-          }
+        const { data: userData } = await Promise.race([
+          userSearchPromise,
+          timeoutPromise
+        ]) as any;
+
+        if (userData?.email) {
+          userEmail = userData.email;
+        } else {
+          const final401 = NextResponse.json(
+            { success: false, message: 'Usuario no encontrado' },
+            { status: 401 }
+          );
+          cookieCarrier.cookies.getAll().forEach((c) => {
+            final401.cookies.set(c.name, c.value, c as unknown as CookieOptions);
+          });
+          return final401;
         }
       } catch (resolveErr: any) {
         const final401 = NextResponse.json(
@@ -109,14 +107,6 @@ export async function POST(request: NextRequest) {
       return final401;
     }
 
-    // Actualizar lastLogin de forma no crítica
-    try {
-      await supabase
-        .from('User')
-        .update({ lastLogin: new Date().toISOString() })
-        .eq('email', userEmail);
-    } catch {}
-
     const result = {
       success: true,
       user: data?.user ?? null,
@@ -131,6 +121,19 @@ export async function POST(request: NextRequest) {
     cookieCarrier.cookies.getAll().forEach((c) => {
       final200.cookies.set(c.name, c.value, c as unknown as CookieOptions);
     });
+
+    // Actualizar lastLogin de forma asíncrona (no bloquear respuesta)
+    setImmediate(async () => {
+      try {
+        await supabase
+          .from('User')
+          .update({ lastLogin: new Date().toISOString() })
+          .eq('email', userEmail);
+      } catch (error) {
+        console.warn('Error actualizando lastLogin:', error);
+      }
+    });
+
     return final200;
 
   } catch (error: any) {

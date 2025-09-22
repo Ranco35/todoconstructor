@@ -22,7 +22,7 @@ export default function LoginPage() {
       console.log('🔍 Iniciando login con API route:', { username: formData.username });
       
       const controller = new AbortController();
-      const timeoutId = setTimeout(() => controller.abort(), 30000); // 30 segundos timeout
+      const timeoutId = setTimeout(() => controller.abort(), 10000); // 10 segundos timeout
 
       const response = await fetch('/api/auth/login', {
         method: 'POST',

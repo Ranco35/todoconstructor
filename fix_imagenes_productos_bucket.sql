@@ -72,3 +72,4 @@ AND policyname LIKE '%imagenes_productos%';
 SELECT id, name, public, file_size_limit, allowed_mime_types 
 FROM storage.buckets 
 WHERE name = 'Imagenes Productos';
+

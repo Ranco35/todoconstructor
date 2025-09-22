@@ -23,8 +23,16 @@ function DashboardContent({ children }: { children: React.ReactNode }) {
         // Usar Supabase auth directo en cliente con cookies
         const supabase = createClient();
         
-        // Intentar obtener sesión primero
-        const { data: { session }, error: sessionError } = await supabase.auth.getSession();
+        // Intentar obtener sesión primero con timeout
+        const sessionPromise = supabase.auth.getSession();
+        const timeoutPromise = new Promise((_, reject) => 
+          setTimeout(() => reject(new Error('Session timeout')), 5000)
+        );
+        
+        const { data: { session }, error: sessionError } = await Promise.race([
+          sessionPromise,
+          timeoutPromise
+        ]) as any;
         
         if (sessionError) {
           console.log('❌ Dashboard Layout: Error obteniendo sesión:', sessionError.message);
@@ -49,13 +57,23 @@ function DashboardContent({ children }: { children: React.ReactNode }) {
           return;
         }
 
-        // Obtener perfil del usuario desde la tabla User
-        const { data: userProfile, error: profileError } = await supabase
+        // Obtener perfil del usuario desde la tabla User con timeout
+        const profilePromise = supabase
           .from('User')
           .select('id, name, email, Role(roleName), department, isCashier, isActive')
           .eq('id', user.id)
           .single();
+        
+        const profileTimeoutPromise = new Promise((_, reject) => 
+          setTimeout(() => reject(new Error('Profile timeout')), 3000)
+        );
+        
+        const { data: userProfile, error: profileError } = await Promise.race([
+          profilePromise,
+          profileTimeoutPromise
+        ]) as any;
 
+        // Si hay error obteniendo el perfil, usar datos básicos de la sesión
         const userData = {
           id: user.id,
           username: userProfile?.name || user.email?.split('@')[0] || 'Usuario',

@@ -93,3 +93,4 @@ FROM pg_policies
 WHERE tablename = 'objects'
 GROUP BY cmd
 ORDER BY cmd;
+

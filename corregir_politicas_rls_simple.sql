@@ -98,3 +98,4 @@ WHERE name = 'Imagenes Productos';
 -- 7. Mensaje de confirmación
 SELECT '=== ¡CONFIGURACIÓN COMPLETADA! ===' as status;
 SELECT 'El bucket "Imagenes Productos" está listo para usar.' as message;
+
