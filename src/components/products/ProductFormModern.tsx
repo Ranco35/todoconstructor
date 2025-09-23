@@ -22,7 +22,6 @@ import { Save, Package, Tag, Image, FileText, Building2, Grid3x3, RefreshCw, Dol
 import { getAllUnits } from '@/utils/unit-conversions';
 import { ProductImageUploader } from './ProductImageUploader';
 import ComboComponentsManager from './ComboComponentsManager';
-import POSFieldDebug from './POSFieldDebug';
 import { toast } from '@/hooks/use-toast';
 
 interface ProductFormModernProps {
@@ -685,8 +684,6 @@ export default function ProductFormModern({ initialData, action, isEdit = false 
           </div>
         </div>
 
-        {/* Debug Component */}
-        <POSFieldDebug formData={formData} isVisible={true} />
         
         {/* Form Content */}
         <form id="product-form" onSubmit={handleSubmit}>

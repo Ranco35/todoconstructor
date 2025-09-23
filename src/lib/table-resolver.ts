@@ -60,8 +60,8 @@ export async function getCategoryTableName(supabase: SupabaseLikeClient): Promis
   }
   // Probar varias variantes comunes
   const candidates = [
-    'category',
     'Category',
+    'category',
     'categories',
     'Categories',
     'product_category',

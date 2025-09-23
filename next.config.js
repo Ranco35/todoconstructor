@@ -49,7 +49,7 @@ const nextConfig = {
     return config;
   },
   
-  // Redirección básica
+  // Redirección básica - solo para la ruta raíz exacta
   async redirects() {
     return [
       {

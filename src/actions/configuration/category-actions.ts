@@ -42,6 +42,7 @@ export async function createCategory(formData: FormData) {
   const name = formData.get('name') as string;
   const description = formData.get('description') as string;
   const parentId = formData.get('parentId') as string;
+  const image = formData.get('image') as string;
 
   if (!name || name.trim() === '') {
     throw new Error('El nombre de la categoría es requerido.');
@@ -79,6 +80,7 @@ export async function createCategory(formData: FormData) {
         name: name.trim(),
         description: description?.trim() || null,
         parentId: parsedParentId,
+        image: image?.trim() || null,
       });
 
     if (error && (error as any).code) {
@@ -102,6 +104,7 @@ export async function createCategory(formData: FormData) {
             name: name.trim(),
             description: description?.trim() || null,
             parentId: parsedParentId,
+            image: image?.trim() || null,
           });
         if (srvErr && (srvErr as any).code) {
           console.error('❌ Service insert Category error:', srvErr || '(null)');
@@ -129,6 +132,7 @@ export async function updateCategory(id: number, formData: FormData) {
   const name = formData.get('name') as string;
   const description = formData.get('description') as string;
   const parentId = formData.get('parentId') as string;
+  const image = formData.get('image') as string;
 
   if (!name || name.trim() === '') {
     throw new Error('El nombre de la categoría es requerido.');
@@ -170,6 +174,7 @@ export async function updateCategory(id: number, formData: FormData) {
         name: name.trim(),
         description: description?.trim() || null,
         parentId: parsedParentId,
+        image: image?.trim() || null,
       })
       .eq('id', id);
 
