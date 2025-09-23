@@ -133,6 +133,15 @@ export async function updateCategory(id: number, formData: FormData) {
   const description = formData.get('description') as string;
   const parentId = formData.get('parentId') as string;
   const image = formData.get('image') as string;
+  
+  // Debug: Log para verificar que los datos se están recibiendo correctamente
+  console.log('🔄 updateCategory - Datos recibidos:', {
+    id,
+    name,
+    description,
+    parentId,
+    image
+  });
 
   if (!name || name.trim() === '') {
     throw new Error('El nombre de la categoría es requerido.');
@@ -168,14 +177,18 @@ export async function updateCategory(id: number, formData: FormData) {
   }
 
   try {
+    const updateData = {
+      name: name.trim(),
+      description: description?.trim() || null,
+      parentId: parsedParentId,
+      image: image?.trim() || null,
+    };
+    
+    console.log('🔄 updateCategory - Datos a actualizar:', updateData);
+    
     const { error } = await (supabase as any)
       .from(categoryTable)
-      .update({
-        name: name.trim(),
-        description: description?.trim() || null,
-        parentId: parsedParentId,
-        image: image?.trim() || null,
-      })
+      .update(updateData)
       .eq('id', id);
 
     if (error) {

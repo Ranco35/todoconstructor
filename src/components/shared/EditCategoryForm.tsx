@@ -11,6 +11,7 @@ import { Switch } from '@/components/ui/switch';
 import { toast } from 'sonner';
 import CategoryParentSelector from '@/components/shared/CategoryParentSelector';
 import NotificationToast from '@/components/shared/NotificationToast';
+import WebsiteImageUploader from '@/components/website/WebsiteImageUploader';
 import { updateCategory } from '@/actions/configuration/category-actions';
 
 // Definir el tipo Category localmente
@@ -19,6 +20,7 @@ interface Category {
   name: string;
   description?: string | null;
   parentId?: number | null;
+  image?: string | null;
   createdAt: string;
   updatedAt: string;
 }
@@ -40,9 +42,23 @@ export default function EditCategoryForm({ category }: EditCategoryFormProps) {
   } | null>(null);
   const [isLoading, setIsLoading] = useState(false);
   const [selectedParentId, setSelectedParentId] = useState<number | null>(category.parentId);
+  const [imageUrl, setImageUrl] = useState<string | null>(category.image || null);
+  
+  // Debug: Log para verificar que la imagen se está cargando correctamente
+  console.log('🔄 EditCategoryForm - Categoría cargada:', {
+    id: category.id,
+    name: category.name,
+    image: category.image,
+    imageUrl: imageUrl
+  });
 
   const handleSubmit = async (formData: FormData) => {
     setIsLoading(true);
+    
+    // Agregar la imagen al FormData
+    if (imageUrl) {
+      formData.set('image', imageUrl);
+    }
     
     // Delay mínimo para asegurar que el usuario vea el spinner
     const startTime = Date.now();
@@ -155,6 +171,26 @@ export default function EditCategoryForm({ category }: EditCategoryFormProps) {
                 placeholder="Descripción detallada de la categoría..."
               />
               <p className="mt-1 text-sm text-gray-500">Máximo 500 caracteres</p>
+            </div>
+
+            {/* Imagen de la categoría */}
+            <div className="md:col-span-2">
+              <label className="block text-sm font-medium text-gray-700 mb-2">
+                Imagen de la categoría (opcional)
+              </label>
+              <WebsiteImageUploader
+                currentImageUrl={imageUrl || undefined}
+                onImageChange={(url) => {
+                  console.log('🔄 EditCategoryForm - Imagen cambiada:', url);
+                  setImageUrl(url);
+                }}
+                category="categories"
+                altText={`Imagen de la categoría ${category.name}`}
+                size="md"
+              />
+              <p className="mt-1 text-sm text-gray-500">
+                La imagen se optimizará automáticamente para la web y se mostrará en el sitio público.
+              </p>
             </div>
 
             <div className="md:col-span-2">

@@ -231,23 +231,26 @@ export default function WebsiteImageUploader({
 
           {/* Controles */}
           <div className="space-y-3">
-            {/* Categoría */}
-            <div>
-              <Label htmlFor="category">Categoría</Label>
-              <Select value={category} onValueChange={setCategory} disabled={disabled}>
-                <SelectTrigger>
-                  <SelectValue placeholder="Seleccionar categoría" />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="hero">Hero/Principal</SelectItem>
-                  <SelectItem value="rooms">Habitaciones</SelectItem>
-                  <SelectItem value="services">Servicios</SelectItem>
-                  <SelectItem value="gallery">Galería</SelectItem>
-                  <SelectItem value="testimonials">Testimonios</SelectItem>
-                  <SelectItem value="other">Otros</SelectItem>
-                </SelectContent>
-              </Select>
-            </div>
+            {/* Categoría - Solo mostrar si no es "categories" */}
+            {category !== 'categories' && (
+              <div>
+                <Label htmlFor="category">Categoría</Label>
+                <Select value={category} onValueChange={setCategory} disabled={disabled}>
+                  <SelectTrigger>
+                    <SelectValue placeholder="Seleccionar categoría" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="hero">Hero/Principal</SelectItem>
+                    <SelectItem value="rooms">Habitaciones</SelectItem>
+                    <SelectItem value="services">Servicios</SelectItem>
+                    <SelectItem value="gallery">Galería</SelectItem>
+                    <SelectItem value="testimonials">Testimonios</SelectItem>
+                    <SelectItem value="categories">Categorías</SelectItem>
+                    <SelectItem value="other">Otros</SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
+            )}
 
             {/* Texto alternativo */}
             <div>

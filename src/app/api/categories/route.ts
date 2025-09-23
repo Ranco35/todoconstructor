@@ -50,7 +50,7 @@ export async function GET() {
         let parentInfo = null;
         if (category.parentId) {
           const { data: parentCategory } = await (supabase as any)
-            .from(categoryTable)
+            .from(primaryTable)
             .select('name')
             .eq('id', category.parentId)
             .single();
