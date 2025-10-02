@@ -56,7 +56,7 @@ export default function ContactSection() {
                   </div>
                   <div>
                     <h4 className="font-semibold text-gray-900 mb-1">Teléfono</h4>
-                    <p className="text-gray-600">+56 9 1234 5678</p>
+                    <p className="text-gray-600">+56 9 6909 5111</p>
                     <p className="text-gray-600">+56 2 2345 6789</p>
                   </div>
                 </div>
@@ -165,7 +165,7 @@ export default function ContactSection() {
                   value={formData.phone}
                   onChange={handleChange}
                   className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-transparent"
-                  placeholder="+56 9 1234 5678"
+                  placeholder="+56 9 6909 5111"
                 />
               </div>
 
@@ -199,7 +199,7 @@ export default function ContactSection() {
               <h4 className="font-semibold text-gray-900 mb-2">¿Necesitas ayuda rápida?</h4>
               <p className="text-gray-600 text-sm">
                 Para reservas inmediatas, llama directamente a nuestro número de atención: 
-                <span className="font-semibold text-green-600"> +56 9 1234 5678</span>
+                <span className="font-semibold text-green-600"> +56 9 6909 5111</span>
               </p>
             </div>
           </div>

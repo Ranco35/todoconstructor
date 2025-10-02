@@ -178,3 +178,6 @@ Resultado: No se muestra la columna de IVA
 **Implementado por:** Sistema de Gestión de Precios  
 **Fecha de implementación:** 23 de enero de 2025  
 **Estado:** ✅ Completado y funcionando
+
+
+

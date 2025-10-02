@@ -345,3 +345,6 @@ SELECT apply_active_promotions(123, 13000, NOW());
 **Fecha de creación**: 2025-01-22  
 **Versión**: 1.0.0  
 **Estado**: Implementado y funcional
+
+
+

@@ -4,3 +4,6 @@ import PriceManagementDashboard from '@/components/pricing/PriceManagementDashbo
 export default function PricingDashboardPage() {
   return <PriceManagementDashboard />;
 }
+
+
+

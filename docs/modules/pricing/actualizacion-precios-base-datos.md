@@ -354,3 +354,6 @@ El sistema de gestión de precios ahora incluye:
 **Sistema funcional**: `http://localhost:3000/dashboard/pricing/products`
 
 ¡La actualización de precios en base de datos está ahora completamente implementada y funcional! 🚀
+
+
+

@@ -250,3 +250,6 @@ const logPriceChange = async (changeData) => {
 4. **Confirmar funcionamiento** sin errores
 
 ¡El sistema de actualización de precios está ahora completamente funcional sin errores de trigger! 🚀
+
+
+

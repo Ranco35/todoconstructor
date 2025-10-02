@@ -187,3 +187,6 @@ El módulo de gestión de precios ahora incluye:
 **URL de acceso**: `http://localhost:3000/dashboard/pricing/products`
 
 El sistema está completamente funcional y listo para uso en producción! 🚀
+
+
+

@@ -206,3 +206,6 @@ La búsqueda de productos ahora funciona perfectamente:
 - **Compatibilidad total**: Funciona en todos los navegadores
 
 ¡El sistema de productos está 100% operativo! 🚀
+
+
+

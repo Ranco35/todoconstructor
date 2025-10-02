@@ -164,3 +164,6 @@ HINT: Use DROP ... CASCADE to drop the dependent objects too.
 4. **Confirmar funcionamiento** sin errores
 
 ¡El sistema de actualización de precios está ahora completamente funcional! 🚀
+
+
+

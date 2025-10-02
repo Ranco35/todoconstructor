@@ -32,3 +32,6 @@ WHERE event_object_table = 'Product';
 
 -- 5. Mensaje de confirmación
 SELECT '✅ Triggers problemáticos eliminados correctamente' as resultado;
+
+
+

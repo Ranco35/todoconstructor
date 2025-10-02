@@ -72,3 +72,6 @@ CREATE TRIGGER log_price_changes
 -- 3. El trigger es opcional y no crítico para la funcionalidad
 --    de actualización de precios
 -- =====================================================
+
+
+

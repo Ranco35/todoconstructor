@@ -230,7 +230,7 @@ export default async function CategoryPage({ params }: CategoryPageProps) {
                   </div>
                   
                   <a
-                    href={`https://wa.me/56912345678?text=Hola, me interesa el producto: ${product.name} (${category.name})`}
+                    href={`https://wa.me/56969095111?text=Hola, me interesa el producto: ${product.name} (${category.name})`}
                     target="_blank"
                     rel="noopener noreferrer"
                     className="w-full bg-green-600 text-white py-2 px-4 rounded-lg font-medium hover:bg-green-700 transition-colors duration-200 flex items-center justify-center space-x-2"
@@ -263,7 +263,7 @@ export default async function CategoryPage({ params }: CategoryPageProps) {
         {/* Botón flotante de WhatsApp */}
         <div className="fixed bottom-4 right-4">
           <a
-            href={`https://wa.me/56912345678?text=Hola, me interesa consultar sobre productos de ${category.name}`}
+            href={`https://wa.me/56969095111?text=Hola, me interesa consultar sobre productos de ${category.name}`}
             target="_blank"
             rel="noopener noreferrer"
             className="bg-green-500 hover:bg-green-600 text-white p-4 rounded-full shadow-lg transition-colors duration-200 flex items-center space-x-2"

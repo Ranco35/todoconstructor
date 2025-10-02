@@ -20,3 +20,6 @@ WHERE event_object_table = 'Product'
 AND trigger_name = 'log_price_changes';
 
 -- Si la consulta anterior no devuelve resultados, el trigger ha sido eliminado correctamente
+
+
+

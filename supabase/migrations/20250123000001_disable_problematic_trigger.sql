@@ -14,3 +14,6 @@ DROP FUNCTION IF EXISTS log_price_changes();
 -- al intentar acceder a campos inexistentes. La funcionalidad de 
 -- actualización de precios funciona correctamente sin este trigger.
 -- El historial de cambios se puede implementar de otra manera si es necesario.
+
+
+

@@ -101,7 +101,7 @@ export default function ProductStore() {
   // Función para contactar sobre un producto
   const handleContactProduct = (product: ProductWithStock) => {
     const message = `Hola, me interesa el producto: ${product.name}`
-    const whatsappUrl = `https://wa.me/56912345678?text=${encodeURIComponent(message)}`
+    const whatsappUrl = `https://wa.me/56969095111?text=${encodeURIComponent(message)}`
     window.open(whatsappUrl, '_blank')
   }
 
@@ -206,7 +206,7 @@ export default function ProductStore() {
       {/* Botón flotante de WhatsApp */}
       <div className="fixed bottom-4 right-4">
         <a
-          href="https://wa.me/56912345678?text=Hola,%20me%20interesa%20consultar%20sobre%20productos%20de%20ferretería"
+          href="https://wa.me/56969095111?text=Hola,%20me%20interesa%20consultar%20sobre%20productos%20de%20ferretería"
           target="_blank"
           rel="noopener noreferrer"
           className="bg-green-500 hover:bg-green-600 text-white p-4 rounded-full shadow-lg transition-colors duration-200 flex items-center space-x-2"

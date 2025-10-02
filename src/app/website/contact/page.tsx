@@ -35,10 +35,10 @@ export default function ContactPage() {
                   Llámanos para consultas y pedidos
                 </p>
                 <a
-                  href="tel:+56912345678"
+                  href="tel:+56969095111"
                   className="text-blue-600 hover:text-blue-700 font-medium"
                 >
-                  +56 9 1234 5678
+                  +56 9 6909 5111
                 </a>
               </div>
             </div>
@@ -112,12 +112,12 @@ export default function ContactPage() {
                   Chatea con nosotros para consultas rápidas
                 </p>
                 <a
-                  href="https://wa.me/56912345678?text=Hola,%20me%20interesa%20consultar%20sobre%20productos%20de%20ferretería"
+                  href="https://wa.me/56969095111?text=Hola,%20me%20interesa%20consultar%20sobre%20productos%20de%20ferretería"
                   target="_blank"
                   rel="noopener noreferrer"
                   className="text-green-600 hover:text-green-700 font-medium"
                 >
-                  +56 9 1234 5678
+                  +56 9 6909 5111
                 </a>
               </div>
             </div>
@@ -194,7 +194,7 @@ export default function ContactPage() {
                 id="telefono"
                 name="telefono"
                 className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                placeholder="+56 9 1234 5678"
+                placeholder="+56 9 6909 5111"
               />
             </div>
 

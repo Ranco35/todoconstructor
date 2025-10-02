@@ -124,3 +124,6 @@ export async function getProducts(params: PaginationParams) {
     throw new Error(`Error obteniendo productos: ${error.message || 'Error desconocido'}`);
   }
 }
+
+
+

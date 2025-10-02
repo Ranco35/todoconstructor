@@ -8,3 +8,6 @@ DROP FUNCTION IF EXISTS log_price_changes() CASCADE;
 
 -- Verificar eliminación
 SELECT 'Triggers eliminados' as resultado;
+
+
+

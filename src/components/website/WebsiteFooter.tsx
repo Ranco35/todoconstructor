@@ -56,7 +56,7 @@ export default function WebsiteFooter() {
             <div className="space-y-3">
               <div className="flex items-center space-x-3">
                 <Phone className="w-4 h-4 text-green-400" />
-                <span className="text-gray-300">+56 9 1234 5678</span>
+                <span className="text-gray-300">+56 9 6909 5111</span>
               </div>
               <div className="flex items-center space-x-3">
                 <Mail className="w-4 h-4 text-green-400" />

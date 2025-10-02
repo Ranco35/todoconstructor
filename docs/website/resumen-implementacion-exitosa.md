@@ -71,7 +71,7 @@ src/
 ### **WhatsApp por Producto**
 - Botón en cada tarjeta de producto
 - Mensaje predefinido con nombre del producto
-- Número: +56 9 1234 5678
+- Número: +56 9 6909 5111
 
 ### **WhatsApp General**
 - Botón flotante en esquina inferior derecha
@@ -198,4 +198,7 @@ El sistema de tienda online para la ferretería TC Constructor ha sido implement
 **📅 Fecha de Finalización**: Diciembre 2024  
 **🏢 Cliente**: TC Constructor - Ferretería & Construcción  
 **✅ Estado**: COMPLETADO Y FUNCIONANDO
+
+
+
 

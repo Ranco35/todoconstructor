@@ -43,7 +43,7 @@
 #### **Consulta General**
 1. Usar el botón flotante verde en la esquina inferior derecha
 2. Mensaje general para consultas sobre ferretería
-3. Número: +56 9 1234 5678
+3. Número: +56 9 6909 5111
 
 ## 👨‍💼 **PARA ADMINISTRADORES**
 
@@ -139,7 +139,7 @@ Get-Process | Where-Object {$_.ProcessName -like "*node*"}
 ## 📞 **SOPORTE**
 
 ### **Contacto Técnico**
-- **WhatsApp**: +56 9 1234 5678
+- **WhatsApp**: +56 9 6909 5111
 - **Email**: soporte@tcconstructor.cl
 - **Horario**: 24/7 (sistema automatizado)
 
@@ -151,4 +151,7 @@ Get-Process | Where-Object {$_.ProcessName -like "*node*"}
 ---
 
 *Esta guía debe actualizarse conforme se implementen nuevas funcionalidades o se realicen cambios en el sistema.*
+
+
+
 

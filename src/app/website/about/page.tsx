@@ -164,7 +164,7 @@ export default function AboutPage() {
               <div className="flex items-center space-x-3">
                 <Phone className="w-5 h-5 text-blue-600" />
                 <span className="text-gray-600">
-                  +56 9 1234 5678
+                  +56 9 6909 5111
                 </span>
               </div>
               <div className="flex items-center space-x-3">

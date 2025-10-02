@@ -105,7 +105,7 @@ WHERE wp.quantity > 0
 ```javascript
 const handleContactProduct = (product) => {
   const message = `Hola, me interesa el producto: ${product.name}`
-  const whatsappUrl = `https://wa.me/56912345678?text=${encodeURIComponent(message)}`
+  const whatsappUrl = `https://wa.me/56969095111?text=${encodeURIComponent(message)}`
   window.open(whatsappUrl, '_blank')
 }
 ```
@@ -113,7 +113,7 @@ const handleContactProduct = (product) => {
 ### **WhatsApp General**
 - Botón flotante en esquina inferior derecha
 - Mensaje predefinido para consultas generales
-- Número: +56 9 1234 5678
+- Número: +56 9 6909 5111
 
 ## 🔧 **CONFIGURACIÓN TÉCNICA**
 
@@ -203,7 +203,7 @@ export async function searchProducts(query: string): Promise<ProductWithStock[]>
 ## 📞 **SOPORTE TÉCNICO**
 
 ### **Contacto**
-- **WhatsApp**: +56 9 1234 5678
+- **WhatsApp**: +56 9 6909 5111
 - **Email**: soporte@tcconstructor.cl
 - **Horario**: 24/7 (sistema automatizado)
 
@@ -229,4 +229,7 @@ export async function searchProducts(query: string): Promise<ProductWithStock[]>
 ---
 
 *Esta documentación refleja el estado actual del sistema implementado y debe actualizarse conforme se realicen modificaciones o mejoras.*
+
+
+
 

@@ -182,3 +182,6 @@ Todas las funcionalidades están trabajando correctamente:
 - ✅ **Paginación**: Controles funcionando en ambos módulos
 
 ¡El sistema está completamente funcional! 🚀
+
+
+

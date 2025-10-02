@@ -246,3 +246,6 @@ El formulario de configuración de precios ahora incluye:
 - **Información completa**: Todo lo necesario para tomar decisiones de precios
 
 ¡El formulario de precios está ahora completamente optimizado para la gestión profesional de precios con IVA y stock! 🚀
+
+
+

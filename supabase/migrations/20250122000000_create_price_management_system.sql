@@ -402,3 +402,6 @@ COMMENT ON FUNCTION calculate_sale_price_from_cost IS 'Calcula precio de venta b
 COMMENT ON FUNCTION get_category_profit_margin IS 'Obtiene el margen de utilidad configurado para una categoría';
 COMMENT ON FUNCTION get_product_profit_margin IS 'Obtiene el margen de utilidad para un producto específico';
 COMMENT ON FUNCTION apply_active_promotions IS 'Aplica promociones activas a un precio base';
+
+
+

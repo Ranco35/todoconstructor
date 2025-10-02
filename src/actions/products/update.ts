@@ -184,17 +184,25 @@ export async function updateProduct(formData: FormData) {
     // Procesar stock solo si tiene warehouseid válido
     if (stockData && stockData.warehouseid && !isNaN(stockData.warehouseid)) {
       const warehouseId = parseInt(stockData.warehouseid.toString());
-      const quantity = stockData.current || 0;
-      const minStock = stockData.min || 0;
-      const maxStock = stockData.max || null;
-
-      console.log('🔍 DEBUG - Procesando stock para producto:', {
-        productId: id,
-        warehouseId,
-        quantity,
-        minStock,
-        maxStock
-      });
+      
+      // ✅ NO FORZAR A 0 - Validar explícitamente si vienen datos válidos
+      const quantity = stockData.current;
+      const minStock = stockData.min;
+      const maxStock = stockData.max;
+      
+      // Validar que quantity sea un número válido
+      if (quantity === null || quantity === undefined) {
+        console.warn('⚠️ No se recibió quantity válida, preservando stock actual');
+        // NO actualizar el stock - preservar el valor actual en la BD
+        // Continuar con el resto del proceso sin tocar Warehouse_Product
+      } else {
+        console.log('🔍 DEBUG - Procesando stock para producto:', {
+          productId: id,
+          warehouseId,
+          quantity,
+          minStock: minStock ?? 0,
+          maxStock: maxStock ?? null
+        });
 
       // Usar service role para operaciones en Warehouse_Product (bypass RLS)
       // Buscar si ya existe un registro para este producto y bodega
@@ -219,8 +227,8 @@ export async function updateProduct(formData: FormData) {
           .from('Warehouse_Product')
           .update({
             quantity,
-            minStock,
-            maxStock
+            minStock: minStock ?? 0,
+            maxStock: maxStock ?? null
           })
           .eq('id', existing.id);
         
@@ -239,8 +247,8 @@ export async function updateProduct(formData: FormData) {
             productId: id,
             warehouseId: warehouseId,
             quantity,
-            minStock,
-            maxStock
+            minStock: minStock ?? 0,
+            maxStock: maxStock ?? null
           });
         
         if (createStockError) {
@@ -250,6 +258,7 @@ export async function updateProduct(formData: FormData) {
           console.log('✅ Stock creado exitosamente en Warehouse_Product');
         }
       }
+      } // Cierre del else que valida quantity
     } else {
       console.log('🔍 DEBUG - No hay datos de stock válidos para procesar');
       console.log('🔍 DEBUG - stockData:', stockData);

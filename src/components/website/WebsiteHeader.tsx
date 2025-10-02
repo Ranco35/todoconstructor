@@ -23,7 +23,7 @@ export default function WebsiteHeader() {
           <div className="flex items-center space-x-4">
             <div className="flex items-center space-x-2">
               <Phone className="w-4 h-4" />
-              <span>+56 9 1234 5678</span>
+              <span>+56 9 6909 5111</span>
             </div>
             <div className="flex items-center space-x-2">
               <Mail className="w-4 h-4" />
