@@ -11,7 +11,7 @@ import PaginationControls from '@/components/shared/PaginationControls';
 
 interface PageProps {
   params: Promise<{ id: string }>;
-  searchParams: Promise<PaginationParams & { search?: string; stockFilter?: string }>;
+  searchParams: Promise<PaginationParams & { search?: string; stockFilter?: string; manage?: string }>;
 }
 
 export const dynamic = 'force-dynamic';
@@ -32,7 +32,7 @@ export default async function WarehouseProductsPage(props: PageProps) {
     notFound();
   }
 
-  const { page = '1', pageSize = '10', search = '', stockFilter = 'all' } = searchParams || {};
+  const { page = '1', pageSize = '10', search = '', stockFilter = 'all', manage } = searchParams || {};
   const currentPage = parseInt(String(page));
   const currentPageSize = parseInt(String(pageSize));
 
@@ -286,8 +286,11 @@ export default async function WarehouseProductsPage(props: PageProps) {
                 <PaginationControls
                   currentPage={currentPage}
                   totalPages={totalPages}
-                  totalItems={totalCount}
-                  pageSize={currentPageSize}
+                  pageSize={String(currentPageSize)}
+                  totalCount={totalCount}
+                  currentCount={warehouseProducts.length}
+                  basePath={`/dashboard/configuration/inventory/warehouses/${warehouseId}/products`}
+                  itemName="productos"
                 />
               </div>
             </>
@@ -295,7 +298,7 @@ export default async function WarehouseProductsPage(props: PageProps) {
         </CardContent>
       </Card>
 
-      {searchParams.manage && (
+      {manage && (
         <WarehouseProductManager
           warehouseId={warehouseId}
           warehouseName={warehouse.name}

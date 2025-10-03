@@ -374,7 +374,7 @@ export async function deleteWarehouseAction(id: number) {
 // === FUNCIONES DE PRODUCTOS EN BODEGAS ===
 
 export async function getProductsByWarehouse(
-  warehouseId: number, 
+  warehouseId: number,
   params?: { page?: number; pageSize?: number; search?: string; stockFilter?: 'all' | 'withStock' | 'withoutStock' | 'negative' }
 ): Promise<{ data: WarehouseProduct[]; totalCount: number }> {
   try {
@@ -382,7 +382,7 @@ export async function getProductsByWarehouse(
     
     // Si no hay parámetros, usar función simple
     if (!params) {
-      const { data, error } = await supabase
+      const { data: warehouseProducts, error } = await supabase
         .from('Warehouse_Product')
         .select(`
           *,
@@ -390,13 +390,8 @@ export async function getProductsByWarehouse(
             id,
             name,
             sku,
-            barcode,
-            Category (
-              name
-            ),
-            Supplier (
-              name
-            )
+            categoryid,
+            supplierid
           )
         `)
         .eq('warehouseId', warehouseId)
@@ -407,7 +402,41 @@ export async function getProductsByWarehouse(
         throw new Error(`Error obteniendo productos de bodega: ${error.message}`);
       }
       
-      return { data: data || [], totalCount: data?.length || 0 };
+      // Obtener IDs únicos de categorías y proveedores
+      const categoryIds = [...new Set(warehouseProducts?.map(wp => wp.Product?.categoryid).filter(Boolean))];
+      const supplierIds = [...new Set(warehouseProducts?.map(wp => wp.Product?.supplierid).filter(Boolean))];
+      
+      // Obtener nombres de categorías
+      const categoriesMap: Record<number, string> = {};
+      if (categoryIds.length > 0) {
+        const { data: categories } = await supabase
+          .from('Category')
+          .select('id, name')
+          .in('id', categoryIds);
+        categories?.forEach(cat => categoriesMap[cat.id] = cat.name);
+      }
+      
+      // Obtener nombres de proveedores
+      const suppliersMap: Record<number, string> = {};
+      if (supplierIds.length > 0) {
+        const { data: suppliers } = await supabase
+          .from('Supplier')
+          .select('id, name')
+          .in('id', supplierIds);
+        suppliers?.forEach(sup => suppliersMap[sup.id] = sup.name);
+      }
+      
+      // Mapear los datos con los nombres
+      const mappedData = warehouseProducts?.map(wp => ({
+        ...wp,
+        Product: wp.Product ? {
+          ...wp.Product,
+          Category: wp.Product.categoryid ? { name: categoriesMap[wp.Product.categoryid] || null } : null,
+          Supplier: wp.Product.supplierid ? { name: suppliersMap[wp.Product.supplierid] || null } : null
+        } : undefined
+      }));
+      
+      return { data: mappedData || [], totalCount: mappedData?.length || 0 };
     }
 
     const { page = 1, pageSize = 10, search = '', stockFilter = 'all' } = params;
@@ -422,13 +451,8 @@ export async function getProductsByWarehouse(
           id,
           name,
           sku,
-          barcode,
-          Category (
-            name
-          ),
-          Supplier (
-            name
-          )
+          categoryid,
+          supplierid
         )
       `, { count: 'exact' })
       .eq('warehouseId', warehouseId);
@@ -448,7 +472,7 @@ export async function getProductsByWarehouse(
       query = query.lt('quantity', 0);
     }
 
-    const { data, error, count } = await query
+    const { data: warehouseProducts, error, count } = await query
       .range(from, to)
       .order('id');
     
@@ -457,7 +481,41 @@ export async function getProductsByWarehouse(
       throw new Error(`Error obteniendo productos de bodega: ${error.message}`);
     }
     
-    return { data: data || [], totalCount: count || 0 };
+    // Obtener IDs únicos de categorías y proveedores
+    const categoryIds = [...new Set(warehouseProducts?.map(wp => wp.Product?.categoryid).filter(Boolean))];
+    const supplierIds = [...new Set(warehouseProducts?.map(wp => wp.Product?.supplierid).filter(Boolean))];
+    
+    // Obtener nombres de categorías
+    const categoriesMap: Record<number, string> = {};
+    if (categoryIds.length > 0) {
+      const { data: categories } = await supabase
+        .from('Category')
+        .select('id, name')
+        .in('id', categoryIds);
+      categories?.forEach(cat => categoriesMap[cat.id] = cat.name);
+    }
+    
+    // Obtener nombres de proveedores
+    const suppliersMap: Record<number, string> = {};
+    if (supplierIds.length > 0) {
+      const { data: suppliers } = await supabase
+        .from('Supplier')
+        .select('id, name')
+        .in('id', supplierIds);
+      suppliers?.forEach(sup => suppliersMap[sup.id] = sup.name);
+    }
+    
+    // Mapear los datos con los nombres
+    const mappedData = warehouseProducts?.map(wp => ({
+      ...wp,
+      Product: wp.Product ? {
+        ...wp.Product,
+        Category: wp.Product.categoryid ? { name: categoriesMap[wp.Product.categoryid] || null } : null,
+        Supplier: wp.Product.supplierid ? { name: suppliersMap[wp.Product.supplierid] || null } : null
+      } : undefined
+    }));
+    
+    return { data: mappedData || [], totalCount: count || 0 };
   } catch (error) {
     console.error('Error en getProductsByWarehouse:', error);
     throw error;
@@ -477,13 +535,8 @@ export async function getUnassignedProducts(
         id,
         name,
         sku,
-        barcode,
-        Category (
-          name
-        ),
-        Supplier (
-          name
-        )
+        categoryid,
+        supplierid
       `, { count: 'exact' });
 
     // Si se especifica una bodega, obtener productos NO asignados a esa bodega específica
@@ -504,17 +557,48 @@ export async function getUnassignedProducts(
     // Aplicar filtro de búsqueda si existe
     if (params?.search) {
       const searchTerm = params.search;
-      query = query.or(`name.ilike.%${searchTerm}%,sku.ilike.%${searchTerm}%,barcode.ilike.%${searchTerm}%`);
+      query = query.or(`name.ilike.%${searchTerm}%,sku.ilike.%${searchTerm}%`);
     }
 
-    const { data, error, count } = await query.order('name');
+    const { data: products, error, count } = await query.order('name');
     
     if (error) {
       console.error('Error obteniendo productos no asignados:', error);
       throw new Error(`Error obteniendo productos no asignados: ${error.message}`);
     }
     
-    return { data: data || [], totalCount: count || 0 };
+    // Obtener IDs únicos de categorías y proveedores
+    const categoryIds = [...new Set(products?.map(p => p.categoryid).filter(Boolean))];
+    const supplierIds = [...new Set(products?.map(p => p.supplierid).filter(Boolean))];
+    
+    // Obtener nombres de categorías
+    const categoriesMap: Record<number, string> = {};
+    if (categoryIds.length > 0) {
+      const { data: categories } = await supabase
+        .from('Category')
+        .select('id, name')
+        .in('id', categoryIds);
+      categories?.forEach(cat => categoriesMap[cat.id] = cat.name);
+    }
+    
+    // Obtener nombres de proveedores
+    const suppliersMap: Record<number, string> = {};
+    if (supplierIds.length > 0) {
+      const { data: suppliers } = await supabase
+        .from('Supplier')
+        .select('id, name')
+        .in('id', supplierIds);
+      suppliers?.forEach(sup => suppliersMap[sup.id] = sup.name);
+    }
+    
+    // Mapear los datos con los nombres
+    const mappedData = products?.map(product => ({
+      ...product,
+      Category: product.categoryid ? { name: categoriesMap[product.categoryid] || null } : null,
+      Supplier: product.supplierid ? { name: suppliersMap[product.supplierid] || null } : null
+    }));
+    
+    return { data: mappedData || [], totalCount: count || 0 };
   } catch (error) {
     console.error('Error en getUnassignedProducts:', error);
     throw error;

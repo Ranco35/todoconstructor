@@ -8,24 +8,7 @@ import { Label } from '@/components/ui/label';
 import { Badge } from '@/components/ui/badge';
 import { Checkbox } from '@/components/ui/checkbox';
 import { bulkAssignProductsToWarehouseAction, updateProductStockInWarehouseAction, removeProductFromWarehouseAction } from '@/actions/configuration/warehouse-assignment-actions';
-import { getUnassignedProducts } from '@/actions/configuration/warehouse-actions';
-
-interface WarehouseProduct {
-  id: number;
-  warehouseId: number;
-  productId: number;
-  quantity: number;
-  minStock: number;
-  maxStock: number;
-  Product: {
-    id: number;
-    name: string;
-    sku?: string;
-    barcode?: string;
-    Category?: { name: string } | null;
-    Supplier?: { name: string } | null;
-  };
-}
+import { getUnassignedProducts, WarehouseProduct } from '@/actions/configuration/warehouse-actions';
 
 interface WarehouseProductManagerProps {
   warehouseId: number;
@@ -72,11 +55,11 @@ export default function WarehouseProductManager({ warehouseId, warehouseName, as
       formData.append('maxStock', editData.maxStock.toString());
       const result = await updateProductStockInWarehouseAction(formData);
       if (result.success) {
-        setMessage({ type: 'success', text: result.message });
+        setMessage({ type: 'success', text: result.message || 'Stock actualizado correctamente' });
         setEditingId(null);
         onUpdate?.();
       } else {
-        setMessage({ type: 'error', text: result.error });
+        setMessage({ type: 'error', text: result.error || 'Error al actualizar stock' });
       }
     } catch (error: any) {
       setMessage({ type: 'error', text: error.message });
@@ -86,7 +69,7 @@ export default function WarehouseProductManager({ warehouseId, warehouseName, as
   };
 
   const handleRemove = async (wp: WarehouseProduct) => {
-    if (!confirm(`¿Remover "${wp.Product.name}" de la bodega?`)) return;
+    if (!confirm(`¿Remover "${wp.Product?.name || 'este producto'}" de la bodega?`)) return;
     setLoading(true);
     setMessage(null);
     try {
@@ -95,10 +78,10 @@ export default function WarehouseProductManager({ warehouseId, warehouseName, as
       formData.append('warehouseId', warehouseId.toString());
       const result = await removeProductFromWarehouseAction(formData);
       if (result.success) {
-        setMessage({ type: 'success', text: result.message });
+        setMessage({ type: 'success', text: result.message || 'Producto removido correctamente' });
         onUpdate?.();
       } else {
-        setMessage({ type: 'error', text: result.error });
+        setMessage({ type: 'error', text: result.error || 'Error al remover producto' });
       }
     } catch (error: any) {
       setMessage({ type: 'error', text: error.message });
@@ -128,12 +111,12 @@ export default function WarehouseProductManager({ warehouseId, warehouseName, as
       });
       const result = await bulkAssignProductsToWarehouseAction(formData);
       if (result.success) {
-        setMessage({ type: 'success', text: result.message });
+        setMessage({ type: 'success', text: result.message || 'Productos asignados correctamente' });
         setShowAdd(false);
         setSelected({});
         onUpdate?.();
       } else {
-        setMessage({ type: 'error', text: result.error });
+        setMessage({ type: 'error', text: result.error || 'Error al asignar productos' });
       }
     } catch (error: any) {
       setMessage({ type: 'error', text: error.message });
@@ -174,6 +157,15 @@ export default function WarehouseProductManager({ warehouseId, warehouseName, as
           ) : assignedProducts.map(wp => {
             const stockStatus = getStockStatus(wp.quantity, wp.minStock);
             const isEditing = editingId === wp.id;
+            
+            if (!wp.Product) {
+              return (
+                <div key={wp.id} className="border rounded-lg p-4 bg-red-50">
+                  <p className="text-red-600">⚠️ Producto con ID {wp.productId} no encontrado</p>
+                </div>
+              );
+            }
+            
             return (
               <div key={wp.id} className="border rounded-lg p-4">
                 <div className="flex items-center justify-between mb-3">
@@ -233,7 +225,20 @@ export default function WarehouseProductManager({ warehouseId, warehouseName, as
                 <div className="text-gray-500 text-sm">No hay productos disponibles para asignar</div>
               ) : unassigned.map(product => (
                 <div key={product.id} className="flex items-center gap-3 border rounded-lg p-3">
-                  <Checkbox checked={!!selected[product.id]?.selected} onCheckedChange={checked => setSelected(prev => ({ ...prev, [product.id]: { ...prev[product.id], selected: checked, quantity: prev[product.id]?.quantity || 0, minStock: prev[product.id]?.minStock || 0, maxStock: prev[product.id]?.maxStock || 100 } }))} />
+                  <Checkbox 
+                    checked={!!selected[product.id]?.selected} 
+                    onCheckedChange={checked => {
+                      setSelected(prev => ({
+                        ...prev,
+                        [product.id]: {
+                          selected: !!checked,
+                          quantity: prev[product.id]?.quantity || 0,
+                          minStock: prev[product.id]?.minStock || 0,
+                          maxStock: prev[product.id]?.maxStock || 100
+                        }
+                      }));
+                    }} 
+                  />
                   <div className="flex-1">
                     <span className="font-medium">{product.name}</span>
                     <span className="ml-2 text-xs text-gray-500">SKU: {product.sku || 'N/A'}</span>
