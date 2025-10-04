@@ -811,6 +811,9 @@ export default function ProductFormModern({ initialData, action, isEdit = false 
                   <div>
                     <label className="block text-sm font-medium text-slate-700 mb-2">
                       SKU <span className="text-blue-600">(Generado automáticamente)</span>
+                      {isEdit && (
+                        <span className="text-orange-600 ml-2">⚠️ Edición restringida</span>
+                      )}
                     </label>
                     <div className="flex gap-2">
                       <input
@@ -818,9 +821,10 @@ export default function ProductFormModern({ initialData, action, isEdit = false 
                         value={formData.sku}
                         onChange={(e) => handleInputChange('sku', e.target.value)}
                         placeholder="PROD-123456"
+                        disabled={isEdit}
                         className={`flex-1 px-4 py-3 border rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all duration-200 ${
                           formData.sku.trim() === '' ? 'border-red-300 bg-red-50' : 'border-slate-300'
-                        }`}
+                        } ${isEdit ? 'bg-gray-100 cursor-not-allowed' : ''}`}
                         required
                       />
                       <button
@@ -832,8 +836,11 @@ export default function ProductFormModern({ initialData, action, isEdit = false 
                         <RefreshCw size={18} className={isGeneratingSKU ? 'animate-spin' : ''} />
                       </button>
                     </div>
-                    {formData.sku.trim() === '' && (
+                    {formData.sku.trim() === '' && !isEdit && (
                       <p className="mt-1 text-xs text-red-600">El SKU es obligatorio. Presiona "Generar SKU" para crear uno automáticamente.</p>
+                    )}
+                    {isEdit && (
+                      <p className="mt-1 text-xs text-orange-600">⚠️ El SKU no se puede modificar para evitar errores de importación. Contacta al administrador si necesitas cambiar el SKU.</p>
                     )}
                   </div>
 

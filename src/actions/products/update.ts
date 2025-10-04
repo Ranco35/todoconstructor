@@ -3,7 +3,7 @@ import { createServerClient } from '@supabase/ssr';
 import { cookies } from 'next/headers';
 import { redirect } from 'next/navigation';
 import { ProductType } from '@/types/product';
-import { ensureUniqueSKU } from '@/actions/products/sku';
+import { ensureUniqueSKU, validateSKUUniqueness } from '@/actions/products/sku';
 import { revalidatePath } from 'next/cache';
 import { mapFormDataToProductFrontend, mapProductFrontendToDB, ProductFrontend } from '@/lib/product-mapper';
 
@@ -76,8 +76,19 @@ export async function updateProduct(formData: FormData) {
     
     // Validar y asegurar unicidad del SKU si se proporciona
     let finalSku = productFrontend.sku;
+    
+    // 🔒 RESTRICCIÓN DOBLE: No modificar SKUs en edición para evitar errores de importación
     if (finalSku && finalSku.trim() !== '') {
-      finalSku = await ensureUniqueSKU(finalSku, id);
+      // Solo validar unicidad, pero NO modificar el SKU existente
+      const isUnique = await validateSKUUniqueness(finalSku, id);
+      if (!isUnique) {
+        return { 
+          success: false, 
+          error: `El SKU "${finalSku}" ya está en uso por otro producto. No se puede modificar el SKU de productos existentes para evitar errores de importación. Contacta al administrador.` 
+        };
+      }
+      // Mantener el SKU original sin modificaciones
+      finalSku = productFrontend.sku;
     }
     
     // Preparar datos del producto con campos de equipos/máquinas
