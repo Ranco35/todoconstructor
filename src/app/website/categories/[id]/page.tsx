@@ -112,6 +112,16 @@ export default async function CategoryPage({ params }: CategoryPageProps) {
       }
     }) || []
 
+    // Ordenar productos: primero los que tienen stock, luego los que no tienen stock
+    products.sort((a, b) => {
+      // Si ambos tienen stock o ambos no tienen stock, mantener orden alfabético
+      if ((a.stock > 0) === (b.stock > 0)) {
+        return a.name.localeCompare(b.name)
+      }
+      // Si uno tiene stock y el otro no, el que tiene stock va primero
+      return b.stock > 0 ? 1 : -1
+    })
+
     return (
       <div className="max-w-7xl mx-auto px-4 py-8">
         {/* Breadcrumb */}
@@ -210,7 +220,7 @@ export default async function CategoryPage({ params }: CategoryPageProps) {
                   )}
                   
                   <div className="mb-3">
-                    {product.saleprice ? (
+                    {product.stock > 0 && product.saleprice ? (
                       <span className="text-lg font-bold text-green-600">
                         ${product.saleprice.toLocaleString()}
                       </span>
