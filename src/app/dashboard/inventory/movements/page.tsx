@@ -259,7 +259,14 @@ export default async function MovementsPage({ searchParams }: MovementsPageProps
                 <>
                   <div className="p-4 flex justify-end">
                     <a
-                      href={`/api/inventory/movements/export?${new URLSearchParams(searchParams as any).toString()}`}
+                      href={`/api/inventory/movements/export?${new URLSearchParams(
+                        Object.entries(searchParams).reduce((acc, [key, value]) => {
+                          if (typeof value === 'string') {
+                            acc[key] = value;
+                          }
+                          return acc;
+                        }, {} as Record<string, string>)
+                      ).toString()}`}
                       className="text-sm bg-blue-600 text-white px-3 py-2 rounded hover:bg-blue-700"
                     >
                       Descargar Excel
