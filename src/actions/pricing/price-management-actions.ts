@@ -672,7 +672,8 @@ export async function createPriceAnalysis(data: {
 export async function updateProductPriceFromCost(
   productId: number,
   costPrice: number,
-  reason: string = 'cost_update'
+  reason: string = 'cost_update',
+  roundingRule?: 'none' | 'tens' | 'hundreds' | 'thousands'
 ): Promise<{
   success: boolean;
   data?: PriceCalculation;
@@ -690,30 +691,41 @@ export async function updateProductPriceFromCost(
     // Obtener configuración del producto o categoría
     const productConfigResult = await getProductProfitConfig(productId);
     let profitMargin = 30; // Margen por defecto
-    let roundingRule: 'none' | 'tens' | 'hundreds' | 'thousands' = 'hundreds';
+    let finalRoundingRule: 'none' | 'tens' | 'hundreds' | 'thousands' = 'hundreds';
+    
+    // Si se pasó una regla de redondeo específica, usarla (prioridad alta)
+    if (roundingRule) {
+      finalRoundingRule = roundingRule;
+    }
     
     if (productConfigResult.success && productConfigResult.data) {
       profitMargin = productConfigResult.data.profitMargin;
-      roundingRule = productConfigResult.data.roundingRule;
+      // Solo usar la regla del producto si no se pasó una específica
+      if (!roundingRule) {
+        finalRoundingRule = productConfigResult.data.roundingRule;
+      }
     } else {
       // Obtener configuración de categoría
       const { data: product } = await supabase
         .from('Product')
-        .select('categoryId')
+        .select('categoryid')
         .eq('id', productId)
         .single();
       
-      if (product?.categoryId) {
-        const categoryConfigResult = await getCategoryProfitConfig(product.categoryId);
+      if (product?.categoryid) {
+        const categoryConfigResult = await getCategoryProfitConfig(product.categoryid);
         if (categoryConfigResult.success && categoryConfigResult.data) {
           profitMargin = categoryConfigResult.data.defaultProfitMargin;
-          roundingRule = categoryConfigResult.data.roundingRule;
+          // Solo usar la regla de la categoría si no se pasó una específica
+          if (!roundingRule) {
+            finalRoundingRule = categoryConfigResult.data.roundingRule;
+          }
         }
       }
     }
     
     // Calcular nuevo precio
-    const calculation = calculateCompletePrice(costPrice, profitMargin, 19, roundingRule);
+    const calculation = calculateCompletePrice(costPrice, profitMargin, 19, finalRoundingRule);
     
     // Actualizar producto
     const { data: updatedProduct, error } = await supabase
@@ -762,7 +774,7 @@ export async function updateCategoryPricesFromCost(
     const { data: products, error: productsError } = await supabase
       .from('Product')
       .select('id, costprice')
-      .eq('categoryId', categoryId)
+      .eq('categoryid', categoryId)
       .not('costprice', 'is', null);
     
     if (productsError) {
@@ -777,7 +789,7 @@ export async function updateCategoryPricesFromCost(
     for (const product of products || []) {
       if (!product.costprice) continue;
       
-      const result = await updateProductPriceFromCost(product.id, product.costprice, reason);
+      const result = await updateProductPriceFromCost(product.id, product.costprice, reason, config.roundingRule);
       if (result.success) {
         updated++;
       } else {

@@ -1,3 +1,5 @@
+'use client'
+
 import Link from 'next/link'
 import { Phone, Mail, MapPin, Facebook, Instagram, Twitter, Youtube } from 'lucide-react'
 
@@ -144,7 +146,8 @@ export default function WebsiteFooter() {
                 <input
                   type="email"
                   placeholder="tu@email.com"
-                  className="px-4 py-2 bg-gray-800 border border-gray-700 rounded-l-lg focus:outline-none focus:ring-2 focus:ring-green-500 text-white placeholder-gray-400"
+                  className="px-4 py-2 bg-gray-800 border border-gray-700 rounded-l-lg focus:outline-none focus:ring-2 focus:ring-green-500 text-white placeholder-gray-400 w-64"
+                  style={{ backgroundImage: 'none', backgroundPosition: 'initial' }}
                 />
                 <button className="px-4 py-2 bg-gradient-to-r from-green-600 to-blue-600 text-white rounded-r-lg hover:from-green-700 hover:to-blue-700 transition-all duration-200">
                   Suscribir

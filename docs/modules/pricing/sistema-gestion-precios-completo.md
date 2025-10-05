@@ -1,350 +1,506 @@
-# Sistema de Gestión de Precios - TodoConstructor
+# Sistema de Gestión de Precios Completo
 
 ## 📋 Resumen Ejecutivo
-
-El **Sistema de Gestión de Precios** es un módulo completo que permite administrar precios de productos basados en costos, configurar utilidades por categorías, crear promociones temporales y realizar análisis de rentabilidad.
+Sistema de gestión de precios para productos por categoría con configuración de márgenes, reglas de redondeo, actualización masiva, cálculo automático de precios con IVA, y auditoría completa.
 
 ## 🎯 Funcionalidades Principales
+- ✅ Configuración de márgenes por categoría
+- ✅ Reglas de redondeo (decenas, centenas, miles)
+- ✅ Actualización masiva de precios
+- ✅ Cálculo automático de precios con IVA
+- ✅ Historial de cambios y auditoría
+- ✅ Interfaz web completa
+- ✅ API endpoints
+- ✅ Triggers automáticos
 
-### 1. **Ajuste de Precios por Costo + Utilidad**
-- Configurar % de utilidad por categoría
-- Configurar % de utilidad por producto específico
-- Cálculo automático: `Precio Venta = Costo × (1 + %Utilidad/100)`
-- Reglas de redondeo configurables
-
-### 2. **Gestión por Categorías**
-- Márgenes por defecto por categoría
-- Márgenes mínimos y máximos
-- Reglas de redondeo por categoría
-- Configuración masiva de precios
-
-### 3. **Productos Específicos**
-- Sobrescribir márgenes de categoría
-- Configuraciones individuales
-- Análisis de rentabilidad por producto
-
-### 4. **Promociones Temporales**
-- Descuentos por fechas específicas
-- Aumentos de precios (temporada alta)
-- Precios especiales limitados
-- Aplicación automática por prioridad
-
-### 5. **Análisis de Precios**
-- Comparación con mercado
-- Recomendaciones automáticas
-- Historial completo de cambios
-- Reportes de rentabilidad
-
-### 6. **Automatización**
-- Actualización masiva de precios
-- Sincronización con POS
-- Aplicación de promociones
-- Alertas de márgenes bajos
+---
 
 ## 🗄️ Estructura de Base de Datos
 
 ### Tablas Principales
 
-#### 1. `CategoryProfitConfig`
+#### 1. CategoryProfitConfig
 ```sql
-- id: BIGSERIAL PRIMARY KEY
-- categoryId: BIGINT (FK a Category)
-- defaultProfitMargin: DECIMAL(5,2) (30% por defecto)
-- minProfitMargin: DECIMAL(5,2) (10% mínimo)
-- maxProfitMargin: DECIMAL(5,2) (100% máximo)
-- roundingRule: VARCHAR(20) ('none', 'tens', 'hundreds', 'thousands')
-- isActive: BOOLEAN
-- createdAt/updatedAt: TIMESTAMPTZ
-- createdBy/updatedBy: UUID (FK a User)
+CREATE TABLE "CategoryProfitConfig" (
+  "id" BIGSERIAL PRIMARY KEY,
+  "categoryId" BIGINT NOT NULL REFERENCES "Category"("id") ON DELETE CASCADE,
+  "defaultProfitMargin" DECIMAL(5,2) NOT NULL DEFAULT 30.00,
+  "minProfitMargin" DECIMAL(5,2) NOT NULL DEFAULT 10.00,
+  "maxProfitMargin" DECIMAL(5,2) NOT NULL DEFAULT 100.00,
+  "roundingRule" VARCHAR(20) DEFAULT 'hundreds' CHECK (roundingRule IN ('none', 'tens', 'hundreds', 'thousands')),
+  "isActive" BOOLEAN DEFAULT true,
+  "createdAt" TIMESTAMPTZ DEFAULT NOW(),
+  "updatedAt" TIMESTAMPTZ DEFAULT NOW(),
+  "createdBy" BIGINT REFERENCES "User"("id"),
+  "updatedBy" BIGINT REFERENCES "User"("id")
+);
 ```
 
-#### 2. `ProductProfitConfig`
+#### 2. ProductProfitConfig
 ```sql
-- id: BIGSERIAL PRIMARY KEY
-- productId: BIGINT (FK a Product, UNIQUE)
-- profitMargin: DECIMAL(5,2) (margen específico)
-- roundingRule: VARCHAR(20)
-- isActive: BOOLEAN
-- createdAt/updatedAt: TIMESTAMPTZ
-- createdBy/updatedBy: UUID (FK a User)
+CREATE TABLE "ProductProfitConfig" (
+  "id" BIGSERIAL PRIMARY KEY,
+  "productId" BIGINT NOT NULL REFERENCES "Product"("id") ON DELETE CASCADE,
+  "profitMargin" DECIMAL(5,2) NOT NULL,
+  "roundingRule" VARCHAR(20) DEFAULT 'hundreds' CHECK (roundingRule IN ('none', 'tens', 'hundreds', 'thousands')),
+  "isActive" BOOLEAN DEFAULT true,
+  "createdAt" TIMESTAMPTZ DEFAULT NOW(),
+  "updatedAt" TIMESTAMPTZ DEFAULT NOW(),
+  "createdBy" BIGINT REFERENCES "User"("id"),
+  "updatedBy" BIGINT REFERENCES "User"("id"),
+  UNIQUE("productId")
+);
 ```
 
-#### 3. `PricePromotions`
+#### 3. PriceHistory (Auditoría)
 ```sql
-- id: BIGSERIAL PRIMARY KEY
-- name: VARCHAR(255) (nombre de la promoción)
-- description: TEXT
-- promotionType: VARCHAR(50) ('discount_percentage', 'discount_fixed', 'markup_percentage', 'markup_fixed', 'special_price')
-- value: DECIMAL(10,2) (valor del descuento/aumento)
-- appliesTo: VARCHAR(50) ('all_products', 'categories', 'specific_products', 'suppliers')
-- targetIds: INTEGER[] (IDs de categorías/productos/proveedores)
-- startDate/endDate: TIMESTAMPTZ
-- isActive: BOOLEAN
-- priority: INTEGER (prioridad para múltiples promociones)
-- maxUsage: INTEGER (límite de usos opcional)
-- currentUsage: INTEGER (usos actuales)
-- createdAt/updatedAt: TIMESTAMPTZ
-- createdBy/updatedBy: UUID (FK a User)
+CREATE TABLE "PriceHistory" (
+  "id" BIGSERIAL PRIMARY KEY,
+  "productId" BIGINT NOT NULL REFERENCES "Product"("id") ON DELETE CASCADE,
+  "oldCostPrice" DECIMAL(10,2),
+  "newCostPrice" DECIMAL(10,2),
+  "oldSalePrice" DECIMAL(10,2),
+  "newSalePrice" DECIMAL(10,2),
+  "oldFinalPrice" DECIMAL(12,2),
+  "newFinalPrice" DECIMAL(12,2),
+  "changeReason" VARCHAR(50) NOT NULL,
+  "oldProfitMargin" DECIMAL(5,2),
+  "newProfitMargin" DECIMAL(5,2),
+  "changedBy" BIGINT REFERENCES "User"("id"),
+  "createdAt" TIMESTAMPTZ DEFAULT NOW()
+);
 ```
 
-#### 4. `PriceHistory`
+#### 4. Campos en Product
 ```sql
-- id: BIGSERIAL PRIMARY KEY
-- productId: BIGINT (FK a Product)
-- oldCostPrice/newCostPrice: DECIMAL(10,2)
-- oldSalePrice/newSalePrice: DECIMAL(10,2)
-- oldFinalPrice/newFinalPrice: DECIMAL(12,2)
-- changeReason: VARCHAR(100) ('cost_update', 'margin_adjustment', 'promotion', 'manual')
-- promotionId: BIGINT (FK a PricePromotions)
-- profitMarginBefore/profitMarginAfter: DECIMAL(5,2)
-- changedAt: TIMESTAMPTZ
-- changedBy: UUID (FK a User)
+-- Campos relevantes en la tabla Product
+"costprice" DECIMAL(10,2),     -- Precio de costo
+"saleprice" DECIMAL(10,2),     -- Precio de venta (sin IVA)
+"finalPrice" DECIMAL(12,2),    -- Precio final con IVA y redondeo aplicado
+"vat" DECIMAL(5,2) DEFAULT 19  -- Porcentaje de IVA
 ```
 
-#### 5. `PriceAnalysis`
+---
+
+## ⚙️ Funciones SQL
+
+### Trigger de Redondeo Automático
 ```sql
-- id: BIGSERIAL PRIMARY KEY
-- productId: BIGINT (FK a Product)
-- analysisDate: DATE
-- costPrice: DECIMAL(10,2)
-- salePrice: DECIMAL(10,2)
-- finalPrice: DECIMAL(12,2)
-- profitMargin: DECIMAL(5,2)
-- profitAmount: DECIMAL(10,2)
-- categoryAverageMargin: DECIMAL(5,2)
-- marketPosition: VARCHAR(20) ('below_market', 'market_average', 'above_market')
-- competitorPrice: DECIMAL(10,2)
-- recommendation: TEXT
-- createdAt: TIMESTAMPTZ
+CREATE OR REPLACE FUNCTION update_final_price_with_vat()
+RETURNS TRIGGER
+LANGUAGE plpgsql
+AS $$
+DECLARE
+  rounding_rule VARCHAR(20) := 'hundreds';
+  final_price DECIMAL(12,2);
+BEGIN
+  -- Obtener regla de redondeo de la categoría
+  SELECT cpc."roundingRule" INTO rounding_rule
+  FROM "CategoryProfitConfig" cpc
+  WHERE cpc."categoryId" = NEW."categoryid"
+    AND cpc."isActive" = true;
+  
+  -- Si no hay configuración, usar por defecto
+  IF rounding_rule IS NULL THEN
+    rounding_rule := 'hundreds';
+  END IF;
+  
+  -- Calcular precio base con IVA
+  final_price := COALESCE(NEW."saleprice", 0) * (1 + COALESCE(NEW."vat", 0)/100);
+  
+  -- Aplicar regla de redondeo
+  CASE rounding_rule
+    WHEN 'tens' THEN
+      final_price := ROUND(final_price / 10) * 10;
+    WHEN 'hundreds' THEN
+      final_price := ROUND(final_price / 100) * 100;
+    WHEN 'thousands' THEN
+      final_price := ROUND(final_price / 1000) * 1000;
+    WHEN 'none' THEN
+      final_price := ROUND(final_price);
+    ELSE
+      final_price := ROUND(final_price / 100) * 100;
+  END CASE;
+  
+  NEW."finalPrice" := final_price;
+  RETURN NEW;
+END;
+$$;
+
+-- Trigger que se ejecuta en cada INSERT/UPDATE
+CREATE TRIGGER trg_update_final_price_with_vat 
+BEFORE INSERT OR UPDATE ON "Product" 
+FOR EACH ROW EXECUTE FUNCTION update_final_price_with_vat();
 ```
 
-#### 6. `PriceRoundingRules`
-```sql
-- id: BIGSERIAL PRIMARY KEY
-- name: VARCHAR(100)
-- description: TEXT
-- ruleType: VARCHAR(20) ('none', 'tens', 'hundreds', 'thousands', 'custom')
-- customValue: INTEGER (para reglas personalizadas)
-- isActive: BOOLEAN
-- createdAt/updatedAt: TIMESTAMPTZ
+---
+
+## 🔧 Funciones JavaScript/TypeScript
+
+### Cálculo de Precios (`src/utils/price-utils.ts`)
+
+#### Función Principal de Cálculo
+```typescript
+export function calculateCompletePrice(
+  costPrice: number,
+  profitMargin: number,
+  vatRate: number = 19,
+  roundingRule: 'none' | 'tens' | 'hundreds' | 'thousands' = 'hundreds'
+): PriceCalculation {
+  const salePrice = calculateSalePriceFromCost(costPrice, profitMargin, roundingRule);
+  const finalPrice = calculateFinalPriceWithVAT(salePrice, vatRate, roundingRule);
+  const profitAmount = calculateProfitAmount(costPrice, salePrice);
+  
+  return {
+    costPrice,
+    profitMargin,
+    salePrice,
+    finalPrice,
+    profitAmount,
+    roundingRule
+  };
+}
 ```
 
-## ⚙️ Funciones SQL Automáticas
-
-### 1. `calculate_sale_price_from_cost()`
-```sql
--- Calcula precio de venta basado en costo y margen
-SELECT calculate_sale_price_from_cost(10000, 30, 'hundreds');
--- Resultado: 13000 (redondeado a centenas)
+#### Cálculo de Precio de Venta
+```typescript
+export function calculateSalePriceFromCost(
+  costPrice: number,
+  profitMargin: number,
+  roundingRule: 'none' | 'tens' | 'hundreds' | 'thousands' = 'hundreds'
+): number {
+  if (!costPrice || costPrice <= 0) return 0;
+  
+  const calculatedPrice = costPrice * (1 + profitMargin / 100);
+  
+  switch (roundingRule) {
+    case 'tens':
+      return Math.round(calculatedPrice / 10) * 10;
+    case 'hundreds':
+      return Math.round(calculatedPrice / 100) * 100;
+    case 'thousands':
+      return Math.round(calculatedPrice / 1000) * 1000;
+    case 'none':
+    default:
+      return Math.round(calculatedPrice * 100) / 100;
+  }
+}
 ```
 
-### 2. `get_category_profit_margin()`
-```sql
--- Obtiene margen de utilidad por categoría
-SELECT get_category_profit_margin(1);
--- Resultado: 30.00 (o margen configurado)
+#### Cálculo de Precio Final con IVA
+```typescript
+export function calculateFinalPriceWithVAT(
+  salePrice: number, 
+  vatRate: number = 19,
+  roundingRule: 'none' | 'tens' | 'hundreds' | 'thousands' = 'none'
+): number {
+  const priceWithVAT = salePrice * (1 + vatRate / 100);
+  
+  switch (roundingRule) {
+    case 'tens':
+      return Math.round(priceWithVAT / 10) * 10;
+    case 'hundreds':
+      return Math.round(priceWithVAT / 100) * 100;
+    case 'thousands':
+      return Math.round(priceWithVAT / 1000) * 1000;
+    case 'none':
+    default:
+      return Math.round(priceWithVAT);
+  }
+}
 ```
 
-### 3. `get_product_profit_margin()`
-```sql
--- Obtiene margen específico del producto o de su categoría
-SELECT get_product_profit_margin(123);
--- Resultado: 35.00 (margen específico o de categoría)
+---
+
+## 🎨 Componentes Frontend
+
+### Configuración de Categorías (`src/components/pricing/CategoryProfitConfigForm.tsx`)
+```typescript
+interface CategoryProfitConfig {
+  id: number;
+  categoryId: number;
+  defaultProfitMargin: number;
+  minProfitMargin: number;
+  maxProfitMargin: number;
+  roundingRule: 'none' | 'tens' | 'hundreds' | 'thousands';
+  isActive: boolean;
+  createdAt: string;
+  updatedAt: string;
+  Category?: {
+    id: number;
+    name: string;
+  };
+}
+
+// Función para actualizar precios de categoría
+const handleUpdatePrices = async (categoryId: number, categoryName: string) => {
+  if (!confirm(`¿Estás seguro de que quieres actualizar los precios de todos los productos de la categoría "${categoryName}"?`)) {
+    return;
+  }
+
+  try {
+    setUpdatingPrices(categoryId);
+    setError(null);
+    setSuccess(null);
+
+    const response = await fetch('/api/pricing/update-category-prices', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({
+        categoryId,
+        reason: 'margin_adjustment'
+      }),
+    });
+
+    const result = await response.json();
+    
+    if (result.success) {
+      const { updated, errors } = result.data || { updated: 0, errors: [] };
+      setSuccess(`Precios actualizados exitosamente: ${updated} productos actualizados${errors.length > 0 ? `. ${errors.length} errores.` : '.'}`);
+      if (errors.length > 0) {
+        console.warn('Errores durante la actualización:', errors);
+      }
+    } else {
+      setError(result.error || 'Error al actualizar precios');
+    }
+  } catch (error) {
+    console.error('Error updating prices:', error);
+    setError('Error interno del servidor');
+  } finally {
+    setUpdatingPrices(null);
+  }
+};
 ```
 
-### 4. `apply_active_promotions()`
-```sql
--- Aplica promociones activas a un precio
-SELECT apply_active_promotions(123, 13000, NOW());
--- Resultado: 11050 (precio con promoción aplicada)
+### Tarjeta de Producto (`src/components/website/ProductCard.tsx`)
+```typescript
+// Función para formatear precio
+const formatPrice = (price: number | null) => {
+  if (!price) return 'Consultar precio'
+  return new Intl.NumberFormat('es-CL', {
+    style: 'currency',
+    currency: 'CLP',
+    minimumFractionDigits: 0
+  }).format(price)
+}
+
+// Renderizado del precio
+{product.finalPrice ? (
+  <div>
+    <span className="text-2xl font-bold text-green-600">
+      {formatPrice(product.finalPrice)}
+    </span>
+    <span className="text-sm text-gray-500 ml-2">
+      (IVA {product.vat || 0}% incluido)
+    </span>
+  </div>
+) : (
+  <span className="text-lg font-semibold text-gray-600">
+    Consultar precio
+  </span>
+)}
 ```
 
-## 🔧 Funcionalidades de la Interfaz
+---
 
-### Dashboard Principal (`/dashboard/pricing`)
-- **Estadísticas en tiempo real**:
-  - Categorías configuradas
-  - Promociones activas
-  - Cambios de precios hoy
-  - Margen promedio
-  - Productos con margen bajo
-  - Promociones por vencer
+## 🌐 API Endpoints
 
-- **Cambios recientes**: Lista de últimos cambios de precios
-- **Productos con margen bajo**: Alertas de productos con rentabilidad baja
-- **Acciones rápidas**: Botones para configurar utilidades, crear promociones, etc.
+### Actualización de Precios por Categoría (`src/app/api/pricing/update-category-prices/route.ts`)
+```typescript
+import { NextRequest, NextResponse } from 'next/server';
+import { updateCategoryPricesFromCost } from '@/actions/pricing/price-management-actions';
 
-### Configuración de Utilidades (`/dashboard/pricing/categories`)
-- **Formulario de configuración**:
-  - Selección de categoría
-  - Margen por defecto (10-100%)
-  - Margen mínimo y máximo
-  - Regla de redondeo
-  - Estado activo/inactivo
+export async function POST(request: NextRequest) {
+  try {
+    const { categoryId, reason = 'margin_adjustment' } = await request.json();
 
-- **Tabla de configuraciones**:
-  - Lista de todas las configuraciones
-  - Edición y eliminación
-  - Estado visual (activo/inactivo)
-  - Información de márgenes y redondeo
+    if (!categoryId || typeof categoryId !== 'number') {
+      return NextResponse.json(
+        { success: false, error: 'ID de categoría requerido' },
+        { status: 400 }
+      );
+    }
 
-### Gestión de Promociones (`/dashboard/pricing/promotions`)
-- **Crear promociones**:
-  - Nombre y descripción
-  - Tipo: descuento %, descuento fijo, aumento %, aumento fijo, precio especial
-  - Valor de la promoción
-  - Aplicación: todos los productos, categorías, productos específicos, proveedores
-  - Fechas de inicio y fin
-  - Prioridad (para múltiples promociones)
-  - Límite de uso opcional
+    const result = await updateCategoryPricesFromCost(categoryId, reason);
 
-- **Filtros**:
-  - Todas las promociones
-  - Solo activas
-  - Solo expiradas
+    if (result.success) {
+      return NextResponse.json(result);
+    } else {
+      return NextResponse.json(
+        { success: false, error: result.error },
+        { status: 500 }
+      );
+    }
+  } catch (error) {
+    console.error('Error en API update-category-prices:', error);
+    return NextResponse.json(
+      { success: false, error: 'Error interno del servidor' },
+      { status: 500 }
+    );
+  }
+}
+```
 
-- **Estados visuales**:
-  - Activa (verde)
-  - Por vencer (naranja)
-  - Programada (azul)
-  - Expirada (rojo)
-  - Inactiva (gris)
+---
 
-## 📊 Flujo de Trabajo
+## 📊 Reglas de Redondeo
+
+### Tipos de Redondeo Disponibles
+1. **`none`** - Sin redondeo (mantiene decimales)
+2. **`tens`** - Redondeo a decenas (ej: 1,234 → 1,230)
+3. **`hundreds`** - Redondeo a centenas (ej: 1,234 → 1,200)
+4. **`thousands`** - Redondeo a miles (ej: 1,234 → 1,000)
+
+### Ejemplo de Cálculo
+```
+Producto: OSB 11mm Casa ULTU
+Costo: $12,000
+Margen: 25%
+IVA: 19%
+Regla de Redondeo: Decenas
+
+Cálculo:
+1. Precio con margen: $12,000 × 1.25 = $15,000
+2. Precio con IVA: $15,000 × 1.19 = $17,850
+3. Redondeo a decenas: ROUND(17,850 / 10) × 10 = $17,850
+4. Precio final: $17,850
+```
+
+---
+
+## 🔄 Flujo de Trabajo
 
 ### 1. Configuración Inicial
-```
-1. Configurar márgenes por categoría (30% por defecto)
-2. Ajustar productos específicos si es necesario
-3. Crear promociones temporales
-4. Configurar reglas de redondeo
-```
+1. Ir a `/dashboard/pricing/categories`
+2. Seleccionar categoría (ej: "Tableros construcción")
+3. Configurar margen (ej: 25%)
+4. Seleccionar regla de redondeo (ej: "Decenas")
+5. Guardar configuración
 
-### 2. Cálculo de Precios
-```
-1. Usuario actualiza precio de costo
-2. Sistema obtiene margen de utilidad:
-   - Busca margen específico del producto
-   - Si no existe, usa margen de la categoría
-   - Si no existe, usa margen por defecto (30%)
-3. Calcula precio de venta: Costo × (1 + %Utilidad/100)
-4. Aplica regla de redondeo
-5. Calcula precio final con IVA
-6. Aplica promociones activas (si las hay)
-7. Actualiza producto en base de datos
-8. Registra cambio en historial
-```
+### 2. Actualización de Precios
+1. En la tabla de configuraciones, hacer clic en el botón 💰
+2. Confirmar la actualización
+3. El sistema actualiza todos los productos de la categoría
+4. Los precios se calculan con la nueva configuración
 
-### 3. Aplicación de Promociones
-```
-1. Usuario accede a producto
-2. Sistema busca promociones activas:
-   - Filtra por fecha (startDate <= now <= endDate)
-   - Filtra por aplicación (categoría, producto, etc.)
-   - Ordena por prioridad (mayor primero)
-3. Aplica primera promoción encontrada
-4. Calcula precio final con promoción
-5. Muestra precio promocional al usuario
-```
+### 3. Visualización
+1. Ir a `/website`
+2. Los productos muestran precios redondeados
+3. El precio mostrado es `finalPrice` (con IVA y redondeo)
 
-## 🎨 Componentes de Interfaz
+---
 
-### 1. `PriceManagementDashboard`
-- Dashboard principal con estadísticas
-- Cards de métricas clave
-- Listas de cambios recientes y alertas
-- Botones de acción rápida
+## 🐛 Problemas Resueltos
 
-### 2. `CategoryProfitConfigForm`
-- Formulario para configurar utilidades por categoría
-- Tabla de configuraciones existentes
-- Validaciones de márgenes
-- Estados visuales
+### 1. Error de Columna
+- **Problema**: `column Product.categoryId does not exist`
+- **Causa**: Uso de `categoryId` en lugar de `categoryid`
+- **Solución**: Corregir referencias en las consultas SQL
 
-### 3. `PricePromotionsManager`
-- Gestión completa de promociones
-- Formulario de creación/edición
-- Filtros por estado
-- Estados visuales con colores
+### 2. Redondeos No Aplicados
+- **Problema**: Los precios no respetaban las reglas de redondeo
+- **Causa**: El trigger no aplicaba redondeo al precio final
+- **Solución**: Corregir trigger para usar `finalPrice` y aplicar reglas
 
-### 4. Utilidades (`price-utils.ts`)
-- Funciones de cálculo de precios
-- Formateo de moneda y porcentajes
-- Validaciones de precios
-- Análisis de rentabilidad
+### 3. Error de Hidratación
+- **Problema**: `hydration mismatch` en WebsiteFooter
+- **Causa**: Estilos dinámicos en el servidor
+- **Solución**: Agregar `'use client'` y estilos específicos
 
-## 🔗 Integración con Sistema Existente
+### 4. Campo Incorrecto
+- **Problema**: Trigger usaba `final_price_with_vat` inexistente
+- **Causa**: Confusión entre snake_case y camelCase
+- **Solución**: Usar `finalPrice` (camelCase)
 
-### 1. **Productos**
-- Extiende la tabla `Product` existente
-- Mantiene compatibilidad con precios actuales
-- Integra con sistema de categorías existente
+---
 
-### 2. **POS**
-- Sincroniza precios automáticamente
-- Aplica promociones en tiempo real
-- Mantiene consistencia de precios
+## 📁 Archivos del Sistema
 
-### 3. **Reservas**
-- Integra con sistema de temporadas existente
-- Compatible con descuentos de reservas
-- Mantiene precios base y promocionales
+### Backend
+- `src/actions/pricing/price-management-actions.ts` - Server actions
+- `src/utils/price-utils.ts` - Funciones de cálculo
+- `src/app/api/pricing/update-category-prices/route.ts` - API endpoint
 
-### 4. **Usuarios**
-- Registra cambios con usuario responsable
-- Mantiene auditoría completa
-- Compatible con sistema de roles existente
+### Frontend
+- `src/components/pricing/CategoryProfitConfigForm.tsx` - Configuración
+- `src/components/website/ProductCard.tsx` - Visualización de productos
+- `src/components/website/WebsiteFooter.tsx` - Footer corregido
+
+### Base de Datos
+- `supabase/migrations/20250122000000_create_price_management_system.sql` - Estructura inicial
+- `supabase/migrations/20250123000002_fix_rounding_trigger.sql` - Trigger corregido
+
+### Documentación
+- `docs/modules/pricing/sistema-gestion-precios-completo.md` - Este documento
+
+---
+
+## ✅ Estado Actual
+- ✅ Configuración por categoría funcionando
+- ✅ Reglas de redondeo aplicadas correctamente
+- ✅ Actualización masiva operativa
+- ✅ Cálculo automático con IVA
+- ✅ Trigger funcionando correctamente
+- ✅ Frontend actualizado y funcionando
+- ✅ API endpoint operativo
+- ✅ Historial de cambios implementado
+- ✅ Auditoría completa
+
+### Resultados Obtenidos
+- Precios calculados automáticamente con márgenes configurados
+- Redondeos aplicados según reglas establecidas
+- IVA incluido en precios finales
+- Actualización masiva funcionando
+- Interfaz intuitiva y funcional
+- Historial completo para auditoría
+
+---
+
+## 🔧 Mantenimiento
+
+### Para Agregar Nuevas Reglas de Redondeo
+1. Actualizar el enum en la base de datos
+2. Modificar el switch en `calculateSalePriceFromCost()`
+3. Actualizar el CASE en el trigger SQL
+4. Agregar opción en el frontend
+
+### Para Cambiar la Lógica de Cálculo
+1. Modificar funciones en `price-utils.ts`
+2. Actualizar server actions
+3. Probar con diferentes escenarios
+4. Actualizar documentación
+
+### Para Monitorear el Sistema
+1. Revisar `PriceHistory` regularmente
+2. Verificar que los triggers funcionen
+3. Monitorear errores en la consola
+4. Validar precios en el frontend
+
+---
 
 ## 📈 Beneficios del Sistema
 
 ### Para el Negocio
-- ✅ **Automatización completa** del cálculo de precios
-- ✅ **Flexibilidad** para ajustar por categoría o producto
-- ✅ **Promociones temporales** sin afectar precios base
-- ✅ **Análisis de rentabilidad** en tiempo real
-- ✅ **Historial completo** para auditoría
-- ✅ **Reportes** para toma de decisiones
+- **Consistencia**: Precios uniformes por categoría
+- **Automatización**: Menos errores manuales
+- **Flexibilidad**: Diferentes márgenes por categoría
+- **Auditoría**: Historial completo de cambios
+- **Eficiencia**: Actualización masiva de precios
 
 ### Para los Usuarios
-- ✅ **Interfaz intuitiva** y fácil de usar
-- ✅ **Configuración masiva** de precios
-- ✅ **Alertas automáticas** de márgenes bajos
-- ✅ **Validaciones** para evitar errores
-- ✅ **Estados visuales** claros
-- ✅ **Acciones rápidas** desde el dashboard
+- **Transparencia**: Precios claros con IVA incluido
+- **Simplicidad**: Interfaz intuitiva
+- **Rapidez**: Cálculos automáticos
+- **Confiabilidad**: Precios consistentes
 
-### Para el Sistema
-- ✅ **Integración perfecta** con módulos existentes
-- ✅ **Base de datos optimizada** con índices
-- ✅ **Funciones SQL** para cálculos eficientes
-- ✅ **Triggers automáticos** para historial
-- ✅ **RLS habilitado** para seguridad
-- ✅ **Escalabilidad** para crecer con el negocio
-
-## 🚀 Próximos Pasos
-
-1. **Implementar integración con POS** para sincronización automática
-2. **Crear reportes avanzados** de rentabilidad por categoría
-3. **Agregar comparación con competencia** usando APIs externas
-4. **Implementar notificaciones** para promociones por vencer
-5. **Crear exportación** de configuraciones a Excel
-6. **Agregar análisis predictivo** de tendencias de precios
-
-## 📝 Notas Técnicas
-
-- **Base de datos**: PostgreSQL con Supabase
-- **Frontend**: Next.js 14 con TypeScript
-- **Estilos**: Tailwind CSS
-- **Iconos**: Heroicons
-- **Validaciones**: Cliente y servidor
-- **Seguridad**: RLS habilitado en todas las tablas
-- **Performance**: Índices optimizados para consultas frecuentes
+### Para el Desarrollo
+- **Mantenibilidad**: Código bien estructurado
+- **Escalabilidad**: Fácil agregar nuevas funcionalidades
+- **Robustez**: Manejo de errores completo
+- **Documentación**: Sistema completamente documentado
 
 ---
 
-**Fecha de creación**: 2025-01-22  
-**Versión**: 1.0.0  
-**Estado**: Implementado y funcional
-
-
-
+**Sistema de gestión de precios completamente funcional y documentado.**

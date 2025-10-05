@@ -115,10 +115,10 @@ export default function ProductCard({ product, onAddToCart }: ProductCardProps) 
 
         {/* Precio */}
         <div className="mb-3">
-          {product.saleprice ? (
+          {product.finalPrice ? (
             <div>
               <span className="text-2xl font-bold text-green-600">
-                {formatPrice(getPriceWithVAT(product.saleprice, product.vat))}
+                {formatPrice(product.finalPrice)}
               </span>
               <span className="text-sm text-gray-500 ml-2">
                 (IVA {product.vat || 0}% incluido)

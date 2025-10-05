@@ -86,8 +86,24 @@ export function calculateProfitAmount(costPrice: number, salePrice: number): num
 /**
  * Calcula el precio final con IVA
  */
-export function calculateFinalPriceWithVAT(salePrice: number, vatRate: number = 19): number {
-  return Math.round(salePrice * (1 + vatRate / 100));
+export function calculateFinalPriceWithVAT(
+  salePrice: number, 
+  vatRate: number = 19,
+  roundingRule: 'none' | 'tens' | 'hundreds' | 'thousands' = 'none'
+): number {
+  const priceWithVAT = salePrice * (1 + vatRate / 100);
+  
+  switch (roundingRule) {
+    case 'tens':
+      return Math.round(priceWithVAT / 10) * 10;
+    case 'hundreds':
+      return Math.round(priceWithVAT / 100) * 100;
+    case 'thousands':
+      return Math.round(priceWithVAT / 1000) * 1000;
+    case 'none':
+    default:
+      return Math.round(priceWithVAT);
+  }
 }
 
 /**
@@ -183,7 +199,7 @@ export function calculateCompletePrice(
   roundingRule: 'none' | 'tens' | 'hundreds' | 'thousands' = 'hundreds'
 ): PriceCalculation {
   const salePrice = calculateSalePriceFromCost(costPrice, profitMargin, roundingRule);
-  const finalPrice = calculateFinalPriceWithVAT(salePrice, vatRate);
+  const finalPrice = calculateFinalPriceWithVAT(salePrice, vatRate, roundingRule);
   const profitAmount = calculateProfitAmount(costPrice, salePrice);
   
   return {

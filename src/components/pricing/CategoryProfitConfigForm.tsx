@@ -7,8 +7,9 @@ import {
   getCategoryProfitConfigs, 
   createCategoryProfitConfig,
   updateCategoryProfitConfig,
-  deleteCategoryProfitConfig 
+  deleteCategoryProfitConfig
 } from '@/actions/pricing/price-management-actions';
+import { getAllCategories } from '@/actions/configuration/category-actions';
 
 interface CategoryProfitConfig {
   id: number;
@@ -43,6 +44,7 @@ export default function CategoryProfitConfigForm() {
   const [categories, setCategories] = useState<Category[]>([]);
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
+  const [updatingPrices, setUpdatingPrices] = useState<number | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [success, setSuccess] = useState<string | null>(null);
   
@@ -66,10 +68,9 @@ export default function CategoryProfitConfigForm() {
       setLoading(true);
       setError(null);
 
-      const [configsResult, categoriesResult] = await Promise.all([
+      const [configsResult, categoriesData] = await Promise.all([
         getCategoryProfitConfigs(),
-        // TODO: Implementar getCategories() o usar la función existente
-        Promise.resolve({ success: true, data: [] as Category[] })
+        getAllCategories()
       ]);
 
       if (configsResult.success) {
@@ -78,9 +79,8 @@ export default function CategoryProfitConfigForm() {
         setError(configsResult.error || 'Error al cargar configuraciones');
       }
 
-      if (categoriesResult.success) {
-        setCategories(categoriesResult.data || []);
-      }
+      // Configurar categorías desde getAllCategories()
+      setCategories(categoriesData || []);
 
     } catch (error) {
       console.error('Error loading data:', error);
@@ -175,6 +175,46 @@ export default function CategoryProfitConfigForm() {
     } catch (error) {
       console.error('Error deleting configuration:', error);
       setError('Error interno del servidor');
+    }
+  };
+
+  const handleUpdatePrices = async (categoryId: number, categoryName: string) => {
+    if (!confirm(`¿Estás seguro de que quieres actualizar los precios de todos los productos de la categoría "${categoryName}"?`)) {
+      return;
+    }
+
+    try {
+      setUpdatingPrices(categoryId);
+      setError(null);
+      setSuccess(null);
+
+      const response = await fetch('/api/pricing/update-category-prices', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          categoryId,
+          reason: 'margin_adjustment'
+        }),
+      });
+
+      const result = await response.json();
+      
+      if (result.success) {
+        const { updated, errors } = result.data || { updated: 0, errors: [] };
+        setSuccess(`Precios actualizados exitosamente: ${updated} productos actualizados${errors.length > 0 ? `. ${errors.length} errores.` : '.'}`);
+        if (errors.length > 0) {
+          console.warn('Errores durante la actualización:', errors);
+        }
+      } else {
+        setError(result.error || 'Error al actualizar precios');
+      }
+    } catch (error) {
+      console.error('Error updating prices:', error);
+      setError('Error interno del servidor');
+    } finally {
+      setUpdatingPrices(null);
     }
   };
 
@@ -424,12 +464,22 @@ export default function CategoryProfitConfigForm() {
                       <button
                         onClick={() => handleEdit(config)}
                         className="text-blue-600 hover:text-blue-900"
+                        title="Editar configuración"
                       >
                         <span>✏️</span>
                       </button>
                       <button
+                        onClick={() => handleUpdatePrices(config.categoryId, config.Category?.name || `Categoría ${config.categoryId}`)}
+                        disabled={updatingPrices === config.categoryId}
+                        className={`text-green-600 hover:text-green-900 ${updatingPrices === config.categoryId ? 'opacity-50 cursor-not-allowed' : ''}`}
+                        title="Actualizar precios de productos"
+                      >
+                        {updatingPrices === config.categoryId ? '⏳' : '💰'}
+                      </button>
+                      <button
                         onClick={() => handleDelete(config.id)}
                         className="text-red-600 hover:text-red-900"
+                        title="Eliminar configuración"
                       >
                         <span>🗑️</span>
                       </button>
