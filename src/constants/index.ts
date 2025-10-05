@@ -60,6 +60,14 @@ export const menus = {
                 { label: '🛡️ Panel Administrativo', href: '/dashboard/pettyCash/admin' },
             ],
         },
+        {
+            label: '🔒 Administración',
+            href: '/dashboard/admin',
+            items: [
+                { label: '🔧 Gestión de SKUs', href: '/dashboard/admin/sku-management' },
+                { label: '📦 Productos Modulares', href: '/dashboard/admin/productos-modulares' },
+            ],
+        },
     ],
     ADMINISTRADOR: [
         {
@@ -120,6 +128,14 @@ export const menus = {
                 { label: 'Dashboard', href: '/dashboard/pettyCash' },
                 { label: 'Historial de Sesiones', href: '/dashboard/pettyCash/sessions' },
                 { label: '🛡️ Panel Administrativo', href: '/dashboard/pettyCash/admin' },
+            ],
+        },
+        {
+            label: '🔒 Administración',
+            href: '/dashboard/admin',
+            items: [
+                { label: '🔧 Gestión de SKUs', href: '/dashboard/admin/sku-management' },
+                { label: '📦 Productos Modulares', href: '/dashboard/admin/productos-modulares' },
             ],
         },
     ],

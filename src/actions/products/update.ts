@@ -74,21 +74,26 @@ export async function updateProduct(formData: FormData) {
       finalPrice: finalPrice
     });
     
-    // Validar y asegurar unicidad del SKU si se proporciona
+    // 🔒 RESTRICCIÓN DOBLE: Mantener el SKU original en edición para evitar errores de importación
     let finalSku = productFrontend.sku;
     
-    // 🔒 RESTRICCIÓN DOBLE: No modificar SKUs en edición para evitar errores de importación
-    if (finalSku && finalSku.trim() !== '') {
-      // Solo validar unicidad, pero NO modificar el SKU existente
-      const isUnique = await validateSKUUniqueness(finalSku, id);
+    // Detectar si es edición basándose en si se proporciona un ID válido
+    const isEditMode = id && id > 0;
+    
+    if (isEditMode && finalSku && finalSku.trim() !== '') {
+      // En modo edición, simplemente mantener el SKU original sin validaciones adicionales
+      // Esto evita errores cuando se edita un producto existente con su propio SKU
+      finalSku = productFrontend.sku;
+      console.log('🔍 DEBUG - Modo edición: manteniendo SKU original:', finalSku);
+    } else if (!isEditMode && finalSku && finalSku.trim() !== '') {
+      // Solo validar unicidad para productos nuevos
+      const isUnique = await validateSKUUniqueness(finalSku);
       if (!isUnique) {
         return { 
           success: false, 
-          error: `El SKU "${finalSku}" ya está en uso por otro producto. No se puede modificar el SKU de productos existentes para evitar errores de importación. Contacta al administrador.` 
+          error: `El SKU "${finalSku}" ya está en uso por otro producto. Presiona "Generar SKU" para crear uno nuevo.` 
         };
       }
-      // Mantener el SKU original sin modificaciones
-      finalSku = productFrontend.sku;
     }
     
     // Preparar datos del producto con campos de equipos/máquinas

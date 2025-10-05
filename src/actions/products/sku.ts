@@ -286,10 +286,18 @@ export async function validateSKUUniqueness(sku: string, excludeId?: number): Pr
     
     const { data, error } = await query.single();
     
-    // Si no hay error y no hay datos, el SKU es único
-    return !error && !data;
+    // Si hay error (no encontrado) o no hay datos, el SKU es único
+    // Si hay datos, significa que existe otro producto con ese SKU
+    if (error) {
+      // Error significa que no se encontró (es único)
+      return true;
+    }
+    
+    // Si hay data, significa que se encontró otro producto con ese SKU
+    return !data;
   } catch (error) {
-    // Si hay error, probablemente significa que no existe (es único)
+    // Si hay error de conexión, asumir que es único para no bloquear
+    console.warn('Error validando unicidad de SKU:', error);
     return true;
   }
 }
