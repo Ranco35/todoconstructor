@@ -41,13 +41,17 @@ export default async function Page(props: PageProps) {
             </button>
           </Link>
           
-          <button className="bg-green-600 text-white px-4 py-2 rounded hover:bg-green-700 flex items-center gap-2">
-            <span>⚙️</span> Gestionar productos
-          </button>
+          <Link href="/dashboard/configuration/products">
+            <button className="bg-green-600 text-white px-4 py-2 rounded hover:bg-green-700 flex items-center gap-2">
+              <span>⚙️</span> Gestionar productos
+            </button>
+          </Link>
           
-          <button className="bg-purple-600 text-white px-4 py-2 rounded hover:bg-purple-700 flex items-center gap-2">
-            <span>📊</span> Reportes de inventario
-          </button>
+          <Link href="/dashboard/inventory/movements">
+            <button className="bg-purple-600 text-white px-4 py-2 rounded hover:bg-purple-700 flex items-center gap-2">
+              <span>📊</span> Reportes de inventario
+            </button>
+          </Link>
         </div>
       </div>
 

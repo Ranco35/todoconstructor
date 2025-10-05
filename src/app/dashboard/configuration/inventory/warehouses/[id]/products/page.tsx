@@ -8,6 +8,7 @@ import { Badge } from '@/components/ui/badge';
 import { Building, MapPin, Package, Search } from 'lucide-react';
 import WarehouseProductManager from '@/components/inventory/WarehouseProductManager';
 import PaginationControls from '@/components/shared/PaginationControls';
+import RemoveProductButton from '@/components/inventory/RemoveProductButton';
 
 interface PageProps {
   params: Promise<{ id: string }>;
@@ -203,6 +204,9 @@ export default async function WarehouseProductsPage(props: PageProps) {
                 <table className="min-w-full divide-y divide-gray-200">
                   <thead className="bg-gray-50">
                     <tr>
+                      <th className="px-6 py-3 text-center text-xs font-medium text-gray-500 uppercase tracking-wider">
+                        Acciones
+                      </th>
                       <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
                         Producto
                       </th>
@@ -233,7 +237,7 @@ export default async function WarehouseProductsPage(props: PageProps) {
                       if (!wp.Product) {
                         return (
                           <tr key={wp.id} className="hover:bg-gray-50 bg-red-50">
-                            <td className="px-6 py-4 whitespace-nowrap" colSpan={7}>
+                            <td className="px-6 py-4 whitespace-nowrap" colSpan={8}>
                               <div className="text-sm text-red-600">
                                 ⚠️ Producto con ID {wp.productId} no encontrado
                               </div>
@@ -244,6 +248,15 @@ export default async function WarehouseProductsPage(props: PageProps) {
 
                       return (
                         <tr key={wp.id} className="hover:bg-gray-50">
+                          <td className="px-6 py-4 whitespace-nowrap text-center">
+                            {wp.quantity === 0 && (
+                              <RemoveProductButton
+                                productId={wp.productId}
+                                warehouseId={warehouseId}
+                                productName={wp.Product.name}
+                              />
+                            )}
+                          </td>
                           <td className="px-6 py-4 whitespace-nowrap">
                             <div className="text-sm font-medium text-gray-900">
                               {wp.Product.name}
