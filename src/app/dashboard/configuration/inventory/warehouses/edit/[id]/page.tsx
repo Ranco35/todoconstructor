@@ -27,7 +27,6 @@ export default async function EditWarehousePage(props: PageProps) {
     notFound()
   }
 
-  const updateWarehouseWithId = updateWarehouse.bind(null, warehouseId)
 
   return (
     <div className="container mx-auto p-4">
@@ -43,7 +42,8 @@ export default async function EditWarehousePage(props: PageProps) {
         </div>
 
         <div className="bg-white shadow-md rounded-lg p-6">
-          <form action={updateWarehouseWithId} className="space-y-6">
+          <form action={updateWarehouse} className="space-y-6">
+            <input type="hidden" name="id" value={warehouseId} />
             <div>
               <label htmlFor="name" className="block text-sm font-medium text-gray-700 mb-2">
                 Nombre de la bodega *

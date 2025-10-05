@@ -1,6 +1,7 @@
 "use server";
 
 import { revalidatePath } from 'next/cache';
+import { redirect } from 'next/navigation';
 import { getSupabaseServerClient } from '@/lib/supabase-server';
 
 async function getSupabaseClient() {
@@ -311,13 +312,79 @@ export async function createWarehouse(formData: FormData) {
   }
 }
 
-export async function updateWarehouse(id: number, warehouseData: Partial<Warehouse>) {
+// Función para actualizar bodega desde FormData (uso en formularios)
+export async function updateWarehouse(formData: FormData) {
+  try {
+    const supabase = await getSupabaseClient();
+    
+    // Extraer datos del FormData
+    const id = formData.get('id') as string;
+    const name = formData.get('name') as string;
+    const description = formData.get('description') as string;
+    const location = formData.get('location') as string;
+    const type = formData.get('type') as string;
+    const parentIdStr = formData.get('parentId') as string;
+    
+    // Validar ID
+    const warehouseId = parseInt(id);
+    if (isNaN(warehouseId)) {
+      return { success: false, error: 'ID de bodega no válido' };
+    }
+    
+    // Validar campos requeridos
+    if (!name || !name.trim()) {
+      return { success: false, error: 'El nombre de la bodega es requerido' };
+    }
+    
+    if (!location || !location.trim()) {
+      return { success: false, error: 'La ubicación de la bodega es requerida' };
+    }
+    
+    if (!type || !type.trim()) {
+      return { success: false, error: 'El tipo de bodega es requerido' };
+    }
+    
+    // Preparar datos para actualizar
+    const warehouseData = {
+      name: name.trim(),
+      description: description?.trim() || null,
+      location: location.trim(),
+      type: type.trim(),
+      parentId: parentIdStr && parentIdStr !== '' ? parseInt(parentIdStr) : null,
+      updatedAt: new Date().toISOString()
+    };
+    
+    console.log('📝 Datos de bodega a actualizar:', { id: warehouseId, ...warehouseData });
+    
+    const { data, error } = await supabase
+      .from('Warehouse')
+      .update(warehouseData)
+      .eq('id', warehouseId)
+      .select()
+      .single();
+    
+    if (error) {
+      console.error('Error actualizando bodega:', error);
+      throw new Error(`Error actualizando bodega: ${error.message}`);
+    }
+    
+    console.log('✅ Bodega actualizada exitosamente:', data);
+    revalidatePath('/dashboard/configuration/inventory/warehouses');
+    redirect('/dashboard/configuration/inventory/warehouses?updated=true');
+  } catch (error: any) {
+    console.error('Error en updateWarehouse:', error);
+    return { success: false, error: error.message };
+  }
+}
+
+// Función para actualizar bodega con datos directos (uso programático)
+export async function updateWarehouseData(id: number, warehouseData: Partial<Warehouse>) {
   try {
     const supabase = await getSupabaseClient();
     
     const { data, error } = await supabase
       .from('Warehouse')
-      .update(warehouseData)
+      .update({ ...warehouseData, updatedAt: new Date().toISOString() })
       .eq('id', id)
       .select()
       .single();
@@ -328,9 +395,9 @@ export async function updateWarehouse(id: number, warehouseData: Partial<Warehou
     }
     
     revalidatePath('/dashboard/configuration/inventory/warehouses');
-    return { data, success: true, message: 'Bodega actualizada exitosamente' };
+    redirect('/dashboard/configuration/inventory/warehouses?updated=true');
   } catch (error: any) {
-    console.error('Error en updateWarehouse:', error);
+    console.error('Error en updateWarehouseData:', error);
     return { success: false, error: error.message };
   }
 }
