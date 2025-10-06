@@ -39,7 +39,7 @@ export async function getProductsForSales(filters: ProductSearchFilters = {}): P
       limit = 50
     } = filters;
 
-    // Construir query base con información de categoría
+    // Construir query base SIN join a Category (hacer JOIN manual después)
     let query = supabase
       .from('Product')
       .select(`
@@ -51,11 +51,7 @@ export async function getProductsForSales(filters: ProductSearchFilters = {}): P
         costprice,
         vat,
         type,
-        categoryid,
-        Category:categoryid (
-          id,
-          name
-        )
+        categoryid
       `)
       .limit(limit);
 
@@ -85,6 +81,25 @@ export async function getProductsForSales(filters: ProductSearchFilters = {}): P
     if (error) {
       console.error('Error al obtener productos para ventas:', error);
       return { success: false, error: 'Error al obtener productos.' };
+    }
+
+    // JOIN MANUAL: Obtener categorías de los productos
+    const categoryIds = [...new Set(products?.map(p => p.categoryid).filter(id => id !== null) || [])];
+    const categoryMap = new Map<number, { id: number; name: string }>();
+
+    if (categoryIds.length > 0) {
+      const { data: categories, error: categoryError } = await supabase
+        .from('Category')
+        .select('id, name')
+        .in('id', categoryIds);
+
+      if (categoryError) {
+        console.warn('Error al obtener categorías:', categoryError);
+      } else {
+        categories?.forEach(cat => {
+          categoryMap.set(cat.id, { id: cat.id, name: cat.name });
+        });
+      }
     }
 
     // Obtener información de stock si el producto lo requiere
@@ -123,10 +138,7 @@ export async function getProductsForSales(filters: ProductSearchFilters = {}): P
           salePrice: Number(product.saleprice) || 0,
           costPrice: Number(product.costprice) || 0,
           vat: Number(product.vat) || 19,
-          category: product.Category ? {
-            id: product.Category.id,
-            name: product.Category.name
-          } : undefined,
+          category: product.categoryid ? categoryMap.get(product.categoryid) : undefined,
           type: product.type || 'SERVICIO',
           active: true, // Asumimos que todos los productos están activos
           hasStock,
