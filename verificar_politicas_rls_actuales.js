@@ -199,3 +199,4 @@ verificarPoliticasRLS()
     process.exit(1);
   });
 
+

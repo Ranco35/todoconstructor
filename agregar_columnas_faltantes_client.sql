@@ -86,3 +86,4 @@ BEGIN
   RAISE NOTICE '🎯 Ahora la tabla Client está completa y lista para usar';
 END $$;
 
+

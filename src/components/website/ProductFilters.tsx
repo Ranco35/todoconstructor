@@ -31,12 +31,17 @@ export default function ProductFilters({
     onSearch(searchQuery)
   }
 
+  const handleSearchChange = (value: string) => {
+    setSearchQuery(value)
+    onSearch(value)
+  }
+
   const handleCategoryChange = (categoryId: number | null) => {
     setSelectedCategory(categoryId)
     onCategoryFilter(categoryId)
   }
 
-  const handlePriceFilter = () => {
+  const handlePriceChange = () => {
     const min = minPrice ? parseFloat(minPrice) : null
     const max = maxPrice ? parseFloat(maxPrice) : null
     onPriceFilter(min, max)
@@ -62,18 +67,18 @@ export default function ProductFilters({
   return (
     <div className="bg-white rounded-lg shadow-md p-6 mb-6">
       {/* Barra de búsqueda */}
-      <form onSubmit={handleSearch} className="mb-4">
+      <div className="mb-4">
         <div className="relative">
           <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 w-5 h-5" />
           <input
             type="text"
             placeholder="Buscar productos..."
             value={searchQuery}
-            onChange={(e) => setSearchQuery(e.target.value)}
+            onChange={(e) => handleSearchChange(e.target.value)}
             className="w-full pl-10 pr-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
           />
         </div>
-      </form>
+      </div>
 
       {/* Botón de filtros móvil */}
       <div className="md:hidden mb-4">
@@ -117,7 +122,11 @@ export default function ProductFilters({
               type="number"
               placeholder="0"
               value={minPrice}
-              onChange={(e) => setMinPrice(e.target.value)}
+              onChange={(e) => {
+                setMinPrice(e.target.value)
+                // Aplicar filtro automáticamente con un pequeño delay
+                setTimeout(() => handlePriceChange(), 300)
+              }}
               className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
             />
           </div>
@@ -131,7 +140,11 @@ export default function ProductFilters({
               type="number"
               placeholder="999999"
               value={maxPrice}
-              onChange={(e) => setMaxPrice(e.target.value)}
+              onChange={(e) => {
+                setMaxPrice(e.target.value)
+                // Aplicar filtro automáticamente con un pequeño delay
+                setTimeout(() => handlePriceChange(), 300)
+              }}
               className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
             />
           </div>
@@ -150,15 +163,8 @@ export default function ProductFilters({
           </div>
         </div>
 
-        {/* Botones de acción */}
-        <div className="flex justify-between items-center mt-4 pt-4 border-t border-gray-200">
-          <button
-            onClick={handlePriceFilter}
-            className="bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700 transition-colors"
-          >
-            Aplicar Filtros
-          </button>
-          
+        {/* Botón de limpiar filtros */}
+        <div className="flex justify-end items-center mt-4 pt-4 border-t border-gray-200">
           <button
             onClick={clearFilters}
             className="flex items-center space-x-2 text-gray-600 hover:text-gray-800 transition-colors"

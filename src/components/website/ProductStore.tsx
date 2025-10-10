@@ -4,11 +4,19 @@ import { useState, useEffect } from 'react'
 import { Package, ShoppingCart, Grid, List } from 'lucide-react'
 import ProductCard from './ProductCard'
 import ProductFilters from './ProductFilters'
-import { ProductWithStock, ProductCategory, getProductsWithStock, getProductCategories, getProductsByCategory, searchProducts } from '@/actions/website/products'
+import { ProductWithStock, ProductCategory, getProductsWithStock, getProductCategories } from '@/actions/website/products'
 
 interface CartItem {
   product: ProductWithStock
   quantity: number
+}
+
+interface ActiveFilters {
+  searchQuery: string
+  categoryId: number | null
+  minPrice: number | null
+  maxPrice: number | null
+  inStockOnly: boolean
 }
 
 export default function ProductStore() {
@@ -17,11 +25,25 @@ export default function ProductStore() {
   const [loading, setLoading] = useState(true)
   const [viewMode, setViewMode] = useState<'grid' | 'list'>('grid')
   const [filteredProducts, setFilteredProducts] = useState<ProductWithStock[]>([])
+  
+  // Estado para mantener todos los filtros activos
+  const [activeFilters, setActiveFilters] = useState<ActiveFilters>({
+    searchQuery: '',
+    categoryId: null,
+    minPrice: null,
+    maxPrice: null,
+    inStockOnly: true
+  })
 
   // Cargar productos y categorías al montar el componente
   useEffect(() => {
     loadData()
   }, [])
+
+  // Aplicar filtros cuando cambien los filtros activos o productos
+  useEffect(() => {
+    applyAllFilters()
+  }, [activeFilters, products])
 
   const loadData = async () => {
     setLoading(true)
@@ -31,7 +53,6 @@ export default function ProductStore() {
         getProductCategories()
       ])
       setProducts(productsData)
-      setFilteredProducts(productsData)
       setCategories(categoriesData)
     } catch (error) {
       console.error('Error loading data:', error)
@@ -40,62 +61,82 @@ export default function ProductStore() {
     }
   }
 
-  // Manejar búsqueda
-  const handleSearch = async (query: string) => {
-    if (!query.trim()) {
-      setFilteredProducts(products)
-      return
-    }
+  // Función central que aplica todos los filtros de forma acumulativa
+  const applyAllFilters = () => {
+    let filtered = [...products]
 
-    try {
-      const searchResults = await searchProducts(query)
-      setFilteredProducts(searchResults)
-    } catch (error) {
-      console.error('Error searching products:', error)
-    }
-  }
-
-  // Manejar filtro por categoría
-  const handleCategoryFilter = async (categoryId: number | null) => {
-    if (!categoryId) {
-      setFilteredProducts(products)
-      return
-    }
-
-    try {
-      const categoryProducts = await getProductsByCategory(categoryId)
-      setFilteredProducts(categoryProducts)
-    } catch (error) {
-      console.error('Error filtering by category:', error)
-    }
-  }
-
-  // Manejar filtro por precio
-  const handlePriceFilter = (minPrice: number | null, maxPrice: number | null) => {
-    let filtered = products
-
-    if (minPrice !== null) {
+    // 1. Filtro por categoría
+    if (activeFilters.categoryId) {
       filtered = filtered.filter(product => 
-        (product.finalPrice || product.saleprice || 0) >= minPrice
+        product.category?.id === activeFilters.categoryId
       )
     }
 
-    if (maxPrice !== null) {
-      filtered = filtered.filter(product => 
-        (product.finalPrice || product.saleprice || 0) <= maxPrice
+    // 2. Filtro de búsqueda
+    if (activeFilters.searchQuery.trim()) {
+      const query = activeFilters.searchQuery.toLowerCase()
+      filtered = filtered.filter(product =>
+        product.name.toLowerCase().includes(query) ||
+        product.description?.toLowerCase().includes(query) ||
+        product.brand?.toLowerCase().includes(query) ||
+        product.sku?.toLowerCase().includes(query)
       )
+    }
+
+    // 3. Filtro de precio
+    if (activeFilters.minPrice !== null) {
+      filtered = filtered.filter(product => {
+        const price = product.finalPrice || product.saleprice || 0
+        return price >= activeFilters.minPrice!
+      })
+    }
+
+    if (activeFilters.maxPrice !== null) {
+      filtered = filtered.filter(product => {
+        const price = product.finalPrice || product.saleprice || 0
+        return price <= activeFilters.maxPrice!
+      })
+    }
+
+    // 4. Filtro de stock
+    if (activeFilters.inStockOnly) {
+      filtered = filtered.filter(product => product.stock > 0)
     }
 
     setFilteredProducts(filtered)
   }
 
+  // Manejar búsqueda
+  const handleSearch = (query: string) => {
+    setActiveFilters(prev => ({
+      ...prev,
+      searchQuery: query
+    }))
+  }
+
+  // Manejar filtro por categoría
+  const handleCategoryFilter = (categoryId: number | null) => {
+    setActiveFilters(prev => ({
+      ...prev,
+      categoryId
+    }))
+  }
+
+  // Manejar filtro por precio
+  const handlePriceFilter = (minPrice: number | null, maxPrice: number | null) => {
+    setActiveFilters(prev => ({
+      ...prev,
+      minPrice,
+      maxPrice
+    }))
+  }
+
   // Manejar filtro por stock
   const handleStockFilter = (inStockOnly: boolean) => {
-    if (inStockOnly) {
-      setFilteredProducts(products.filter(product => product.stock > 0))
-    } else {
-      setFilteredProducts(products)
-    }
+    setActiveFilters(prev => ({
+      ...prev,
+      inStockOnly
+    }))
   }
 
   // Función para contactar sobre un producto

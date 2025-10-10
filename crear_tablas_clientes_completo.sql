@@ -273,3 +273,4 @@ BEGIN
   RAISE NOTICE '   - ClientTagAssignment (Asignaciones)';
 END $$;
 
+
