@@ -201,24 +201,18 @@ export async function updateProduct(formData: FormData) {
     if (stockData && stockData.warehouseid && !isNaN(stockData.warehouseid)) {
       const warehouseId = parseInt(stockData.warehouseid.toString());
       
-      // ✅ NO FORZAR A 0 - Validar explícitamente si vienen datos válidos
+      // Obtener valores de stock (pueden ser null/undefined)
       const quantity = stockData.current;
       const minStock = stockData.min;
       const maxStock = stockData.max;
       
-      // Validar que quantity sea un número válido
-      if (quantity === null || quantity === undefined) {
-        console.warn('⚠️ No se recibió quantity válida, preservando stock actual');
-        // NO actualizar el stock - preservar el valor actual en la BD
-        // Continuar con el resto del proceso sin tocar Warehouse_Product
-      } else {
-        console.log('🔍 DEBUG - Procesando stock para producto:', {
-          productId: id,
-          warehouseId,
-          quantity,
-          minStock: minStock ?? 0,
-          maxStock: maxStock ?? null
-        });
+      console.log('🔍 DEBUG - Procesando stock para producto:', {
+        productId: id,
+        warehouseId,
+        quantity,
+        minStock: minStock ?? 0,
+        maxStock: maxStock ?? null
+      });
 
       // Usar service role para operaciones en Warehouse_Product (bypass RLS)
       // Buscar si ya existe un registro para este producto y bodega
@@ -237,15 +231,21 @@ export async function updateProduct(formData: FormData) {
       console.log('🔍 DEBUG - Registro existente encontrado:', existing);
 
       if (existing) {
-        // Actualizar registro existente
-        console.log('🔍 DEBUG - Actualizando registro existente en Warehouse_Product:', existing.id);
+        // Actualizar registro existente - preservar quantity si no viene
+        const updateData: any = {
+          minStock: minStock ?? existing.minStock ?? 0,
+          maxStock: maxStock ?? existing.maxStock ?? null
+        };
+        
+        // Solo actualizar quantity si viene un valor válido
+        if (quantity !== null && quantity !== undefined) {
+          updateData.quantity = quantity;
+        }
+        
+        console.log('🔍 DEBUG - Actualizando registro existente en Warehouse_Product:', existing.id, updateData);
         const { error: updateStockError } = await supabaseService
           .from('Warehouse_Product')
-          .update({
-            quantity,
-            minStock: minStock ?? 0,
-            maxStock: maxStock ?? null
-          })
+          .update(updateData)
           .eq('id', existing.id);
         
         if (updateStockError) {
@@ -255,14 +255,16 @@ export async function updateProduct(formData: FormData) {
           console.log('✅ Stock actualizado exitosamente en Warehouse_Product');
         }
       } else {
-        // Crear nuevo registro
+        // Crear nuevo registro - usar quantity o 0 por defecto
+        const newQuantity = quantity !== null && quantity !== undefined ? quantity : 0;
+        
         console.log('🔍 DEBUG - Creando nuevo registro en Warehouse_Product');
         const { error: createStockError } = await supabaseService
           .from('Warehouse_Product')
           .insert({
             productId: id,
             warehouseId: warehouseId,
-            quantity,
+            quantity: newQuantity,
             minStock: minStock ?? 0,
             maxStock: maxStock ?? null
           });
@@ -274,7 +276,6 @@ export async function updateProduct(formData: FormData) {
           console.log('✅ Stock creado exitosamente en Warehouse_Product');
         }
       }
-      } // Cierre del else que valida quantity
     } else {
       console.log('🔍 DEBUG - No hay datos de stock válidos para procesar');
       console.log('🔍 DEBUG - stockData:', stockData);

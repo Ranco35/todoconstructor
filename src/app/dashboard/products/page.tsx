@@ -268,29 +268,36 @@ export default async function ProductsDashboard() {
             <span className="text-2xl mr-3">⚠️</span>
             Productos con Stock Bajo
           </h3>
-          <div className="space-y-3">
-            <div className="flex items-center justify-between p-3 bg-red-50 rounded-lg border border-red-200">
-              <div>
-                <p className="font-medium text-gray-900">Producto A</p>
-                <p className="text-sm text-gray-600">Stock: 2 unidades</p>
-              </div>
-              <span className="text-sm font-semibold text-red-600">Crítico</span>
+          {stats.lowStockProductsDetail && stats.lowStockProductsDetail.length > 0 ? (
+            <div className="space-y-3">
+              {stats.lowStockProductsDetail.map((product: any, index: number) => (
+                <div 
+                  key={index}
+                  className={`flex items-center justify-between p-3 rounded-lg border ${
+                    product.status === 'critical' 
+                      ? 'bg-red-50 border-red-200' 
+                      : 'bg-yellow-50 border-yellow-200'
+                  }`}
+                >
+                  <div>
+                    <p className="font-medium text-gray-900">{product.name}</p>
+                    <p className="text-sm text-gray-600">
+                      Stock: {product.quantity} unidades | SKU: {product.sku}
+                    </p>
+                  </div>
+                  <span className={`text-sm font-semibold ${
+                    product.status === 'critical' ? 'text-red-600' : 'text-yellow-600'
+                  }`}>
+                    {product.status === 'critical' ? 'Crítico' : 'Bajo'}
+                  </span>
+                </div>
+              ))}
             </div>
-            <div className="flex items-center justify-between p-3 bg-yellow-50 rounded-lg border border-yellow-200">
-              <div>
-                <p className="font-medium text-gray-900">Producto B</p>
-                <p className="text-sm text-gray-600">Stock: 5 unidades</p>
-              </div>
-              <span className="text-sm font-semibold text-yellow-600">Bajo</span>
+          ) : (
+            <div className="text-center py-8">
+              <p className="text-gray-500">✅ No hay productos con stock bajo</p>
             </div>
-            <div className="flex items-center justify-between p-3 bg-yellow-50 rounded-lg border border-yellow-200">
-              <div>
-                <p className="font-medium text-gray-900">Producto C</p>
-                <p className="text-sm text-gray-600">Stock: 8 unidades</p>
-              </div>
-              <span className="text-sm font-semibold text-yellow-600">Bajo</span>
-            </div>
-          </div>
+          )}
           <div className="mt-4">
             <Link href="/dashboard/inventory" className="text-sm text-indigo-600 hover:text-indigo-800 font-medium">
               Ver todos los productos con stock bajo →
@@ -305,21 +312,26 @@ export default async function ProductsDashboard() {
           </h3>
           <div className="space-y-4">
             <div className="flex justify-between items-center p-3 bg-gray-50 rounded-lg">
-              <span className="text-sm font-medium text-gray-600">Productos más vendidos</span>
-              <span className="text-sm font-semibold text-blue-600">Ver reporte</span>
-            </div>
-            <div className="flex justify-between items-center p-3 bg-gray-50 rounded-lg">
               <span className="text-sm font-medium text-gray-600">Productos sin movimiento</span>
-              <span className="text-sm font-semibold text-gray-900">15 productos</span>
+              <span className="text-sm font-semibold text-gray-900">{stats.noMovementProducts} productos</span>
             </div>
             <div className="flex justify-between items-center p-3 bg-gray-50 rounded-lg">
               <span className="text-sm font-medium text-gray-600">Valor total inventario</span>
-              <span className="text-sm font-semibold text-green-600">$45,780</span>
+              <span className="text-sm font-semibold text-green-600">
+                ${stats.totalInventoryValue.toLocaleString('es-CL')}
+              </span>
             </div>
             <div className="flex justify-between items-center p-3 bg-gray-50 rounded-lg">
               <span className="text-sm font-medium text-gray-600">Productos agregados hoy</span>
-              <span className="text-sm font-semibold text-indigo-600">3 productos</span>
+              <span className="text-sm font-semibold text-indigo-600">{stats.productsAddedToday} productos</span>
             </div>
+            <Link 
+              href="/dashboard/inventory/movements" 
+              className="flex justify-between items-center p-3 bg-indigo-50 rounded-lg border border-indigo-200 hover:bg-indigo-100 transition-colors"
+            >
+              <span className="text-sm font-medium text-indigo-900">Ver movimientos de inventario</span>
+              <span className="text-sm font-semibold text-indigo-600">→</span>
+            </Link>
           </div>
         </div>
       </div>

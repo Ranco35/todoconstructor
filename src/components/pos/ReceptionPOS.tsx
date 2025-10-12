@@ -250,11 +250,17 @@ export default function ReceptionPOS() {
   const loadInitialData = async () => {
     setIsLoading(true)
     try {
-      // Cargar sesión actual
-      const sessionResult = await getCurrentPOSSession(REGISTER_TYPE_ID)
-      if (sessionResult.success && sessionResult.data) {
-        setSession(sessionResult.data)
-        loadSessionStats(sessionResult.data.id)
+      // Intentar cargar sesión actual (opcional - no es obligatorio)
+      try {
+        const sessionResult = await getCurrentPOSSession(REGISTER_TYPE_ID)
+        if (sessionResult.success && sessionResult.data) {
+          setSession(sessionResult.data)
+          loadSessionStats(sessionResult.data.id)
+        } else {
+          console.log('🔄 Modo sin sesión de caja - Continuando sin sesión activa')
+        }
+      } catch (sessionError) {
+        console.log('🔄 No hay sesión de caja activa - Modo sin sesión')
       }
 
       // Cargar productos y categorías
@@ -296,43 +302,59 @@ export default function ReceptionPOS() {
           }
         }
         
-        // Corregir problema específico de "Menu Dia"
+        // Corregir problema específico de "Menu Dia" (opcional)
         console.log('🔧 Verificando y corrigiendo problema de "Menu Dia"...')
         messages.push('🔧 Verificando categoría "Menu Dia"...')
         
-        const fixMenuDiaResult = await fixMenuDiaIssue()
-        if (fixMenuDiaResult.success) {
-          console.log('✅ Problema de Menu Dia corregido:', fixMenuDiaResult.data)
-          messages.push(`✅ ${fixMenuDiaResult.data?.message || 'Categoría Menu Dia corregida'}`)
-          
-          // Crear productos de prueba para Menu Dia si no existen
-          console.log('🍽️ Creando productos de prueba para Menu Dia si es necesario...')
-          messages.push('🍽️ Verificando productos de Menu Dia...')
-          
-          const sampleProductsResult = await createSampleMenuDiaProducts()
-          if (sampleProductsResult.success) {
-            console.log('✅ Productos de prueba Menu Dia:', sampleProductsResult.data)
-            messages.push(`✅ ${sampleProductsResult.data?.message || 'Productos de Menu Dia verificados'}`)
+        try {
+          const fixMenuDiaResult = await fixMenuDiaIssue()
+          if (fixMenuDiaResult.success) {
+            console.log('✅ Problema de Menu Dia corregido:', fixMenuDiaResult.data)
+            messages.push(`✅ ${fixMenuDiaResult.data?.message || 'Categoría Menu Dia corregida'}`)
+            
+            // Crear productos de prueba para Menu Dia si no existen
+            console.log('🍽️ Creando productos de prueba para Menu Dia si es necesario...')
+            messages.push('🍽️ Verificando productos de Menu Dia...')
+            
+            try {
+              const sampleProductsResult = await createSampleMenuDiaProducts()
+              if (sampleProductsResult.success) {
+                console.log('✅ Productos de prueba Menu Dia:', sampleProductsResult.data)
+                messages.push(`✅ ${sampleProductsResult.data?.message || 'Productos de Menu Dia verificados'}`)
+              } else {
+                console.warn('⚠️ Advertencia con productos Menu Dia:', sampleProductsResult.error)
+                messages.push(`⚠️ Advertencia Menu Dia: ${sampleProductsResult.error}`)
+              }
+            } catch (sampleError) {
+              console.warn('⚠️ Error no crítico con productos Menu Dia:', sampleError)
+              messages.push('⚠️ Productos Menu Dia: Error no crítico, continuando...')
+            }
           } else {
-            console.error('❌ Error creando productos de prueba Menu Dia:', sampleProductsResult.error)
-            messages.push(`❌ Error con productos Menu Dia: ${sampleProductsResult.error}`)
+            console.warn('⚠️ Advertencia con categoría Menu Dia:', fixMenuDiaResult.error)
+            messages.push(`⚠️ Advertencia Menu Dia: ${fixMenuDiaResult.error}`)
           }
-          
-          // Corregir categorización de productos con "Programa"
-          console.log('🔧 Corrigiendo categorización de productos con "Programa"...')
-          messages.push('🔧 Verificando productos de Programas...')
-          
+        } catch (menuDiaError) {
+          console.warn('⚠️ Error no crítico con Menu Dia:', menuDiaError)
+          messages.push('⚠️ Menu Dia: Error no crítico, continuando...')
+        }
+        
+        // Corregir categorización de productos con "Programa" (opcional)
+        console.log('🔧 Corrigiendo categorización de productos con "Programa"...')
+        messages.push('🔧 Verificando productos de Programas...')
+        
+        try {
           const programaCategoryResult = await fixProgramaCategoryIssue()
           if (programaCategoryResult.success) {
             console.log('✅ Corrección de categoría Programas:', programaCategoryResult.data)
             messages.push(`✅ ${programaCategoryResult.data?.message || 'Productos de Programas verificados'}`)
           } else {
-            console.error('❌ Error corrigiendo categoría Programas:', programaCategoryResult.error)
-            messages.push(`❌ Error con productos Programas: ${programaCategoryResult.error}`)
+            console.warn('⚠️ Advertencia con categoría Programas:', programaCategoryResult.error)
+            messages.push(`⚠️ Advertencia Programas: ${programaCategoryResult.error}`)
+            // No es crítico, continuar
           }
-        } else {
-          console.error('❌ Error corrigiendo Menu Dia:', fixMenuDiaResult.error)
-          messages.push(`❌ Error corrigiendo Menu Dia: ${fixMenuDiaResult.error}`)
+        } catch (error) {
+          console.warn('⚠️ Error no crítico con categoría Programas:', error)
+          messages.push('⚠️ Categoría Programas: Error no crítico, continuando...')
         }
       } else {
         console.error('❌ Error en diagnóstico:', diagnosticResult.error)
@@ -536,7 +558,7 @@ export default function ReceptionPOS() {
       }
 
       const saleData = {
-        sessionId: session.id,
+        sessionId: session?.id || null, // Permitir null para modo sin sesión
         customerName: finalCustomerName,
         clientId: selectedClient?.id || undefined,
         roomNumber: roomNumber || undefined,
@@ -570,8 +592,10 @@ export default function ReceptionPOS() {
         // Los descuentos se limpian automáticamente al limpiar el carrito
         setShowPaymentModal(false)
         
-        // Recargar estadísticas
-        await loadSessionStats(session.id)
+        // Recargar estadísticas (solo si hay sesión)
+        if (session?.id) {
+          await loadSessionStats(session.id)
+        }
         
         alert('Venta procesada exitosamente')
       } else {
@@ -611,7 +635,7 @@ export default function ReceptionPOS() {
       }
 
       const saleData = {
-        sessionId: session.id,
+        sessionId: session?.id || null, // Permitir null para modo sin sesión
         customerName: finalCustomerName,
         clientId: selectedClient?.id || undefined,
         roomNumber: roomNumber || undefined,
@@ -652,8 +676,10 @@ export default function ReceptionPOS() {
         // Los descuentos se limpian automáticamente al limpiar el carrito
         setShowMultiplePaymentModal(false)
         
-        // Recargar estadísticas
-        await loadSessionStats(session.id)
+        // Recargar estadísticas (solo si hay sesión)
+        if (session?.id) {
+          await loadSessionStats(session.id)
+        }
         
         alert('Venta procesada exitosamente con múltiples pagos')
       } else {
@@ -845,92 +871,10 @@ export default function ReceptionPOS() {
     }
   };
 
-  // Vista cuando no hay sesión activa
-  if (!session) {
-    return (
-      <div className="min-h-screen bg-gray-50 p-4">
-        <div className="max-w-2xl mx-auto">
-          <Card>
-            <CardHeader className="text-center">
-              <CardTitle className="flex items-center justify-center gap-2">
-                <Home className="h-6 w-6 text-purple-600" />
-                POS Recepción - AdminTermas
-              </CardTitle>
-            </CardHeader>
-            <CardContent className="space-y-6">
-              <Alert>
-                <AlertCircle className="h-4 w-4" />
-                <AlertDescription>
-                  No hay una sesión de caja activa. Debe iniciar una sesión para comenzar a vender.
-                </AlertDescription>
-              </Alert>
-              
-              <div className="text-center space-y-4">
-                <Button 
-                  onClick={() => setShowSessionModal(true)}
-                  className="bg-purple-600 hover:bg-purple-700"
-                  size="lg"
-                >
-                  Iniciar Sesión de Caja
-                </Button>
-                
-                <div className="flex justify-center space-x-4">
-                  <Link href="/dashboard/pettyCash">
-                    <Button variant="outline">
-                      <DollarSign className="h-4 w-4 mr-2" />
-                      Caja Chica
-                    </Button>
-                  </Link>
-                  <Link href="/dashboard/pos">
-                    <Button variant="outline">
-                      <Home className="h-4 w-4 mr-2" />
-                      Seleccionar POS
-                    </Button>
-                  </Link>
-                </div>
-              </div>
-            </CardContent>
-          </Card>
-        </div>
-
-        {/* Modal de creación de sesión */}
-        <Dialog open={showSessionModal} onOpenChange={setShowSessionModal}>
-          <DialogContent>
-            <DialogHeader>
-              <DialogTitle>Iniciar Sesión de Caja - Recepción</DialogTitle>
-            </DialogHeader>
-            <div className="space-y-4">
-              <div>
-                <Label htmlFor="initialAmount">Monto inicial en caja</Label>
-                <Input
-                  id="initialAmount"
-                  type="number"
-                  value={initialAmount}
-                  onChange={(e) => setInitialAmount(Number(e.target.value))}
-                  placeholder="0"
-                />
-              </div>
-              <div className="flex justify-end space-x-2">
-                <Button 
-                  variant="outline" 
-                  onClick={() => setShowSessionModal(false)}
-                >
-                  Cancelar
-                </Button>
-                <Button 
-                  onClick={handleCreateSession}
-                  disabled={isProcessing}
-                  className="bg-purple-600 hover:bg-purple-700"
-                >
-                  {isProcessing ? 'Creando...' : 'Crear Sesión'}
-                </Button>
-              </div>
-            </div>
-          </DialogContent>
-        </Dialog>
-      </div>
-    )
-  }
+  // Modo sin sesión de caja - Permitir ventas directas
+  // if (!session) {
+  //   // Comentado: Ahora permite funcionar sin sesión de caja
+  // }
 
   if (isLoading) {
     return (
@@ -966,9 +910,15 @@ export default function ReceptionPOS() {
                     Sin conexión
                   </Badge>
                 )}
-                <Badge className="bg-purple-100 text-purple-800">
-                  Sesión #{session.sessionNumber || session.id}
-                </Badge>
+                {session ? (
+                  <Badge className="bg-purple-100 text-purple-800">
+                    Sesión #{session.sessionNumber || session.id}
+                  </Badge>
+                ) : (
+                  <Badge className="bg-gray-100 text-gray-600">
+                    Sin Sesión
+                  </Badge>
+                )}
               </div>
             </div>
             

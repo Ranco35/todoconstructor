@@ -22,7 +22,7 @@ const POSProductSchema = z.object({
 })
 
 const POSSaleSchema = z.object({
-  sessionId: z.number(),
+  sessionId: z.number().nullable(),
   customerName: z.string().optional(),
   customerDocument: z.string().optional(),
   tableNumber: z.string().optional(),
@@ -807,21 +807,26 @@ export async function createPOSSale(saleData: z.infer<typeof POSSaleSchema>): Pr
     // Validar datos
     const validatedData = POSSaleSchema.parse(saleData)
     
-    // Verificar que la sesión existe y es activa
-    const { data: session, error: sessionError } = await supabase
-      .from('CashSession')
-      .select('*, cashRegisterTypeId')
-      .eq('id', validatedData.sessionId)
-      .eq('isActive', true)
-      .single()
-    
-    if (sessionError || !session) {
-      return { success: false, error: 'Sesión de caja no válida' }
+    // Verificar sesión solo si sessionId no es null
+    let session = null
+    if (validatedData.sessionId) {
+      const { data: sessionData, error: sessionError } = await supabase
+        .from('CashSession')
+        .select('*, cashRegisterTypeId')
+        .eq('id', validatedData.sessionId)
+        .eq('isActive', true)
+        .single()
+      
+      if (sessionError || !sessionData) {
+        return { success: false, error: 'Sesión de caja no válida' }
+      }
+      session = sessionData
     }
     
-    // Generar número de venta
+    // Generar número de venta (usar tipo de caja por defecto si no hay sesión)
+    const registerTypeId = session?.cashRegisterTypeId || 1 // Recepción por defecto
     const { data: saleNumber, error: numberError } = await supabase
-      .rpc('generate_sale_number', { register_type_id: session.cashRegisterTypeId })
+      .rpc('generate_sale_number', { register_type_id: registerTypeId })
     
     if (numberError) {
       console.error('Error generating sale number:', numberError)

@@ -577,6 +577,22 @@ export async function getDashboardStats() {
       .select('*', { count: 'exact', head: true })
       .lt('quantity', 10);
 
+    // Obtener productos reales con stock bajo (detalles)
+    const { data: lowStockProductsDetail } = await supabase
+      .from('Warehouse_Product')
+      .select(`
+        quantity,
+        minStock,
+        Product:productId (
+          id,
+          name,
+          sku
+        )
+      `)
+      .lt('quantity', 10)
+      .order('quantity', { ascending: true })
+      .limit(5);
+
     // Obtener categorías con más productos
     const { data: topCategories } = await (supabase as any)
       .from(categoryTable)
@@ -587,12 +603,56 @@ export async function getDashboardStats() {
       `)
       .limit(5);
 
+    // Calcular valor total del inventario
+    const { data: inventoryValue } = await supabase
+      .from('Warehouse_Product')
+      .select(`
+        quantity,
+        Product:productId (
+          costprice
+        )
+      `);
+
+    const totalInventoryValue = inventoryValue?.reduce((sum, item) => {
+      const cost = item.Product?.costprice || 0;
+      const qty = item.quantity || 0;
+      return sum + (cost * qty);
+    }, 0) || 0;
+
+    // Obtener productos sin movimiento (agregados hace más de 30 días sin ventas)
+    const thirtyDaysAgo = new Date();
+    thirtyDaysAgo.setDate(thirtyDaysAgo.getDate() - 30);
+    
+    const { count: noMovementProducts } = await supabase
+      .from('Product')
+      .select('*', { count: 'exact', head: true })
+      .lt('createdAt', thirtyDaysAgo.toISOString());
+
+    // Obtener productos agregados hoy
+    const today = new Date();
+    today.setHours(0, 0, 0, 0);
+    
+    const { count: productsAddedToday } = await supabase
+      .from('Product')
+      .select('*', { count: 'exact', head: true })
+      .gte('createdAt', today.toISOString());
+
     return {
       totalCategories: totalCategories || 0,
       totalProducts: totalProducts || 0,
       activeProducts: activeProducts || 0,
       lowStockProducts: lowStockProducts || 0,
-      topCategories: topCategories || []
+      lowStockProductsDetail: lowStockProductsDetail?.map(item => ({
+        name: item.Product?.name || 'Sin nombre',
+        sku: item.Product?.sku || 'Sin SKU',
+        quantity: item.quantity || 0,
+        minStock: item.minStock || 5,
+        status: (item.quantity || 0) === 0 ? 'critical' : (item.quantity || 0) < (item.minStock || 5) ? 'low' : 'normal'
+      })) || [],
+      topCategories: topCategories || [],
+      totalInventoryValue: Math.round(totalInventoryValue),
+      noMovementProducts: noMovementProducts || 0,
+      productsAddedToday: productsAddedToday || 0
     };
   } catch (error) {
     console.error('Error obteniendo estadísticas del dashboard:', error);
@@ -601,7 +661,11 @@ export async function getDashboardStats() {
       totalProducts: 0,
       activeProducts: 0,
       lowStockProducts: 0,
-      topCategories: []
+      lowStockProductsDetail: [],
+      topCategories: [],
+      totalInventoryValue: 0,
+      noMovementProducts: 0,
+      productsAddedToday: 0
     };
   }
 }

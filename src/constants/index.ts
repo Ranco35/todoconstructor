@@ -29,6 +29,10 @@ export const menus = {
             href: '/dashboard/configuration/products',
         },
         {
+            label: '🛒 Punto de Venta',
+            href: '/dashboard/pos/recepcion',
+        },
+        {
             label: 'Ventas',
             href: '/dashboard/sales',
             items: [
@@ -97,6 +101,10 @@ export const menus = {
         {
             label: 'Productos',
             href: '/dashboard/configuration/products',
+        },
+        {
+            label: '🛒 Punto de Venta',
+            href: '/dashboard/pos/recepcion',
         },
         {
             label: 'Ventas',
