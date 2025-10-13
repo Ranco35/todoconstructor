@@ -31,21 +31,10 @@ export async function getBudgetById(id: number): Promise<{ success: boolean; dat
   try {
     const supabase = await getSupabaseServerClient();
     
-    // Obtener presupuesto con información del cliente
+    // Obtener presupuesto SIN JOIN
     const { data: budget, error: budgetError } = await supabase
       .from('sales_quotes')
-      .select(`
-        *,
-        client:client_id (
-          id,
-          nombrePrincipal,
-          apellido, 
-          email,
-          rut,
-          telefono,
-          telefonoMovil
-        )
-      `)
+      .select('*')
       .eq('id', id)
       .single();
 
@@ -58,16 +47,54 @@ export async function getBudgetById(id: number): Promise<{ success: boolean; dat
       return { success: false, error: 'Presupuesto no encontrado.' };
     }
 
-    // Obtener líneas del presupuesto con información del producto usando SQL manual
-    const { data: lines, error: linesError } = await supabase
-      .rpc('get_budget_lines_with_product', { budget_id: id });
+    // Obtener cliente si existe
+    let clientData = null;
+    if (budget.client_id) {
+      const { data: client } = await supabase
+        .from('Client')
+        .select('id, nombrePrincipal, apellido, email, rut, telefono, telefonoMovil')
+        .eq('id', budget.client_id)
+        .single();
+      
+      if (client) {
+        clientData = client;
+      }
+    }
 
-    console.log('Líneas obtenidas:', lines);
+    // Obtener líneas del presupuesto directamente
+    const { data: rawLines, error: linesError } = await supabase
+      .from('sales_quote_lines')
+      .select('*')
+      .eq('quote_id', id)
+      .order('id');
 
     if (linesError) {
       console.error('Error al obtener líneas del presupuesto:', linesError);
       return { success: false, error: 'Error al cargar las líneas del presupuesto.' };
     }
+
+    // Obtener nombres de productos para cada línea
+    const lines = await Promise.all(
+      (rawLines || []).map(async (line) => {
+        let productName = null;
+        if (line.product_id) {
+          const { data: product } = await supabase
+            .from('Product')
+            .select('name')
+            .eq('id', line.product_id)
+            .single();
+          
+          if (product) {
+            productName = product.name;
+          }
+        }
+        
+        return {
+          ...line,
+          product_name: productName
+        };
+      })
+    );
 
     // Mapear datos a la interface esperada
     const budgetWithDetails: BudgetWithDetails = {
@@ -86,7 +113,7 @@ export async function getBudgetById(id: number): Promise<{ success: boolean; dat
       paymentTerms: budget.payment_terms,
       companyId: budget.company_id,
       sellerId: budget.seller_id,
-      client: budget.client,
+      client: clientData,
       lines: (lines || []).map(line => ({
         id: line.id,
         quoteId: line.quote_id,
@@ -118,16 +145,7 @@ export async function getBudgetPreview(id: number): Promise<{ success: boolean; 
     
     const { data: budget, error } = await supabase
       .from('sales_quotes')
-      .select(`
-        number,
-        total,
-        currency,
-        status,
-        client:client_id (
-          nombrePrincipal,
-          apellido
-        )
-      `)
+      .select('*')
       .eq('id', id)
       .single();
 
@@ -135,11 +153,25 @@ export async function getBudgetPreview(id: number): Promise<{ success: boolean; 
       return { success: false, error: 'Presupuesto no encontrado.' };
     }
 
+    // Obtener cliente si existe
+    let clientName = 'Cliente no encontrado';
+    if (budget.client_id) {
+      const { data: client } = await supabase
+        .from('Client')
+        .select('nombrePrincipal, apellido')
+        .eq('id', budget.client_id)
+        .single();
+      
+      if (client) {
+        clientName = `${client.nombrePrincipal} ${client.apellido}`;
+      }
+    }
+
     return {
       success: true,
       data: {
         number: budget.number,
-        clientName: budget.client ? `${budget.client.nombrePrincipal} ${budget.client.apellido}` : 'Cliente no encontrado',
+        clientName: clientName,
         total: Number(budget.total),
         currency: budget.currency,
         status: budget.status
@@ -154,21 +186,10 @@ export async function getBudgetForEdit(id: number): Promise<{ success: boolean; 
   try {
     const supabase = await getSupabaseServerClient();
     
-    // Obtener presupuesto con información del cliente
+    // Obtener presupuesto SIN JOIN
     const { data: budget, error: budgetError } = await supabase
       .from('sales_quotes')
-      .select(`
-        *,
-        client:client_id (
-          id,
-          nombrePrincipal,
-          apellido, 
-          email,
-          rut,
-          telefono,
-          telefonoMovil
-        )
-      `)
+      .select('*')
       .eq('id', id)
       .single();
 
@@ -181,14 +202,40 @@ export async function getBudgetForEdit(id: number): Promise<{ success: boolean; 
       return { success: false, error: 'Presupuesto no encontrado.' };
     }
 
-    // Obtener líneas del presupuesto usando la función personalizada
-    const { data: lines, error: linesError } = await supabase
-      .rpc('get_budget_lines_with_product', { budget_id: id });
+    // Obtener líneas del presupuesto directamente
+    const { data: rawLines, error: linesError } = await supabase
+      .from('sales_quote_lines')
+      .select('*')
+      .eq('quote_id', id)
+      .order('id');
 
     if (linesError) {
       console.error('Error al obtener líneas del presupuesto:', linesError);
       return { success: false, error: 'Error al cargar las líneas del presupuesto.' };
     }
+
+    // Obtener nombres de productos para cada línea
+    const lines = await Promise.all(
+      (rawLines || []).map(async (line) => {
+        let productName = null;
+        if (line.product_id) {
+          const { data: product } = await supabase
+            .from('Product')
+            .select('name')
+            .eq('id', line.product_id)
+            .single();
+          
+          if (product) {
+            productName = product.name;
+          }
+        }
+        
+        return {
+          ...line,
+          product_name: productName
+        };
+      })
+    );
 
     // Mapear datos para el formulario
     const formData = {

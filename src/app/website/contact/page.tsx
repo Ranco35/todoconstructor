@@ -29,7 +29,7 @@ export default function ContactPage() {
                 Chatea con nosotros para consultas rápidas
               </p>
               <a
-                href="https://wa.me/56969095111?text=Hola,%20necesito%20información%20sobre%20Bodegas%20Termas%20Llifen"
+                href="https://wa.me/56969095111?text=Hola,%20necesito%20información%20sobre%20productos%20de%20TC%20Constructor"
                 target="_blank"
                 rel="noopener noreferrer"
                 className="inline-flex items-center bg-green-600 text-white px-6 py-3 rounded-lg font-medium hover:bg-green-700 transition-colors"
@@ -75,7 +75,10 @@ export default function ContactPage() {
                 Nuestra dirección física
               </p>
               <p className="text-purple-600 font-medium text-lg">
-                Bodegas Termas Llifen
+                Bodegas Termas LLifen
+              </p>
+              <p className="text-gray-600 text-sm mt-1">
+                LLifen s/n, Futrono, Chile
               </p>
             </div>
           </div>

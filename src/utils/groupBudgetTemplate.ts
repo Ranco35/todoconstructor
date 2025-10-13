@@ -25,7 +25,7 @@ export function generateGroupBudgetHTML(data: GroupBudgetData): string {
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Presupuesto Grupal - Hotel Spa Termas LLifén</title>
+    <title>Presupuesto Grupal - TC Constructor Ferretería & Construcción</title>
     <style>
         @import url('https://fonts.googleapis.com/css2?family=Playfair+Display:wght@400;700&family=Source+Sans+Pro:wght@300;400;600&display=swap');
         
@@ -441,14 +441,14 @@ export function generateGroupBudgetHTML(data: GroupBudgetData): string {
 <body>
     <div class="container">
         <div class="header">
-            <div class="logo">Hotel Spa Termas LLifén</div>
-            <div class="tagline">Encuentra el descanso que estabas buscando</div>
-            <div class="location">LLifén s/n, Futrono, Chile</div>
+            <div class="logo">TC Constructor - Ferretería & Construcción</div>
+            <div class="tagline">Todo lo que necesitas para tus proyectos</div>
+            <div class="location">Bodegas Termas LLifen - LLifen, Futrono, Chile</div>
         </div>
         
         <div class="hero-section">
-            <h2 class="hero-title">Una Experiencia de Bienestar Única</h2>
-            <p class="hero-subtitle">Sumérgete en un oasis de tranquilidad donde las aguas termales naturales, la gastronomía local y los paisajes de la Región de Los Ríos se combinan para renovar tu cuerpo y alma.</p>
+            <h2 class="hero-title">Soluciones Profesionales para tu Proyecto</h2>
+            <p class="hero-subtitle">Encuentra todo lo que necesitas para tu proyecto de construcción o remodelación. Productos de calidad, asesoría técnica y la mejor atención.</p>
         </div>
         
         <div class="content">
@@ -472,8 +472,8 @@ export function generateGroupBudgetHTML(data: GroupBudgetData): string {
             </div>
             
             <div class="programa-destacado">
-                <h2 class="programa-title">Programa Especial de Bienestar</h2>
-                <p>Experiencias diseñadas especialmente para grupos en Hotel Spa Termas LLifén</p>
+                <h2 class="programa-title">Presupuesto para tu Proyecto</h2>
+                <p>Soluciones profesionales para proyectos de construcción y ferretería</p>
                 <div class="programa-details">
                     <div class="programa-stat">
                         <div class="stat-number">${data.totalTrips}</div>
@@ -495,34 +495,34 @@ export function generateGroupBudgetHTML(data: GroupBudgetData): string {
             </div>
             
             <div class="experiencia-section">
-                <h2 class="section-title">Tu Experiencia de Bienestar</h2>
+                <h2 class="section-title">Servicios y Productos Incluidos</h2>
                 <div class="experiencia-grid">
                     <div class="experiencia-card">
-                        <span class="experiencia-icon">♨️</span>
-                        <h3 class="experiencia-title">Aguas Termales</h3>
-                        <p class="experiencia-desc">Relájate en nuestras 3 piscinas termales techadas con aguas minerales naturales que renuevan tu energía</p>
+                        <span class="experiencia-icon">🔨</span>
+                        <h3 class="experiencia-title">Herramientas Profesionales</h3>
+                        <p class="experiencia-desc">Amplio catálogo de herramientas de las mejores marcas para profesionales y aficionados</p>
                     </div>
                     <div class="experiencia-card">
-                        <span class="experiencia-icon">🍽️</span>
-                        <h3 class="experiencia-title">Gastronomía Local</h3>
-                        <p class="experiencia-desc">Sabores auténticos de la región en cada comida, preparados con ingredientes frescos y locales</p>
+                        <span class="experiencia-icon">🏗️</span>
+                        <h3 class="experiencia-title">Materiales de Construcción</h3>
+                        <p class="experiencia-desc">Todo lo necesario para tu obra: cemento, fierro, madera, pinturas y más</p>
                     </div>
                     <div class="experiencia-card">
-                        <span class="experiencia-icon">🧘‍♀️</span>
-                        <h3 class="experiencia-title">Sonoterapia</h3>
-                        <p class="experiencia-desc">Experimenta la sanación a través del sonido con cuencos tibetanos en un entorno natural único</p>
+                        <span class="experiencia-icon">⚡</span>
+                        <h3 class="experiencia-title">Productos Eléctricos</h3>
+                        <p class="experiencia-desc">Cables, interruptores, iluminación y todo para instalaciones eléctricas</p>
                     </div>
                     <div class="experiencia-card">
-                        <span class="experiencia-icon">🌿</span>
-                        <h3 class="experiencia-title">Conexión Natural</h3>
-                        <p class="experiencia-desc">Desconéctate del mundo y reconéctate contigo mismo en medio de la naturaleza patagónica</p>
+                        <span class="experiencia-icon">📦</span>
+                        <h3 class="experiencia-title">Despacho a Domicilio</h3>
+                        <p class="experiencia-desc">Envío de productos directamente a tu obra u hogar con el mejor servicio</p>
                     </div>
                 </div>
             </div>
             
             <div class="servicios-table">
                 <div class="table-header">
-                    <h3>Programa de Bienestar - Día Completo</h3>
+                    <h3>Presupuesto Detallado - Materiales y Servicios</h3>
                     <div class="table-subheader">${data.totalTrips} Viajes × ${data.guestsPerTrip} Personas c/u = ${data.totalGuests} Huéspedes Total</div>
                 </div>
                 
@@ -557,12 +557,12 @@ export function generateGroupBudgetHTML(data: GroupBudgetData): string {
             <div class="condiciones">
                 <h4>🔄 Condiciones de Reserva y Flexibilidad</h4>
                 <ul>
-                    <li>Las reservas se confirman con el 50% del total del programa</li>
-                    <li>Cancelación gratuita hasta 5 días antes del check-in</li>
-                    <li>Posibles ajustes por cambio de temporada</li>
-                    <li>Horarios: Ingreso 14:00 hrs - Salida 11:00 hrs</li>
-                    <li>Todos los cambios sujetos a disponibilidad del hotel</li>
-                    <li>Programa especialmente diseñado para grupos</li>
+                    <li>Presupuesto válido por 30 días desde su emisión</li>
+                    <li>Precios sujetos a cambios sin previo aviso</li>
+                    <li>Disponibilidad de productos según stock actual</li>
+                    <li>Horarios de atención: Lunes a Sábado 8:00 - 19:00 hrs</li>
+                    <li>Despacho disponible previa coordinación</li>
+                    <li>Garantía en todos nuestros productos</li>
                 </ul>
             </div>
         </div>
@@ -571,18 +571,19 @@ export function generateGroupBudgetHTML(data: GroupBudgetData): string {
             <div class="contacto">
                 <div class="contacto-item">
                     <span class="contacto-icon">📧</span>
-                    <div>reservas@termasllifen.cl</div>
+                    <div>info@admintermas.cl</div>
                 </div>
                 <div class="contacto-item">
                     <span class="contacto-icon">📱</span>
-                    <div>Instagram: @hotelspatermasllifen</div>
+                    <div>Tel: +56 9 6909 5111</div>
                 </div>
                 <div class="contacto-item">
                     <span class="contacto-icon">📍</span>
-                    <div>LLifén s/n, Futrono, Chile</div>
+                    <div>Bodegas Termas LLifen</div>
+                    <div>LLifen s/n, Futrono, Chile</div>
                 </div>
             </div>
-            <p style="margin-top: 15px; opacity: 0.8;">✨ Donde la naturaleza se encuentra con el bienestar ✨</p>
+            <p style="margin-top: 15px; opacity: 0.8;">✨ Tu socio confiable en construcción y ferretería ✨</p>
         </div>
     </div>
 </body>

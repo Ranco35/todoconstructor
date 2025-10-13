@@ -21,18 +21,10 @@ export async function listBudgets(input: ListBudgetsInput = {}): Promise<{ succe
     // Calcular offset
     const offset = (page - 1) * pageSize;
 
-    // Construir query base con JOIN para obtener información del cliente
+    // Construir query base SIN JOIN (obtendremos el cliente después)
     let query = supabase
       .from('sales_quotes')
-      .select(`
-        *,
-        client:client_id!inner (
-          id,
-          nombrePrincipal,
-          apellido,
-          email
-        )
-      `, { count: 'exact' });
+      .select('*', { count: 'exact' });
 
     // Aplicar filtros
     if (filters.status) {
@@ -67,14 +59,34 @@ export async function listBudgets(input: ListBudgetsInput = {}): Promise<{ succe
       return { success: false, error: 'Error al obtener presupuestos.' };
     }
 
-    // Obtener líneas de presupuesto para cada presupuesto
+    // Obtener líneas de presupuesto y clientes para cada presupuesto
     const quotesWithLines = await Promise.all(
       (quotes || []).map(async (quote) => {
+        // Obtener líneas
         const { data: lines } = await supabase
           .from('sales_quote_lines')
           .select('*')
           .eq('quote_id', quote.id)
           .order('id');
+
+        // Obtener cliente si existe
+        let clientData = null;
+        if (quote.client_id) {
+          const { data: client } = await supabase
+            .from('Client')
+            .select('id, nombrePrincipal, apellido, email')
+            .eq('id', quote.client_id)
+            .single();
+          
+          if (client) {
+            clientData = {
+              id: client.id,
+              nombrePrincipal: client.nombrePrincipal || '',
+              apellido: client.apellido || '',
+              email: client.email || ''
+            };
+          }
+        }
 
         return {
           id: quote.id,
@@ -92,13 +104,7 @@ export async function listBudgets(input: ListBudgetsInput = {}): Promise<{ succe
           companyId: quote.company_id,
           sellerId: quote.seller_id,
           lines: lines || [],
-          // Información del cliente
-          client: quote.client ? {
-            id: quote.client.id,
-            nombrePrincipal: quote.client.nombrePrincipal || '',
-            apellido: quote.client.apellido || '',
-            email: quote.client.email || ''
-          } : null
+          client: clientData
         } as Budget & { client: { id: number; nombrePrincipal: string; apellido: string; email: string } | null };
       })
     );

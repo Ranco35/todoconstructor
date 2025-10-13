@@ -27,6 +27,7 @@ export default function AboutPage() {
           <div className="space-y-2 text-gray-600">
             <p><strong>Teléfono:</strong> +56 9 6909 5111</p>
             <p><strong>Email:</strong> info@admintermas.cl</p>
+            <p><strong>Ubicación:</strong> Bodegas Termas LLifen - LLifen s/n, Futrono, Chile</p>
           </div>
         </div>
       </div>

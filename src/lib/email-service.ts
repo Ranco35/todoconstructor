@@ -71,7 +71,7 @@ export async function sendEmail(options: EmailOptions): Promise<{ success: boole
     // Preparar email
     const mailOptions = {
       from: {
-        name: 'Termas Llifen - Reservas',
+        name: 'TC Constructor - Ventas',
         address: process.env.GMAIL_USER!,
       },
       to: options.to,
@@ -146,45 +146,45 @@ export const emailTemplates = {
     contactPerson: string;
     contactPhone: string;
   }): EmailTemplate => ({
-    subject: `Presupuesto ${data.budgetNumber} - Termas Llifen`,
+    subject: `Presupuesto ${data.budgetNumber} - TC Constructor`,
     html: `
       <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto; background-color: #f9f9f9; padding: 20px;">
         <div style="background-color: white; padding: 30px; border-radius: 10px; box-shadow: 0 2px 10px rgba(0,0,0,0.1);">
           <div style="text-align: center; margin-bottom: 30px;">
-            <h1 style="color: #2c5530; margin: 0;">Termas Llifen</h1>
-            <p style="color: #666; margin: 5px 0;">Hotel & Spa</p>
+            <h1 style="color: #1e7e34; margin: 0;">TC Constructor</h1>
+            <p style="color: #666; margin: 5px 0;">Ferretería & Construcción</p>
           </div>
           
-          <h2 style="color: #2c5530; border-bottom: 2px solid #2c5530; padding-bottom: 10px;">
-            💼 Presupuesto de Servicios
+          <h2 style="color: #1e7e34; border-bottom: 2px solid #1e7e34; padding-bottom: 10px;">
+            💼 Presupuesto de Productos
           </h2>
           
           <p>Estimado/a <strong>${data.clientName}</strong>,</p>
           
-          <p>Nos complace presentar el siguiente presupuesto para los servicios solicitados:</p>
+          <p>Nos complace presentar el siguiente presupuesto para los productos solicitados:</p>
           
           <div style="background-color: #f8f9fa; padding: 20px; border-radius: 8px; margin: 20px 0;">
             <table style="width: 100%; border-collapse: collapse;">
               <tr>
-                <td style="padding: 8px 0; font-weight: bold; color: #2c5530;">Presupuesto N°:</td>
+                <td style="padding: 8px 0; font-weight: bold; color: #1e7e34;">Presupuesto N°:</td>
                 <td style="padding: 8px 0;">${data.budgetNumber}</td>
               </tr>
               <tr>
-                <td style="padding: 8px 0; font-weight: bold; color: #2c5530;">Fecha:</td>
+                <td style="padding: 8px 0; font-weight: bold; color: #1e7e34;">Fecha:</td>
                 <td style="padding: 8px 0;">${new Date().toLocaleDateString('es-CL')}</td>
               </tr>
               <tr>
-                <td style="padding: 8px 0; font-weight: bold; color: #2c5530;">Válido hasta:</td>
+                <td style="padding: 8px 0; font-weight: bold; color: #1e7e34;">Válido hasta:</td>
                 <td style="padding: 8px 0;">${data.validUntil}</td>
               </tr>
             </table>
           </div>
 
-          <h3 style="color: #2c5530; margin-top: 30px;">Detalle de Servicios:</h3>
+          <h3 style="color: #1e7e34; margin-top: 30px;">Detalle de Productos:</h3>
           <table style="width: 100%; border-collapse: collapse; margin: 20px 0;">
             <thead>
-              <tr style="background-color: #2c5530; color: white;">
-                <th style="padding: 12px; text-align: left; border: 1px solid #ddd;">Servicio</th>
+              <tr style="background-color: #1e7e34; color: white;">
+                <th style="padding: 12px; text-align: left; border: 1px solid #ddd;">Producto</th>
                 <th style="padding: 12px; text-align: center; border: 1px solid #ddd;">Cant.</th>
                 <th style="padding: 12px; text-align: right; border: 1px solid #ddd;">Precio Unit.</th>
                 <th style="padding: 12px; text-align: right; border: 1px solid #ddd;">Total</th>
@@ -207,7 +207,7 @@ export const emailTemplates = {
                 <td colspan="3" style="padding: 10px; font-weight: bold; text-align: right; border: 1px solid #ddd;">IVA (19%):</td>
                 <td style="padding: 10px; text-align: right; font-weight: bold; border: 1px solid #ddd;">$${(data.taxes || 0).toLocaleString('es-CL')}</td>
               </tr>
-              <tr style="background-color: #2c5530; color: white;">
+              <tr style="background-color: #1e7e34; color: white;">
                 <td colspan="3" style="padding: 15px; font-weight: bold; text-align: right; border: 1px solid #ddd;">TOTAL:</td>
                 <td style="padding: 15px; text-align: right; font-weight: bold; font-size: 18px; border: 1px solid #ddd;">$${(data.total || 0).toLocaleString('es-CL')}</td>
               </tr>
@@ -215,28 +215,30 @@ export const emailTemplates = {
           </table>
 
           <div style="background-color: #e8f5e8; padding: 15px; border-radius: 8px; margin: 20px 0;">
-            <p style="margin: 0; color: #2c5530;"><strong>📞 Contacto para consultas:</strong></p>
-            <p style="margin: 5px 0; color: #2c5530;">${data.contactPerson}</p>
-            <p style="margin: 0; color: #2c5530;">${data.contactPhone}</p>
+            <p style="margin: 0; color: #1e7e34;"><strong>📞 Contacto para consultas:</strong></p>
+            <p style="margin: 5px 0; color: #1e7e34;">${data.contactPerson}</p>
+            <p style="margin: 0; color: #1e7e34;">Tel: ${data.contactPhone}</p>
+            <p style="margin: 5px 0 0 0; color: #1e7e34;">Email: info@admintermas.cl</p>
           </div>
           
           <p>Esperamos que nuestro presupuesto sea de su agrado. No dude en contactarnos para aclarar cualquier consulta.</p>
           
           <p style="margin-top: 30px;">
             Saludos cordiales,<br>
-            <strong>Equipo Comercial Termas Llifen</strong>
+            <strong>Equipo Comercial TC Constructor</strong>
           </p>
           
           <div style="text-align: center; margin-top: 40px; padding-top: 20px; border-top: 1px solid #eee;">
             <p style="color: #888; font-size: 12px; margin: 0;">
-              Este presupuesto es válido hasta la fecha indicada. Para reservar, contacte a reservas@termasllifen.cl
+              Este presupuesto es válido hasta la fecha indicada. Para consultas, contacte al +56 9 6909 5111 o info@admintermas.cl<br>
+              Bodegas Termas LLifen - LLifen, Futrono, Chile
             </p>
           </div>
         </div>
       </div>
     `,
     text: `
-      Presupuesto ${data.budgetNumber} - Termas Llifen
+      Presupuesto ${data.budgetNumber} - TC Constructor - Ferretería & Construcción
       
       Estimado/a ${data.clientName},
       
@@ -244,7 +246,7 @@ export const emailTemplates = {
       Fecha: ${new Date().toLocaleDateString('es-CL')}
       Válido hasta: ${data.validUntil}
       
-      Detalle de Servicios:
+      Detalle de Productos:
       ${data.items.map(item => `${item.name} - Cant: ${item.quantity} - Precio: $${item.price.toLocaleString('es-CL')} - Total: $${item.total.toLocaleString('es-CL')}`).join('\n')}
       
       Subtotal: $${data.subtotal.toLocaleString('es-CL')}
@@ -254,7 +256,10 @@ export const emailTemplates = {
       Contacto: ${data.contactPerson} - ${data.contactPhone}
       
       Saludos cordiales,
-      Equipo Comercial Termas Llifen
+      Equipo Comercial TC Constructor
+      Tel: +56 9 6909 5111
+      Email: info@admintermas.cl
+      Bodegas Termas LLifen - LLifen, Futrono, Chile
     `,
   }),
 

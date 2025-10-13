@@ -99,7 +99,7 @@ export async function sendBudgetEmail(input: SendBudgetEmailInput): Promise<Send
       total: Number(budget.total) || 0,
       validUntil: budget.expiration_date ? new Date(budget.expiration_date).toLocaleDateString('es-CL') : '30 días',
       contactPerson: user.name || 'Equipo Comercial',
-      contactPhone: '+56 9 1234 5678', // Configurar teléfono de contacto
+      contactPhone: '+56 9 6909 5111', // Teléfono de contacto de TC Constructor
     };
 
     // Generar email usando la plantilla existente
@@ -124,7 +124,7 @@ export async function sendBudgetEmail(input: SendBudgetEmailInput): Promise<Send
     let attachments: any[] = [];
     
     // Definir nombre de archivo PDF por defecto
-    let pdfFilename = `Presupuesto_${budget.number}_Termas_Llifen.pdf`;
+    let pdfFilename = `Presupuesto_${budget.number}_TC_Constructor.pdf`;
     
     if (input.includePDF) {
       try {
@@ -177,8 +177,8 @@ export async function sendBudgetEmail(input: SendBudgetEmailInput): Promise<Send
         
         // Actualizar nombre del archivo PDF según el tipo
         pdfFilename = input.useCustomHTML 
-          ? `Presupuesto_${budget.number}_Personalizado_Termas_Llifen.pdf`
-          : `Presupuesto_${budget.number}_Termas_Llifen.pdf`;
+          ? `Presupuesto_${budget.number}_Personalizado_TC_Constructor.pdf`
+          : `Presupuesto_${budget.number}_TC_Constructor.pdf`;
           
         attachments.push({
           filename: pdfFilename,

@@ -142,48 +142,33 @@ export const exportBudgetToPDF = async (
     // Footer con gradiente
     addGradientRect(0, footerY - 4, pageWidth, 20, colors.primary, colors.secondary);
     addCenteredText('Gracias por su preferencia!', footerY + 4, 11, true, colors.white);
-    addCenteredText('Hotel Spa Termas LLifen - LLifen s/n, Futrono, Chile', footerY + 10, 8, false, colors.white);
+    addCenteredText('TC Constructor - Ferreteria & Construccion - LLifen, Futrono, Chile', footerY + 10, 8, false, colors.white);
   };
   
   // === HEADER PRINCIPAL CON GRADIENTE (COMPACTO) ===
   addGradientRect(0, 0, pageWidth, 32, colors.primary, colors.secondary); // REDUCIDO: 45px -> 32px
   
-  // Logo centrado (si está disponible)
-  try {
-    const logoResponse = await fetch('/images/logo-termas.png');
-    if (logoResponse.ok) {
-      const logoBlob = await logoResponse.blob();
-      const logoUrl = URL.createObjectURL(logoBlob);
-      const img = new Image();
-      img.onload = () => {
-        const logoWidth = 28; // REDUCIDO: 35px -> 28px
-        const logoHeight = 14; // REDUCIDO: 18px -> 14px
-        const logoX = (pageWidth - logoWidth) / 2;
-        doc.addImage(img, 'PNG', logoX, yPosition + 1, logoWidth, logoHeight);
-      };
-      img.src = logoUrl;
-    }
-  } catch (error) {
-    console.log('Logo no encontrado, usando texto');
-  }
+  // Logo centrado (Letra "A" con gradiente - similar a la web)
+  // Por ahora omitimos el logo de imagen y usamos solo texto
+  // TODO: Crear logo de TC Constructor para usar aquí
   
   // Títulos del header (COMPACTOS)
   yPosition = 12;
-  addCenteredText('TERMAS LLIFEN', yPosition, 20, true, colors.white); // REDUCIDO: 24px -> 20px
+  addCenteredText('TC CONSTRUCTOR', yPosition, 20, true, colors.white); // REDUCIDO: 24px -> 20px
   yPosition += 6; // REDUCIDO: 8px -> 6px
-  addCenteredText('HOTEL & SPA', yPosition, 12, true, colors.white); // REDUCIDO: 14px -> 12px
+  addCenteredText('FERRETERIA & CONSTRUCCION', yPosition, 12, true, colors.white); // REDUCIDO: 14px -> 12px
   yPosition += 5; // REDUCIDO: 6px -> 5px
-  addCenteredText('ENCUENTRA EL DESCANSO QUE ESTABAS BUSCANDO', yPosition, 9, false, colors.white); // REDUCIDO: 11px -> 9px
+  addCenteredText('TODO LO QUE NECESITAS PARA TUS PROYECTOS', yPosition, 9, false, colors.white); // REDUCIDO: 11px -> 9px
   yPosition += 4; // REDUCIDO: 5px -> 4px
-  addCenteredText('LLifen s/n, Futrono - Chile', yPosition, 8, false, colors.white); // REDUCIDO: 10px -> 8px
+  addCenteredText('Bodegas Termas LLifen - LLifen, Futrono | Tel: +56 9 6909 5111', yPosition, 8, false, colors.white); // REDUCIDO: 10px -> 8px
   
   yPosition = 38; // REDUCIDO: 55px -> 38px
   
-  // === SECCIÓN INFORMACIÓN DEL HOTEL (COMPACTA) ===
+  // === SECCIÓN INFORMACIÓN DE LA EMPRESA (COMPACTA) ===
   addRect(margin, yPosition, contentWidth, 18, colors.light); // REDUCIDO: 25px -> 18px
-  addText('Informacion del Hotel', margin + 5, yPosition + 6, 10, true, colors.primary); // REDUCIDO: 12px -> 10px
-  addText('Direccion: LLifen s/n, Futrono - Chile', margin + 5, yPosition + 12, 8, false, colors.primary); // REDUCIDO: 9px -> 8px
-  addText('Check-in: 14:00 hrs | Check-out: 11:00 hrs', pageWidth - 80, yPosition + 12, 8, false, colors.primary); // REDUCIDO: 9px -> 8px
+  addText('Informacion de Contacto', margin + 5, yPosition + 6, 10, true, colors.primary); // REDUCIDO: 12px -> 10px
+  addText('Tel: +56 9 6909 5111 | Email: info@admintermas.cl', margin + 5, yPosition + 12, 8, false, colors.primary); // REDUCIDO: 9px -> 8px
+  addText('WhatsApp: Disponible 24/7', pageWidth - 80, yPosition + 12, 8, false, colors.primary); // REDUCIDO: 9px -> 8px
   yPosition += 23; // REDUCIDO: 35px -> 23px
   
   // === HEADER PRESUPUESTO CON CARDS (SÚPER COMPACTO) ===
@@ -253,7 +238,7 @@ export const exportBudgetToPDF = async (
       
       // Re-agregar header en nueva página (más compacto)
       addGradientRect(0, 0, pageWidth, 25, colors.primary, colors.secondary); // REDUCIDO: 30px -> 25px
-      addCenteredText('TERMAS LLIFEN - PRESUPUESTO (Continuacion)', 16, 12, true, colors.white); // REDUCIDO: 20px -> 16px, 14px -> 12px
+      addCenteredText('TC CONSTRUCTOR - PRESUPUESTO (Continuacion)', 16, 12, true, colors.white); // REDUCIDO: 20px -> 16px, 14px -> 12px
       yPosition = 30; // REDUCIDO: 40px -> 30px
     }
     
@@ -373,7 +358,7 @@ export const exportBudgetToPDF = async (
     
     // Header compacto en nueva página
     addGradientRect(0, 0, pageWidth, 25, colors.primary, colors.secondary);
-    addCenteredText('TERMAS LLIFEN - TERMINOS Y CONDICIONES', 16, 12, true, colors.white);
+    addCenteredText('TC CONSTRUCTOR - TERMINOS Y CONDICIONES', 16, 12, true, colors.white);
     currentY = 35;
   }
   
@@ -385,11 +370,11 @@ export const exportBudgetToPDF = async (
   
   // Lista de términos con checkmarks (más compacta)
   const terms = [
-    'Las reservas se confirman con el abono del 50% del total del programa',
-    'Cancelación gratuita hasta 5 días antes del check-in',
-    'Puede existir un cobro adicional por cambio de temporada',
-    'Todo cambio está sujeto a disponibilidad del hotel',
-    'Horarios: Ingreso 14:00 hrs - Salida 11:00 hrs'
+    'Los presupuestos son válidos por 30 días desde su emisión',
+    'Precios sujetos a disponibilidad de stock',
+    'Despacho a domicilio disponible (costo según zona)',
+    'Garantía en todos nuestros productos según fabricante',
+    'Horario de atención: Lunes a Sábado 8:00 - 19:00 hrs'
   ];
   
   addRect(margin, currentY, contentWidth, terms.length * 5 + 8, colors.white, colors.gray); // REDUCIDO: 6px -> 5px, 10px -> 8px
@@ -506,14 +491,14 @@ export const generateBudgetPDFBuffer = async (
   yPosition += 10;
   
   // Logo y título principal
-  addText('TERMAS LLIFEN', margin, yPosition, 24, true, colors.primary);
-  addText('Hotel & Spa', margin, yPosition + 8, 12, false, colors.secondary);
+  addText('TC CONSTRUCTOR', margin, yPosition, 24, true, colors.primary);
+  addText('Ferreteria & Construccion', margin, yPosition + 8, 12, false, colors.secondary);
   
   // Información de contacto en la esquina superior derecha
-  const contactX = pageWidth - margin;
-  addText('📞 +56 9 8765 4321', contactX, yPosition, 10, false, colors.gray);
-  addText('✉️ reservas@termasllifen.cl', contactX, yPosition + 6, 10, false, colors.gray);
-  addText('🌐 www.termasllifen.cl', contactX, yPosition + 12, 10, false, colors.gray);
+  const contactX = pageWidth - margin - 60;
+  addText('Tel: +56 9 6909 5111', contactX, yPosition, 10, false, colors.gray);
+  addText('Email: info@admintermas.cl', contactX, yPosition + 6, 10, false, colors.gray);
+  addText('LLifen, Futrono', contactX, yPosition + 12, 10, false, colors.gray);
   
   yPosition += 25;
   
@@ -668,8 +653,8 @@ export const generateBudgetPDFBuffer = async (
   doc.line(margin, footerY - 5, pageWidth - margin, footerY - 5);
   
   // Texto del footer
-  addCenteredText('Termas Llifen - Hotel & Spa Premium', footerY, 10, false, colors.gray);
-  addCenteredText('Esperamos confirmar pronto su reserva. ¡Gracias por elegirnos!', footerY + 6, 9, false, colors.gray);
+  addCenteredText('TC Constructor - Bodegas Termas LLifen', footerY, 10, false, colors.gray);
+  addCenteredText('LLifen, Futrono, Chile | Tel: +56 9 6909 5111', footerY + 6, 9, false, colors.gray);
   
   // Generar el PDF como Buffer
   const pdfBuffer = Buffer.from(doc.output('arraybuffer'));
@@ -743,7 +728,7 @@ export const generateBudgetPDFWithCustomHTML = async (
       doc.text(`Presupuesto ${budgetNumber}`, 20, 30);
       doc.setFontSize(12);
       doc.text('Documento generado con plantilla personalizada', 20, 50);
-      doc.text('Hotel & Spa Termas Llifen', 20, 70);
+      doc.text('TC Constructor - Ferreteria & Construccion', 20, 70);
     }
 
     // Limpiar elemento temporal
@@ -754,7 +739,7 @@ export const generateBudgetPDFWithCustomHTML = async (
     doc.text(`Presupuesto ${budgetNumber}`, 20, 30);
     doc.setFontSize(12);
     doc.text('Documento generado con plantilla personalizada', 20, 50);
-    doc.text('Hotel & Spa Termas Llifen', 20, 70);
+    doc.text('TC Constructor - Ferreteria & Construccion', 20, 70);
   }
 
   // Generar el PDF como Buffer

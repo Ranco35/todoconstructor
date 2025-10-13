@@ -52,6 +52,7 @@ export async function createBudget(input: CreateBudgetInput): Promise<{ success:
       .single();
 
     if (budgetError || !budget) {
+      console.error('❌ Error al insertar presupuesto:', budgetError);
       return { success: false, error: budgetError?.message || 'Error al crear presupuesto.' };
     }
 
@@ -72,6 +73,7 @@ export async function createBudget(input: CreateBudgetInput): Promise<{ success:
       .insert(linesToInsert);
 
     if (linesError) {
+      console.error('❌ Error al insertar líneas:', linesError);
       // Rollback manual si falla
       await supabase.from('sales_quotes').delete().eq('id', budget.id);
       return { success: false, error: linesError.message };
