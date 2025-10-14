@@ -12,16 +12,15 @@ import { Plus, FileText, TrendingUp, Clock, DollarSign } from 'lucide-react';
 
 export default function InvoicesPage() {
   const router = useRouter();
-  const [showCreateModal, setShowCreateModal] = useState(false);
   const [editingInvoice, setEditingInvoice] = useState<any>(null);
   const [viewingInvoice, setViewingInvoice] = useState<any>(null);
   const [showPaymentModal, setShowPaymentModal] = useState(false);
   const [selectedInvoiceForPayment, setSelectedInvoiceForPayment] = useState<number | null>(null);
   const [refreshKey, setRefreshKey] = useState(0);
 
-  const handleCreateSuccess = () => {
-    setShowCreateModal(false);
-    setRefreshKey(prev => prev + 1);
+  const handleCreateInvoice = () => {
+    // Navegar a la página de creación en lugar de abrir modal
+    router.push('/dashboard/sales/invoices/create');
   };
 
   const handleEditSuccess = () => {
@@ -33,8 +32,26 @@ export default function InvoicesPage() {
     setViewingInvoice(invoice);
   };
 
-  const handleEditInvoice = (invoice: any) => {
-    setEditingInvoice(invoice);
+  const handleEditInvoice = async (invoice: any) => {
+    console.log('🔍 Editando factura:', invoice);
+    try {
+      // Importar la función para obtener factura completa
+      const { getInvoiceById } = await import('@/actions/sales/invoices/list');
+      const result = await getInvoiceById(invoice.id);
+      
+      if (result.success && result.data) {
+        console.log('✅ Factura completa obtenida:', result.data);
+        setEditingInvoice(result.data);
+      } else {
+        console.error('❌ Error al obtener factura:', result.error);
+        // Fallback: usar datos básicos
+        setEditingInvoice(invoice);
+      }
+    } catch (error) {
+      console.error('❌ Error al cargar factura:', error);
+      // Fallback: usar datos básicos
+      setEditingInvoice(invoice);
+    }
   };
 
   const handlePaymentClick = (invoiceId: number) => {
@@ -60,7 +77,7 @@ export default function InvoicesPage() {
         </div>
         
         <div className="flex items-center gap-3">
-          <Button onClick={() => setShowCreateModal(true)}>
+          <Button onClick={handleCreateInvoice}>
             <Plus className="h-4 w-4 mr-2" />
             Nueva Factura
           </Button>
@@ -135,22 +152,9 @@ export default function InvoicesPage() {
         onPaymentClick={handlePaymentClick}
       />
 
-      {/* Modal Crear Factura */}
-      <Dialog open={showCreateModal} onOpenChange={setShowCreateModal}>
-        <DialogContent className="max-w-6xl max-h-[90vh] overflow-y-auto">
-          <DialogHeader>
-            <DialogTitle>Nueva Factura</DialogTitle>
-          </DialogHeader>
-          <InvoiceForm
-            onSuccess={handleCreateSuccess}
-            onCancel={() => setShowCreateModal(false)}
-          />
-        </DialogContent>
-      </Dialog>
-
       {/* Modal Editar Factura */}
       <Dialog open={!!editingInvoice} onOpenChange={() => setEditingInvoice(null)}>
-        <DialogContent className="max-w-6xl max-h-[90vh] overflow-y-auto">
+        <DialogContent className="max-w-6xl max-h-[90vh] overflow-y-auto bg-white">
           <DialogHeader>
             <DialogTitle>Editar Factura</DialogTitle>
           </DialogHeader>
@@ -158,6 +162,7 @@ export default function InvoicesPage() {
             <InvoiceForm
               onSuccess={handleEditSuccess}
               onCancel={() => setEditingInvoice(null)}
+              invoiceData={editingInvoice}
             />
           )}
         </DialogContent>
@@ -165,7 +170,7 @@ export default function InvoicesPage() {
 
       {/* Modal Ver Detalle */}
       <Dialog open={!!viewingInvoice} onOpenChange={() => setViewingInvoice(null)}>
-        <DialogContent className="max-w-4xl">
+        <DialogContent className="max-w-4xl bg-white">
           <DialogHeader>
             <DialogTitle>Detalle de Factura</DialogTitle>
           </DialogHeader>

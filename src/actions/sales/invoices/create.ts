@@ -63,6 +63,13 @@ export interface InvoiceLine {
 
 export async function createInvoice(input: CreateInvoiceInput): Promise<{ success: boolean; data?: Invoice; error?: string }> {
   try {
+    console.log('📋 Creando factura con datos:', {
+      number: input.number,
+      client_id: input.client_id,
+      lines_count: input.lines?.length,
+      total: input.total
+    });
+
     const supabase = await getSupabaseServerClient();
 
     // Validaciones básicas
@@ -78,6 +85,13 @@ export async function createInvoice(input: CreateInvoiceInput): Promise<{ succes
       return { success: false, error: 'Debe incluir al menos una línea en la factura.' };
     }
 
+    // Validar que todas las líneas tengan descripción
+    const linesWithoutDescription = input.lines.filter(line => !line.description?.trim());
+    if (linesWithoutDescription.length > 0) {
+      console.error('❌ Líneas sin descripción:', linesWithoutDescription);
+      return { success: false, error: 'Todas las líneas deben tener una descripción.' };
+    }
+
     // Verificar que el número no exista
     const { data: existingInvoice } = await supabase
       .from('invoices')
@@ -90,46 +104,107 @@ export async function createInvoice(input: CreateInvoiceInput): Promise<{ succes
     }
 
     // Insertar factura principal
+    const invoiceData: any = {
+      number: input.number,
+      client_id: input.client_id,
+      quote_id: input.budget_id, // La columna en BD es quote_id
+      reservation_id: input.reservation_id,
+      status: input.status || 'draft',
+      total: input.total,
+      currency: input.currency || 'CLP',
+      due_date: input.due_date,
+      notes: input.notes,
+      payment_terms: input.payment_terms,
+      company_id: input.company_id,
+      seller_id: input.seller_id
+    };
+
+    // Si existe budget_id en la tabla, agregarlo también
+    if (input.budget_id) {
+      invoiceData.budget_id = input.budget_id;
+    }
+
+    console.log('📝 Datos de factura a insertar:', invoiceData);
+
     const { data: invoice, error: invoiceError } = await supabase
       .from('invoices')
-      .insert({
-        number: input.number,
-        client_id: input.client_id,
-        budget_id: input.budget_id,
-        reservation_id: input.reservation_id,
-        status: input.status || 'draft',
-        total: input.total,
-        currency: input.currency || 'CLP',
-        due_date: input.due_date,
-        notes: input.notes,
-        payment_terms: input.payment_terms,
-        company_id: input.company_id,
-        seller_id: input.seller_id,
-        created_at: new Date().toISOString(),
-        updated_at: new Date().toISOString()
-      })
+      .insert(invoiceData)
       .select()
       .single();
 
-    if (invoiceError) {
-      console.error('Error al crear factura:', invoiceError);
-      return { success: false, error: 'Error al crear la factura.' };
+    console.log('📊 Respuesta de Supabase:', {
+      hasError: !!invoiceError,
+      hasData: !!invoice,
+      error: invoiceError,
+      data: invoice
+    });
+
+    // Verificar si hay error O si no hay datos
+    if (invoiceError || !invoice) {
+      console.error('❌ Error al crear factura:', {
+        errorType: typeof invoiceError,
+        errorKeys: invoiceError ? Object.keys(invoiceError) : [],
+        message: invoiceError?.message,
+        code: invoiceError?.code,
+        details: invoiceError?.details,
+        hint: invoiceError?.hint,
+        fullError: invoiceError,
+        invoice: invoice
+      });
+      
+      // Mensaje de error más descriptivo
+      let errorMessage = 'Error al crear la factura';
+      
+      if (invoiceError) {
+        if (invoiceError.message) {
+          errorMessage += `: ${invoiceError.message}`;
+        }
+        if (invoiceError.hint) {
+          errorMessage += `. Sugerencia: ${invoiceError.hint}`;
+        }
+        if (invoiceError.details) {
+          errorMessage += `. Detalles: ${invoiceError.details}`;
+        }
+        if (invoiceError.code) {
+          errorMessage += ` (Código: ${invoiceError.code})`;
+        }
+      } else {
+        errorMessage += ': No se recibieron datos de la factura creada';
+      }
+      
+      return { success: false, error: errorMessage };
     }
+    
+    console.log('✅ Factura creada exitosamente:', invoice.id);
 
     // Insertar líneas de factura
-    const invoiceLines = input.lines.map(line => ({
-      invoice_id: invoice.id,
-      product_id: line.product_id || null,
-      modular_product_id: line.modular_product_id || null, // NUEVO: para productos modulares
-      name: line.name || null, // NUEVO: para reportes rápidos
-      description: line.description,
-      quantity: line.quantity,
-      unit_price: line.unit_price,
-      unit: line.unit || 'UND', // Unidad de medida del producto
-      discount_percent: line.discount_percent,
-      taxes: line.taxes,
-      subtotal: line.subtotal
-    }));
+    const invoiceLines = input.lines.map(line => {
+      const lineData: any = {
+        invoice_id: invoice.id,
+        product_id: line.product_id || null,
+        description: line.description,
+        quantity: line.quantity,
+        unit_price: line.unit_price,
+        discount_percent: line.discount_percent,
+        taxes: line.taxes,
+        subtotal: line.subtotal
+      };
+
+      // Campos opcionales que pueden no existir en todas las versiones de la BD
+      if (line.modular_product_id) {
+        lineData.modular_product_id = line.modular_product_id;
+      }
+      if (line.name) {
+        lineData.name = line.name;
+      }
+      if (line.unit) {
+        lineData.unit = line.unit;
+      }
+
+      return lineData;
+    });
+
+    console.log('📝 Líneas de factura a insertar:', invoiceLines);
 
     const { data: lines, error: linesError } = await supabase
       .from('invoice_lines')
@@ -137,7 +212,13 @@ export async function createInvoice(input: CreateInvoiceInput): Promise<{ succes
       .select();
 
     if (linesError) {
-      console.error('Error al crear líneas de factura:', linesError);
+      console.error('❌ Error al crear líneas de factura:', {
+        message: linesError.message,
+        code: linesError.code,
+        details: linesError.details,
+        hint: linesError.hint,
+        fullError: JSON.stringify(linesError, null, 2)
+      });
       
       // Rollback manual: eliminar factura creada
       await supabase
@@ -145,7 +226,19 @@ export async function createInvoice(input: CreateInvoiceInput): Promise<{ succes
         .delete()
         .eq('id', invoice.id);
 
-      return { success: false, error: 'Error al crear las líneas de la factura.' };
+      // Mensaje de error más descriptivo
+      let errorMessage = 'Error al crear las líneas de la factura';
+      if (linesError.message) {
+        errorMessage += `: ${linesError.message}`;
+      }
+      if (linesError.hint) {
+        errorMessage += `. Sugerencia: ${linesError.hint}`;
+      }
+      if (linesError.details) {
+        errorMessage += `. Detalles: ${linesError.details}`;
+      }
+
+      return { success: false, error: errorMessage };
     }
 
     // Si la factura se creó desde un presupuesto, actualizar el estado del presupuesto

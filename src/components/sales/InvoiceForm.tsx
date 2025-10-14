@@ -29,6 +29,26 @@ interface InvoiceFormProps {
     }>;
     total: number;
   };
+  invoiceData?: {
+    id: number;
+    number: string;
+    client_id: number;
+    status: string;
+    due_date: string;
+    notes: string;
+    payment_terms: string;
+    total: number;
+    lines: Array<{
+      id: number;
+      product_id: number;
+      description: string;
+      quantity: number;
+      unit_price: number;
+      discount_percent: number;
+      taxes: number[];
+      subtotal: number;
+    }>;
+  };
 }
 
 interface InvoiceLine {
@@ -50,7 +70,7 @@ const INVOICE_STATUSES = [
   { value: 'cancelled', label: 'Cancelada', color: 'bg-gray-100 text-gray-800' }
 ];
 
-export default function InvoiceForm({ onSuccess, onCancel, budgetData }: InvoiceFormProps) {
+export default function InvoiceForm({ onSuccess, onCancel, budgetData, invoiceData }: InvoiceFormProps) {
   const [loading, setLoading] = useState(false);
   const [invoiceNumber, setInvoiceNumber] = useState('');
   const [clientId, setClientId] = useState<number | null>(budgetData?.client_id || null);
@@ -61,9 +81,39 @@ export default function InvoiceForm({ onSuccess, onCancel, budgetData }: Invoice
   const [lines, setLines] = useState<InvoiceLine[]>([]);
   const [errors, setErrors] = useState<Record<string, string>>({});
 
-  // Inicializar con datos de presupuesto si se proporciona
+  // Inicializar con datos de presupuesto o factura existente
   useEffect(() => {
-    if (budgetData) {
+    if (invoiceData) {
+      // Cargar datos de factura existente para edición
+      console.log('🔍 Cargando datos de factura existente:', invoiceData);
+      
+      setInvoiceNumber(invoiceData.number);
+      setClientId(invoiceData.client_id);
+      setStatus(invoiceData.status);
+      setDueDate(invoiceData.due_date || '');
+      setNotes(invoiceData.notes || '');
+      setPaymentTerms(invoiceData.payment_terms || '');
+      
+      // Cargar líneas de la factura
+      setLines(invoiceData.lines.map(line => ({
+        product_id: line.product_id,
+        product_name: line.description, // Usar description como nombre del producto
+        description: line.description,
+        quantity: line.quantity,
+        unit_price: line.unit_price,
+        discount_percent: line.discount_percent,
+        taxes: line.taxes || [19],
+        subtotal: line.subtotal
+      })));
+      
+      console.log('✅ Datos cargados en formulario:', {
+        number: invoiceData.number,
+        client_id: invoiceData.client_id,
+        lines: invoiceData.lines.length
+      });
+      
+    } else if (budgetData) {
+      // Cargar datos de presupuesto
       setLines(budgetData.lines.map(line => ({
         description: line.description,
         quantity: line.quantity,
@@ -73,7 +123,7 @@ export default function InvoiceForm({ onSuccess, onCancel, budgetData }: Invoice
         subtotal: line.subtotal
       })));
     } else {
-      // Línea vacía inicial
+      // Línea vacía inicial para nueva factura
       setLines([{
         product_id: undefined,
         product_name: '',
@@ -86,8 +136,8 @@ export default function InvoiceForm({ onSuccess, onCancel, budgetData }: Invoice
       }]);
     }
 
-    // Generar número de factura automático
-    if (!budgetData) {
+    // Generar número de factura automático solo para nuevas facturas
+    if (!budgetData && !invoiceData) {
       const now = new Date();
       const year = now.getFullYear();
       const month = String(now.getMonth() + 1).padStart(2, '0');
@@ -96,13 +146,15 @@ export default function InvoiceForm({ onSuccess, onCancel, budgetData }: Invoice
       setInvoiceNumber(`F${year}${month}${day}-${time}`);
     }
 
-    // Fecha de vencimiento por defecto (30 días)
-    const defaultDueDate = new Date();
-    defaultDueDate.setDate(defaultDueDate.getDate() + 30);
-    setDueDate(defaultDueDate.toISOString().split('T')[0]);
-  }, [budgetData]);
+    // Fecha de vencimiento por defecto (30 días) solo para nuevas facturas
+    if (!invoiceData) {
+      const defaultDueDate = new Date();
+      defaultDueDate.setDate(defaultDueDate.getDate() + 30);
+      setDueDate(defaultDueDate.toISOString().split('T')[0]);
+    }
+  }, [budgetData, invoiceData]);
 
-  const calculateSubtotal = (quantity: number, unitPrice: number, discountPercent: number): number => {
+  const calculateLineSubtotal = (quantity: number, unitPrice: number, discountPercent: number): number => {
     const subtotalBeforeDiscount = quantity * unitPrice;
     const discountAmount = subtotalBeforeDiscount * (discountPercent / 100);
     return subtotalBeforeDiscount - discountAmount;
@@ -115,7 +167,7 @@ export default function InvoiceForm({ onSuccess, onCancel, budgetData }: Invoice
     // Recalcular subtotal si cambian cantidad, precio o descuento
     if (['quantity', 'unit_price', 'discount_percent'].includes(field)) {
       const line = newLines[index];
-      newLines[index].subtotal = calculateSubtotal(line.quantity, line.unit_price, line.discount_percent);
+      newLines[index].subtotal = calculateLineSubtotal(line.quantity, line.unit_price, line.discount_percent);
     }
     
     setLines(newLines);
@@ -140,8 +192,19 @@ export default function InvoiceForm({ onSuccess, onCancel, budgetData }: Invoice
     }
   };
 
-  const calculateTotal = (): number => {
+  const calculateSubtotal = (): number => {
     return lines.reduce((total, line) => total + line.subtotal, 0);
+  };
+
+  const calculateIVA = (): number => {
+    const subtotal = calculateSubtotal();
+    return subtotal * 0.19; // IVA 19%
+  };
+
+  const calculateTotal = (): number => {
+    const subtotal = calculateSubtotal();
+    const iva = calculateIVA();
+    return subtotal + iva;
   };
 
   const formatCurrency = (amount: number): string => {
@@ -222,6 +285,8 @@ export default function InvoiceForm({ onSuccess, onCancel, budgetData }: Invoice
   };
 
   const selectedStatus = INVOICE_STATUSES.find(s => s.value === status);
+  const subtotal = calculateSubtotal();
+  const iva = calculateIVA();
   const total = calculateTotal();
 
   return (
@@ -243,8 +308,20 @@ export default function InvoiceForm({ onSuccess, onCancel, budgetData }: Invoice
             </Badge>
           )}
           <div className="text-right">
-            <p className="text-sm text-gray-600">Total</p>
-            <p className="text-2xl font-bold text-blue-600">{formatCurrency(total)}</p>
+            <div className="space-y-1">
+              <div>
+                <p className="text-xs text-gray-600">Subtotal</p>
+                <p className="text-sm font-semibold text-gray-900">{formatCurrency(subtotal)}</p>
+              </div>
+              <div>
+                <p className="text-xs text-gray-600">IVA (19%)</p>
+                <p className="text-sm font-semibold text-gray-700">{formatCurrency(iva)}</p>
+              </div>
+              <div className="border-t pt-1">
+                <p className="text-sm text-gray-600">Total</p>
+                <p className="text-2xl font-bold text-blue-600">{formatCurrency(total)}</p>
+              </div>
+            </div>
           </div>
         </div>
       </div>
@@ -341,10 +418,15 @@ export default function InvoiceForm({ onSuccess, onCancel, budgetData }: Invoice
                       <Label>Producto</Label>
                       <ProductSelector
                         onSelect={(product) => {
-                          updateLine(index, 'product_id', product.id);
+                          console.log('🔍 Producto seleccionado:', product);
+                          
+                          // Usar updateLine para que maneje el recálculo automático
+                          updateLine(index, 'product_id', Number(product.id));
                           updateLine(index, 'product_name', product.name);
-                          updateLine(index, 'description', product.name);
+                          updateLine(index, 'description', product.description || product.name);
                           updateLine(index, 'unit_price', product.salePrice);
+                          
+                          console.log('✅ Producto asignado a línea:', index);
                         }}
                         placeholder="Buscar producto..."
                         selectedProductId={line.product_id?.toString()}
@@ -445,6 +527,28 @@ export default function InvoiceForm({ onSuccess, onCancel, budgetData }: Invoice
               placeholder="Notas adicionales..."
               rows={3}
             />
+          </CardContent>
+        </Card>
+
+        {/* Resumen de Totales */}
+        <Card className="bg-blue-50 border-blue-200">
+          <CardContent className="p-6">
+            <div className="flex justify-end">
+              <div className="space-y-3 min-w-[300px]">
+                <div className="flex justify-between items-center">
+                  <span className="text-gray-700 font-medium">Subtotal (Neto):</span>
+                  <span className="text-lg font-semibold text-gray-900">{formatCurrency(subtotal)}</span>
+                </div>
+                <div className="flex justify-between items-center">
+                  <span className="text-gray-700 font-medium">IVA (19%):</span>
+                  <span className="text-lg font-semibold text-gray-700">{formatCurrency(iva)}</span>
+                </div>
+                <div className="border-t-2 border-blue-300 pt-3 flex justify-between items-center">
+                  <span className="text-gray-900 font-bold text-lg">Total:</span>
+                  <span className="text-2xl font-bold text-blue-600">{formatCurrency(total)}</span>
+                </div>
+              </div>
+            </div>
           </CardContent>
         </Card>
 
