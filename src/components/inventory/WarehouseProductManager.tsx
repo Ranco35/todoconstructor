@@ -14,10 +14,11 @@ interface WarehouseProductManagerProps {
   warehouseId: number;
   warehouseName: string;
   assignedProducts: WarehouseProduct[];
+  totalProducts?: number;
   onUpdate?: () => void;
 }
 
-export default function WarehouseProductManager({ warehouseId, warehouseName, assignedProducts, onUpdate }: WarehouseProductManagerProps) {
+export default function WarehouseProductManager({ warehouseId, warehouseName, assignedProducts, totalProducts, onUpdate }: WarehouseProductManagerProps) {
   const [editingId, setEditingId] = useState<number | null>(null);
   const [editData, setEditData] = useState<{ quantity: number; minStock: number; maxStock: number }>({ quantity: 0, minStock: 0, maxStock: 100 });
   const [loading, setLoading] = useState(false);
@@ -137,7 +138,9 @@ export default function WarehouseProductManager({ warehouseId, warehouseName, as
       <CardHeader>
         <CardTitle className="flex items-center gap-2">
           📦 Productos en {warehouseName}
-          <Badge variant="outline">{assignedProducts.length} productos</Badge>
+          <Badge variant="outline">
+            {totalProducts ? `${assignedProducts.length} de ${totalProducts}` : `${assignedProducts.length} productos`}
+          </Badge>
           <Button size="sm" className="ml-auto" onClick={() => setShowAdd(v => !v)}>
             {showAdd ? 'Cerrar asignación' : 'Agregar productos'}
           </Button>

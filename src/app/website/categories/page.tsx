@@ -1,6 +1,8 @@
 import { getProductCategories } from '@/actions/website/products'
 import { createClient } from '@/lib/supabase-server'
 
+export const dynamic = 'force-dynamic';
+
 export default async function CategoriesPage() {
   console.log('🚀 CategoriesPage (Server) está renderizando...')
   

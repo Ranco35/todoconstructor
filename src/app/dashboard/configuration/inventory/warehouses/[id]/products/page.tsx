@@ -6,13 +6,12 @@ import { notFound } from "next/navigation";
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Building, MapPin, Package, Search } from 'lucide-react';
-import WarehouseProductManager from '@/components/inventory/WarehouseProductManager';
 import PaginationControls from '@/components/shared/PaginationControls';
 import RemoveProductButton from '@/components/inventory/RemoveProductButton';
 
 interface PageProps {
   params: Promise<{ id: string }>;
-  searchParams: Promise<PaginationParams & { search?: string; stockFilter?: string; manage?: string }>;
+  searchParams: Promise<PaginationParams & { search?: string; stockFilter?: string }>;
 }
 
 export const dynamic = 'force-dynamic';
@@ -33,7 +32,7 @@ export default async function WarehouseProductsPage(props: PageProps) {
     notFound();
   }
 
-  const { page = '1', pageSize = '10', search = '', stockFilter = 'all', manage } = searchParams || {};
+  const { page = '1', pageSize = '10', search = '', stockFilter = 'all' } = searchParams || {};
   const currentPage = parseInt(String(page));
   const currentPageSize = parseInt(String(pageSize));
 
@@ -44,9 +43,10 @@ export default async function WarehouseProductsPage(props: PageProps) {
     stockFilter: String(stockFilter) as 'all' | 'withStock' | 'withoutStock' | 'negative'
   });
 
-  const { data: allProducts } = await getProductsByWarehouse(warehouseId, { page: 1, pageSize: 1000 });
-
   const totalPages = Math.ceil(totalCount / currentPageSize);
+  
+  // Obtener estadísticas de todos los productos para las cards
+  const { data: allProducts } = await getProductsByWarehouse(warehouseId, { page: 1, pageSize: 1000 });
 
   const getStockStatus = (quantity: number, minStock: number) => {
     if (quantity < 0) return { status: 'Stock Negativo', color: 'bg-red-200 text-red-900' };
@@ -185,7 +185,7 @@ export default async function WarehouseProductsPage(props: PageProps) {
           <CardTitle className="flex items-center gap-2">
             📦 Productos ({totalCount})
             <Link 
-              href={`/dashboard/configuration/inventory/warehouses/${warehouseId}/products?manage=true`}
+              href={`/dashboard/configuration/inventory/warehouses/${warehouseId}/products/manage`}
               className="ml-auto text-sm bg-blue-600 text-white px-3 py-1 rounded hover:bg-blue-700"
             >
               Gestionar productos
@@ -295,29 +295,26 @@ export default async function WarehouseProductsPage(props: PageProps) {
                 </table>
               </div>
 
-              <div className="mt-6">
-                <PaginationControls
-                  currentPage={currentPage}
-                  totalPages={totalPages}
-                  pageSize={String(currentPageSize)}
-                  totalCount={totalCount}
-                  currentCount={warehouseProducts.length}
-                  basePath={`/dashboard/configuration/inventory/warehouses/${warehouseId}/products`}
-                  itemName="productos"
-                />
-              </div>
             </>
           )}
         </CardContent>
       </Card>
 
-      {manage && (
-        <WarehouseProductManager
-          warehouseId={warehouseId}
-          warehouseName={warehouse.name}
-          assignedProducts={allProducts}
-        />
+      {/* Paginación fuera de la tabla para que siempre esté visible */}
+      {totalCount > 0 && (
+        <div className="mt-6">
+          <PaginationControls
+            currentPage={currentPage}
+            totalPages={totalPages}
+            pageSize={String(currentPageSize)}
+            totalCount={totalCount}
+            currentCount={warehouseProducts.length}
+            basePath={`/dashboard/configuration/inventory/warehouses/${warehouseId}/products`}
+            itemName="productos"
+          />
+        </div>
       )}
+
     </div>
   );
 } 

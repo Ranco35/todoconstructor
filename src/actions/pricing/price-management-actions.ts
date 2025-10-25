@@ -65,6 +65,7 @@ export interface ProductForPricing {
   isActive: boolean;
   isForSale: boolean;
   isPOSEnabled: boolean;
+  stock: number;
 }
 
 export interface CreateCategoryProfitConfigData {
@@ -456,35 +457,66 @@ export async function createPricePromotion(data: CreatePricePromotionData): Prom
   error?: string;
 }> {
   try {
+    console.log('🏗️ [SERVER] createPricePromotion called with data:', data);
+    
     // Validar fechas
     const startDate = new Date(data.startDate);
     const endDate = new Date(data.endDate);
     
+    console.log('📅 [SERVER] Date validation:', {
+      startDate: startDate.toString(),
+      endDate: endDate.toString(),
+      isStartBeforeEnd: startDate < endDate
+    });
+    
     if (startDate >= endDate) {
+      console.error('❌ [SERVER] Date validation failed');
       return { success: false, error: 'La fecha de inicio debe ser anterior a la fecha de fin' };
     }
     
     // Validar valor
+    console.log('💰 [SERVER] Value validation:', { value: data.value, isValid: data.value > 0 });
     if (data.value <= 0) {
+      console.error('❌ [SERVER] Value validation failed');
       return { success: false, error: 'El valor de la promoción debe ser mayor a cero' };
     }
     
     const supabase = await getSupabaseServerClient();
+    console.log('🔌 [SERVER] Supabase client created');
+    
+    // Preparar datos para insertar
+    const insertData = {
+      name: data.name,
+      description: data.description || null,
+      promotionType: data.promotionType,
+      value: data.value,
+      appliesTo: data.appliesTo,
+      targetIds: data.targetIds,
+      startDate: data.startDate,
+      endDate: data.endDate,
+      priority: data.priority || 0,
+      maxUsage: data.maxUsage || null,
+      isActive: true,
+      currentUsage: 0
+    };
+    
+    console.log('📝 [SERVER] Inserting data:', insertData);
     
     const { data: result, error } = await supabase
       .from('PricePromotions')
-      .insert(data)
+      .insert(insertData)
       .select()
       .single();
     
     if (error) {
-      console.error('Error creating price promotion:', error);
+      console.error('❌ [SERVER] Database error:', error);
       return { success: false, error: error.message };
     }
     
+    console.log('✅ [SERVER] Promotion created successfully:', result);
     return { success: true, data: result };
   } catch (error) {
-    console.error('Unexpected error creating price promotion:', error);
+    console.error('💥 [SERVER] Unexpected error creating price promotion:', error);
     return { success: false, error: 'Error interno del servidor' };
   }
 }
@@ -880,6 +912,23 @@ export async function getProductsForPricing(params: {
     const categoryMap = new Map(categories?.map(cat => [cat.id, cat.name]) || []);
     const supplierMap = new Map(suppliers?.map(supp => [supp.id, supp.name]) || []);
 
+    // Obtener stock de los productos
+    const productIds = data?.map(p => p.id) || [];
+    let stockMap = new Map<number, number>();
+    
+    if (productIds.length > 0) {
+      const { data: stockData } = await supabase
+        .from('Warehouse_Product')
+        .select('productId, quantity')
+        .in('productId', productIds);
+      
+      // Sumar stock de todas las bodegas por producto
+      stockData?.forEach(item => {
+        const currentStock = stockMap.get(item.productId) || 0;
+        stockMap.set(item.productId, currentStock + (item.quantity || 0));
+      });
+    }
+
     // Transformar datos
     const products: ProductForPricing[] = data?.map(product => ({
       id: product.id,
@@ -897,7 +946,8 @@ export async function getProductsForPricing(params: {
       supplierName: product.supplierid ? supplierMap.get(product.supplierid) || null : null,
       isActive: true, // Por defecto activo hasta que se implemente la columna
       isForSale: product.isForSale,
-      isPOSEnabled: product.isPOSEnabled
+      isPOSEnabled: product.isPOSEnabled,
+      stock: stockMap.get(product.id) || 0
     })) || [];
 
     return { 

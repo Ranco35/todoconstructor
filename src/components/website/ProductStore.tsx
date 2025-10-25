@@ -1,10 +1,12 @@
 'use client'
 
 import { useState, useEffect } from 'react'
-import { Package, ShoppingCart, Grid, List } from 'lucide-react'
+import { Package, ShoppingCart, Grid, List, Percent, Gift } from 'lucide-react'
 import ProductCard from './ProductCard'
+import ProductCardWithPromotions from './ProductCardWithPromotions'
 import ProductFilters from './ProductFilters'
-import { ProductWithStock, ProductCategory, getProductsWithStock, getProductCategories } from '@/actions/website/products'
+import { ProductWithStock, ProductCategory, ProductWithPromotion, getProductsForWebsite, getProductCategories } from '@/actions/website/products'
+import { getPromotedProductsOnly } from '@/actions/website/promotions'
 
 interface CartItem {
   product: ProductWithStock
@@ -20,11 +22,12 @@ interface ActiveFilters {
 }
 
 export default function ProductStore() {
-  const [products, setProducts] = useState<ProductWithStock[]>([])
+  const [products, setProducts] = useState<ProductWithPromotion[]>([])
+  const [promotedProducts, setPromotedProducts] = useState<ProductWithPromotion[]>([])
   const [categories, setCategories] = useState<ProductCategory[]>([])
   const [loading, setLoading] = useState(true)
   const [viewMode, setViewMode] = useState<'grid' | 'list'>('grid')
-  const [filteredProducts, setFilteredProducts] = useState<ProductWithStock[]>([])
+  const [filteredProducts, setFilteredProducts] = useState<ProductWithPromotion[]>([])
   
   // Estado para mantener todos los filtros activos
   const [activeFilters, setActiveFilters] = useState<ActiveFilters>({
@@ -48,12 +51,14 @@ export default function ProductStore() {
   const loadData = async () => {
     setLoading(true)
     try {
-      const [productsData, categoriesData] = await Promise.all([
-        getProductsWithStock(),
-        getProductCategories()
+      const [productsData, categoriesData, promotedProductsData] = await Promise.all([
+        getProductsForWebsite(),
+        getProductCategories(),
+        getPromotedProductsOnly()
       ])
       setProducts(productsData)
       setCategories(categoriesData)
+      setPromotedProducts(promotedProductsData)
     } catch (error) {
       console.error('Error loading data:', error)
     } finally {
@@ -83,17 +88,21 @@ export default function ProductStore() {
       )
     }
 
-    // 3. Filtro de precio
+    // 3. Filtro de precio (usando precio con promoción si existe)
     if (activeFilters.minPrice !== null) {
       filtered = filtered.filter(product => {
-        const price = product.finalPrice || product.saleprice || 0
+        const price = product.hasPromotion && product.promotionPrice 
+          ? product.promotionPrice 
+          : (product.finalPrice || product.saleprice || 0)
         return price >= activeFilters.minPrice!
       })
     }
 
     if (activeFilters.maxPrice !== null) {
       filtered = filtered.filter(product => {
-        const price = product.finalPrice || product.saleprice || 0
+        const price = product.hasPromotion && product.promotionPrice 
+          ? product.promotionPrice 
+          : (product.finalPrice || product.saleprice || 0)
         return price <= activeFilters.maxPrice!
       })
     }
@@ -140,9 +149,17 @@ export default function ProductStore() {
   }
 
   // Función para contactar sobre un producto
-  const handleContactProduct = (product: ProductWithStock) => {
-    const message = `Hola, me interesa el producto: ${product.name}`
-    const whatsappUrl = `https://wa.me/56969095111?text=${encodeURIComponent(message)}`
+  const handleContactProduct = (product: ProductWithPromotion) => {
+    let message = `Hola, me interesa el producto: ${product.name}`
+    
+    if (product.hasPromotion && product.promotionData) {
+      message += `%0A%0A¡ESTÁ EN PROMOCIÓN!%0A`
+      message += `Precio original: $${product.originalPrice?.toLocaleString() || 'Consultar'}%0A`
+      message += `Precio con descuento: $${product.promotionPrice?.toLocaleString() || 'Consultar'}%0A`
+      message += `Ahorro: $${product.promotionData.savings.toLocaleString()} (${Math.round(product.promotionData.savingsPercent)}%)`
+    }
+    
+    const whatsappUrl = `https://wa.me/56969095111?text=${message}`
     window.open(whatsappUrl, '_blank')
   }
 
@@ -168,12 +185,39 @@ export default function ProductStore() {
         </p>
       </div>
 
+      {/* Banner de promociones */}
+      {promotedProducts.length > 0 && (
+        <div className="bg-gradient-to-r from-red-500 to-pink-600 rounded-xl text-white p-6 mb-8">
+          <div className="flex items-center justify-center mb-4">
+            <Gift className="w-8 h-8 mr-3" />
+            <h2 className="text-2xl font-bold">¡Ofertas Especiales Activas!</h2>
+          </div>
+          <div className="text-center">
+            <p className="text-lg mb-4">
+              Tenemos {promotedProducts.length} productos con descuentos especiales
+            </p>
+            <a
+              href="/website/promotions"
+              className="bg-white text-red-600 px-6 py-3 rounded-lg font-bold hover:bg-gray-100 transition-colors inline-flex items-center"
+            >
+              <Percent className="w-5 h-5 mr-2" />
+              Ver Todas las Promociones
+            </a>
+          </div>
+        </div>
+      )}
+
       {/* Estadísticas rápidas */}
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
+      <div className="grid grid-cols-1 md:grid-cols-4 gap-6 mb-8">
         <div className="bg-blue-50 rounded-lg p-6 text-center">
           <Package className="w-8 h-8 text-blue-600 mx-auto mb-2" />
           <div className="text-2xl font-bold text-blue-600">{products.length}</div>
           <div className="text-gray-600">Productos disponibles</div>
+        </div>
+        <div className="bg-red-50 rounded-lg p-6 text-center">
+          <Gift className="w-8 h-8 text-red-600 mx-auto mb-2" />
+          <div className="text-2xl font-bold text-red-600">{promotedProducts.length}</div>
+          <div className="text-gray-600">En promoción</div>
         </div>
         <div className="bg-green-50 rounded-lg p-6 text-center">
           <ShoppingCart className="w-8 h-8 text-green-600 mx-auto mb-2" />
@@ -225,7 +269,7 @@ export default function ProductStore() {
             : 'grid-cols-1'
         }`}>
           {filteredProducts.map((product) => (
-            <ProductCard
+            <ProductCardWithPromotions
               key={product.id}
               product={product}
               onAddToCart={handleContactProduct}

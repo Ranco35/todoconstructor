@@ -8,6 +8,7 @@ const navigation = [
   { name: 'Inicio', href: '/website' },
   { name: 'Productos', href: '/website' },
   { name: 'Categorías', href: '/website/categories' },
+  { name: '🏷️ Promociones', href: '/website/promotions', isPromotion: true },
   { name: 'Sobre Nosotros', href: '/website/about' },
   { name: 'Contacto', href: '/website/contact' },
 ]
@@ -60,7 +61,11 @@ export default function WebsiteHeader() {
               <Link
                 key={item.name}
                 href={item.href}
-                className="text-gray-700 hover:text-green-600 transition-colors font-medium"
+                className={`transition-colors font-medium ${
+                  (item as any).isPromotion 
+                    ? 'text-red-600 hover:text-red-700 font-bold animate-pulse' 
+                    : 'text-gray-700 hover:text-green-600'
+                }`}
               >
                 {item.name}
               </Link>
@@ -102,7 +107,11 @@ export default function WebsiteHeader() {
                 <Link
                   key={item.name}
                   href={item.href}
-                  className="text-gray-700 hover:text-green-600 block px-3 py-2 text-base font-medium"
+                  className={`block px-3 py-2 text-base font-medium transition-colors ${
+                    (item as any).isPromotion 
+                      ? 'text-red-600 hover:text-red-700 font-bold' 
+                      : 'text-gray-700 hover:text-green-600'
+                  }`}
                   onClick={() => setMobileMenuOpen(false)}
                 >
                   {item.name}

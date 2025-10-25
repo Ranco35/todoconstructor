@@ -1,5 +1,9 @@
 import { createClient } from '@/lib/supabase-server'
+import { getProductsForWebsiteByCategory } from '@/actions/website/products'
+import ProductCardWithPromotions from '@/components/website/ProductCardWithPromotions'
 import Link from 'next/link'
+
+export const dynamic = 'force-dynamic';
 
 interface CategoryPageProps {
   params: Promise<{
@@ -63,64 +67,8 @@ export default async function CategoryPage({ params }: CategoryPageProps) {
       )
     }
 
-    // Obtener todos los productos de esta categoría (sin filtro de stock)
-    const { data: productsData } = await supabase
-      .from('Product')
-      .select(`
-        id,
-        name,
-        sku,
-        description,
-        brand,
-        image,
-        saleprice,
-        finalPrice,
-        vat,
-        categoryid
-      `)
-      .eq('categoryid', categoryId)
-      .order('name')
-
-    // Obtener stock de productos
-    const { data: stockData } = await supabase
-      .from('Warehouse_Product')
-      .select(`
-        productId,
-        quantity,
-        warehouseId
-      `)
-
-    // Transformar productos con información de stock
-    const products = productsData?.map(product => {
-      const stock = stockData?.find(s => s.productId === product.id)
-      
-      return {
-        id: product.id,
-        name: product.name,
-        sku: product.sku,
-        description: product.description,
-        brand: product.brand,
-        image: product.image,
-        saleprice: product.saleprice,
-        finalPrice: product.finalPrice,
-        vat: product.vat,
-        stock: stock?.quantity || 0,
-        warehouse: {
-          id: stock?.warehouseId || 0,
-          name: 'Almacén Principal'
-        }
-      }
-    }) || []
-
-    // Ordenar productos: primero los que tienen stock, luego los que no tienen stock
-    products.sort((a, b) => {
-      // Si ambos tienen stock o ambos no tienen stock, mantener orden alfabético
-      if ((a.stock > 0) === (b.stock > 0)) {
-        return a.name.localeCompare(b.name)
-      }
-      // Si uno tiene stock y el otro no, el que tiene stock va primero
-      return b.stock > 0 ? 1 : -1
-    })
+    // Obtener productos de la categoría con promociones
+    const products = await getProductsForWebsiteByCategory(categoryId)
 
     return (
       <div className="max-w-7xl mx-auto px-4 py-8">
@@ -190,65 +138,10 @@ export default async function CategoryPage({ params }: CategoryPageProps) {
             </h2>
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
               {products.map((product) => (
-                <div key={product.id} className="border border-gray-200 rounded-lg p-4 hover:shadow-md transition-shadow">
-                  <div className="h-32 bg-gray-100 rounded mb-3 flex items-center justify-center">
-                    {product.image ? (
-                      <img 
-                        src={product.image} 
-                        alt={product.name}
-                        className="h-full w-full object-cover rounded"
-                      />
-                    ) : (
-                      <span className="text-gray-400 text-2xl">📦</span>
-                    )}
-                  </div>
-                  
-                  <h3 className="font-semibold text-gray-900 mb-2 line-clamp-2">
-                    {product.name}
-                  </h3>
-                  
-                  {product.brand && (
-                    <p className="text-sm text-gray-600 mb-1">
-                      <span className="font-medium">Marca:</span> {product.brand}
-                    </p>
-                  )}
-                  
-                  {product.sku && (
-                    <p className="text-xs text-gray-500 mb-2">
-                      <span className="font-medium">SKU:</span> {product.sku}
-                    </p>
-                  )}
-                  
-                  <div className="mb-3">
-                    {product.stock > 0 && product.saleprice ? (
-                      <span className="text-lg font-bold text-green-600">
-                        ${product.saleprice.toLocaleString()}
-                      </span>
-                    ) : (
-                      <span className="text-gray-600">Consultar precio</span>
-                    )}
-                  </div>
-                  
-                  <div className="flex justify-between items-center mb-3">
-                    <span className={`px-2 py-1 rounded-full text-xs font-medium ${
-                      product.stock > 10 ? 'bg-green-100 text-green-600' :
-                      product.stock > 0 ? 'bg-yellow-100 text-yellow-600' :
-                      'bg-red-100 text-red-600'
-                    }`}>
-                      {product.stock} unidades
-                    </span>
-                  </div>
-                  
-                  <a
-                    href={`https://wa.me/56969095111?text=Hola, me interesa el producto: ${product.name} (${category.name})`}
-                    target="_blank"
-                    rel="noopener noreferrer"
-                    className="w-full bg-green-600 text-white py-2 px-4 rounded-lg font-medium hover:bg-green-700 transition-colors duration-200 flex items-center justify-center space-x-2"
-                  >
-                    <span>💬</span>
-                    <span>Consultar por WhatsApp</span>
-                  </a>
-                </div>
+                <ProductCardWithPromotions
+                  key={product.id}
+                  product={product}
+                />
               ))}
             </div>
           </div>

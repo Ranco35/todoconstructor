@@ -1,6 +1,12 @@
 'use server'
 
 import { createClient } from '@/lib/supabase-server'
+import { 
+  getProductsWithPromotions, 
+  getProductsWithPromotionsByCategory, 
+  searchProductsWithPromotions,
+  ProductWithPromotion 
+} from './promotions'
 
 export interface ProductWithStock {
   id: number
@@ -23,6 +29,9 @@ export interface ProductWithStock {
   }
 }
 
+// Re-exportar el tipo con promociones para compatibilidad
+export type { ProductWithPromotion }
+
 export interface ProductCategory {
   id: number
   name: string
@@ -31,6 +40,7 @@ export interface ProductCategory {
 
 /**
  * Obtiene todos los productos con stock positivo para mostrar en el website
+ * DEPRECATED: Usar getProductsWithPromotions() para incluir ofertas
  */
 export async function getProductsWithStock(): Promise<ProductWithStock[]> {
   const supabase = await createClient()
@@ -132,6 +142,7 @@ export async function getProductCategories(): Promise<ProductCategory[]> {
 
 /**
  * Obtiene productos filtrados por categoría
+ * DEPRECATED: Usar getProductsWithPromotionsByCategory() para incluir ofertas
  */
 export async function getProductsByCategory(categoryId: number): Promise<ProductWithStock[]> {
   const supabase = await createClient()
@@ -207,7 +218,8 @@ export async function getProductsByCategory(categoryId: number): Promise<Product
 }
 
 /**
- * Busca productos por nombre o descripción
+ * Busca productos por nombre o descripción  
+ * DEPRECATED: Usar searchProductsWithPromotions() para incluir ofertas
  */
 export async function searchProducts(query: string): Promise<ProductWithStock[]> {
   const supabase = await createClient()
@@ -280,4 +292,29 @@ export async function searchProducts(query: string): Promise<ProductWithStock[]>
     console.error('Error in searchProducts:', error)
     return []
   }
+}
+
+// ============================================
+// NUEVAS FUNCIONES CON PROMOCIONES
+// ============================================
+
+/**
+ * Función wrapper para obtener productos con promociones (recomendada)
+ */
+export async function getProductsForWebsite(): Promise<ProductWithPromotion[]> {
+  return await getProductsWithPromotions();
+}
+
+/**
+ * Función wrapper para obtener productos por categoría con promociones
+ */
+export async function getProductsForWebsiteByCategory(categoryId: number): Promise<ProductWithPromotion[]> {
+  return await getProductsWithPromotionsByCategory(categoryId);
+}
+
+/**
+ * Función wrapper para buscar productos con promociones
+ */
+export async function searchProductsForWebsite(query: string): Promise<ProductWithPromotion[]> {
+  return await searchProductsWithPromotions(query);
 }

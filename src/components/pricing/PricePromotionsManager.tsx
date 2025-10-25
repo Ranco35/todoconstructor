@@ -9,6 +9,9 @@ import {
   updatePricePromotion,
   deletePricePromotion 
 } from '@/actions/pricing/price-management-actions';
+import ProductMultiSelector from './ProductMultiSelector';
+import CategoryMultiSelector from './CategoryMultiSelector';
+import SupplierMultiSelector from './SupplierMultiSelector';
 
 interface PricePromotion {
   id: number;
@@ -51,15 +54,29 @@ export default function PricePromotionsManager() {
   // Form state
   const [showForm, setShowForm] = useState(false);
   const [editingId, setEditingId] = useState<number | null>(null);
+  // Función para obtener fecha inicial en formato correcto
+  const getDefaultStartDate = () => {
+    const now = new Date();
+    now.setMinutes(now.getMinutes() - now.getTimezoneOffset()); // Ajustar zona horaria
+    return now.toISOString().slice(0, 16); // YYYY-MM-DDTHH:mm
+  };
+
+  const getDefaultEndDate = () => {
+    const tomorrow = new Date();
+    tomorrow.setDate(tomorrow.getDate() + 1);
+    tomorrow.setMinutes(tomorrow.getMinutes() - tomorrow.getTimezoneOffset());
+    return tomorrow.toISOString().slice(0, 16);
+  };
+
   const [formData, setFormData] = useState<FormData>({
     name: '',
     description: '',
     promotionType: 'discount_percentage',
-    value: 0,
+    value: 10, // Valor por defecto válido para descuento del 10%
     appliesTo: 'all_products',
     targetIds: [],
-    startDate: '',
-    endDate: '',
+    startDate: getDefaultStartDate(),
+    endDate: getDefaultEndDate(),
     priority: 0,
     maxUsage: undefined
   });
@@ -118,6 +135,18 @@ export default function PricePromotionsManager() {
       return;
     }
 
+    // Validar selección de elementos según tipo
+    if (formData.appliesTo !== 'all_products' && formData.targetIds.length === 0) {
+      const typeNames: Record<string, string> = {
+        'categories': 'categorías',
+        'specific_products': 'productos',
+        'suppliers': 'proveedores'
+      };
+      const typeName = typeNames[formData.appliesTo] || 'elementos';
+      setError(`Debes seleccionar al menos un elemento (${typeName})`);
+      return;
+    }
+
     try {
       setSaving(true);
       setError(null);
@@ -128,6 +157,17 @@ export default function PricePromotionsManager() {
         targetIds: formData.appliesTo === 'all_products' ? [] : formData.targetIds
       };
 
+      // Debug logging
+      console.log('🔍 Datos a enviar:', submitData);
+      console.log('🔍 Validation check:', {
+        name: submitData.name?.trim(),
+        value: submitData.value,
+        startDate: submitData.startDate,
+        endDate: submitData.endDate,
+        appliesTo: submitData.appliesTo,
+        targetIds: submitData.targetIds
+      });
+
       if (editingId) {
         // Actualizar promoción existente
         const result = await updatePricePromotion(editingId, submitData);
@@ -137,17 +177,21 @@ export default function PricePromotionsManager() {
           await loadPromotions();
           resetForm();
         } else {
+          console.error('❌ Error al actualizar:', result.error);
           setError(result.error || 'Error al actualizar promoción');
         }
       } else {
         // Crear nueva promoción
+        console.log('🚀 Enviando promoción nueva...');
         const result = await createPricePromotion(submitData);
+        console.log('📦 Respuesta del servidor:', result);
         
         if (result.success) {
           setSuccess('Promoción creada exitosamente');
           await loadPromotions();
           resetForm();
         } else {
+          console.error('❌ Error al crear:', result.error);
           setError(result.error || 'Error al crear promoción');
         }
       }
@@ -203,11 +247,11 @@ export default function PricePromotionsManager() {
       name: '',
       description: '',
       promotionType: 'discount_percentage',
-      value: 0,
+      value: 10, // Valor por defecto válido
       appliesTo: 'all_products',
       targetIds: [],
-      startDate: '',
-      endDate: '',
+      startDate: getDefaultStartDate(),
+      endDate: getDefaultEndDate(),
       priority: 0,
       maxUsage: undefined
     });
@@ -422,7 +466,7 @@ export default function PricePromotionsManager() {
               </div>
 
               {/* Aplica a */}
-              <div>
+              <div className="md:col-span-2">
                 <label className="block text-sm font-medium text-gray-700 mb-1">
                   Aplica a
                 </label>
@@ -430,7 +474,8 @@ export default function PricePromotionsManager() {
                   value={formData.appliesTo}
                   onChange={(e) => setFormData({ 
                     ...formData, 
-                    appliesTo: e.target.value as any 
+                    appliesTo: e.target.value as any,
+                    targetIds: [] // Limpiar selección anterior al cambiar tipo
                   })}
                   className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
                 >
@@ -439,8 +484,59 @@ export default function PricePromotionsManager() {
                   <option value="specific_products">Productos específicos</option>
                   <option value="suppliers">Proveedores específicos</option>
                 </select>
+                
+                {/* Mensaje informativo de selección */}
+                {formData.appliesTo !== 'all_products' && (
+                  <p className="mt-2 text-sm text-gray-600">
+                    {formData.targetIds.length > 0 ? (
+                      <span className="text-green-600 font-medium">
+                        ✓ {formData.targetIds.length} {
+                          formData.appliesTo === 'categories' ? 'categorías' :
+                          formData.appliesTo === 'specific_products' ? 'productos' : 
+                          'proveedores'
+                        } seleccionado{formData.targetIds.length !== 1 ? 's' : ''}
+                      </span>
+                    ) : (
+                      <span className="text-orange-600">
+                        ⚠ Selecciona al menos un elemento
+                      </span>
+                    )}
+                  </p>
+                )}
               </div>
+            </div>
 
+            {/* Selectores condicionales según tipo de aplicación */}
+            {formData.appliesTo === 'specific_products' && (
+              <div className="mb-4">
+                <ProductMultiSelector 
+                  selectedIds={formData.targetIds}
+                  onChange={(ids) => setFormData({...formData, targetIds: ids})}
+                  promotionType={formData.promotionType}
+                  promotionValue={formData.value}
+                />
+              </div>
+            )}
+
+            {formData.appliesTo === 'categories' && (
+              <div className="mb-4">
+                <CategoryMultiSelector 
+                  selectedIds={formData.targetIds}
+                  onChange={(ids) => setFormData({...formData, targetIds: ids})}
+                />
+              </div>
+            )}
+
+            {formData.appliesTo === 'suppliers' && (
+              <div className="mb-4">
+                <SupplierMultiSelector 
+                  selectedIds={formData.targetIds}
+                  onChange={(ids) => setFormData({...formData, targetIds: ids})}
+                />
+              </div>
+            )}
+
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               {/* Prioridad */}
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-1">
