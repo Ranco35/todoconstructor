@@ -1,6 +1,6 @@
 import { createClient } from '@/lib/supabase-server'
 import { getProductsForWebsiteByCategory } from '@/actions/website/products'
-import ProductCardWithPromotions from '@/components/website/ProductCardWithPromotions'
+import ProductsPaginated from '@/components/website/ProductsPaginated'
 import Link from 'next/link'
 
 export const dynamic = 'force-dynamic';
@@ -130,38 +130,12 @@ export default async function CategoryPage({ params }: CategoryPageProps) {
           </div>
         </div>
 
-        {/* Lista de productos */}
-        {products.length > 0 ? (
-          <div className="bg-white rounded-lg shadow-md p-6">
-            <h2 className="text-2xl font-bold text-gray-900 mb-6">
-              Productos en {category.name}
-            </h2>
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
-              {products.map((product) => (
-                <ProductCardWithPromotions
-                  key={product.id}
-                  product={product}
-                />
-              ))}
-            </div>
-          </div>
-        ) : (
-          <div className="bg-white rounded-lg shadow-md p-8 text-center">
-            <div className="text-6xl mb-4">📦</div>
-            <h3 className="text-xl font-semibold text-gray-600 mb-2">
-              No hay productos en esta categoría
-            </h3>
-            <p className="text-gray-500 mb-6">
-              Esta categoría aún no tiene productos asignados.
-            </p>
-            <Link 
-              href="/website/categories" 
-              className="bg-blue-600 text-white px-6 py-3 rounded-lg hover:bg-blue-700 inline-block"
-            >
-              Ver otras categorías
-            </Link>
-          </div>
-        )}
+        {/* Lista de productos con paginación */}
+        <ProductsPaginated 
+          products={products} 
+          categoryName={category.name}
+          itemsPerPage={20}
+        />
 
         {/* Botón flotante de WhatsApp */}
         <div className="fixed bottom-4 right-4">

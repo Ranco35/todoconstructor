@@ -210,3 +210,4 @@ interface WarehouseProductManagerProps {
 **Estado:** ✅ RESUELTO  
 **Tiempo de resolución:** ~10 minutos
 
+

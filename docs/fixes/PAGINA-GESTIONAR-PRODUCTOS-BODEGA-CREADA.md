@@ -317,3 +317,4 @@ Bodegas → Bodega X → Productos → [Gestionar productos]
 
 **🎯 NUEVA PÁGINA FUNCIONAL CON MEJOR UX**
 
+

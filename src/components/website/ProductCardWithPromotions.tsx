@@ -168,34 +168,47 @@ export default function ProductCardWithPromotions({ product, onAddToCart }: Prod
           </div>
         )}
 
-        {/* Precio */}
+        {/* Precio - NO mostrar si no hay stock */}
         <div className="mb-3">
-          {displayPrice > 0 ? (
-            <div>
-              {product.hasPromotion ? (
-                <div className="space-y-1">
-                  {/* Precio original tachado */}
-                  <div className="text-sm text-gray-500 line-through">
-                    Antes: {formatPrice(product.originalPrice)}
+          {product.stock > 0 ? (
+            // Mostrar precio solo si hay stock
+            displayPrice > 0 ? (
+              <div>
+                {product.hasPromotion ? (
+                  <div className="space-y-1">
+                    {/* Precio original tachado */}
+                    <div className="text-sm text-gray-500 line-through">
+                      Antes: {formatPrice(product.originalPrice)}
+                    </div>
+                    {/* Precio con descuento */}
+                    <div className="text-2xl font-bold text-red-600">
+                      {formatPrice(displayPrice)}
+                    </div>
                   </div>
-                  {/* Precio con descuento */}
-                  <div className="text-2xl font-bold text-red-600">
+                ) : (
+                  <div className="text-2xl font-bold text-green-600">
                     {formatPrice(displayPrice)}
                   </div>
-                </div>
-              ) : (
-                <div className="text-2xl font-bold text-green-600">
-                  {formatPrice(displayPrice)}
-                </div>
-              )}
-              <span className="text-sm text-gray-500 ml-1">
-                (IVA {product.vat || 0}% incluido)
+                )}
+                <span className="text-sm text-gray-500 ml-1">
+                  (IVA {product.vat || 0}% incluido)
+                </span>
+              </div>
+            ) : (
+              <span className="text-lg font-semibold text-gray-600">
+                Consultar precio
               </span>
-            </div>
+            )
           ) : (
-            <span className="text-lg font-semibold text-gray-600">
-              Consultar precio
-            </span>
+            // Sin stock - NO mostrar precio, solo mensaje
+            <div className="text-center py-2">
+              <span className="text-lg font-semibold text-gray-400">
+                Sin stock disponible
+              </span>
+              <p className="text-xs text-gray-500 mt-1">
+                Consulta disponibilidad
+              </p>
+            </div>
           )}
         </div>
 

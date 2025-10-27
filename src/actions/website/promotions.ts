@@ -75,7 +75,7 @@ export async function getProductsWithPromotions(): Promise<ProductWithPromotion[
   const supabase = await createClient();
 
   try {
-    // Obtener productos con stock
+    // Obtener TODOS los productos (con y sin stock)
     const { data, error } = await supabase
       .from('Product')
       .select(`
@@ -90,12 +90,11 @@ export async function getProductsWithPromotions(): Promise<ProductWithPromotion[
         vat,
         categoryid,
         supplierid,
-        Warehouse_Product!inner (
+        Warehouse_Product (
           quantity,
           warehouseId
         )
       `)
-      .gt('Warehouse_Product.quantity', 0, { foreignTable: 'Warehouse_Product' })
       .order('name');
 
     if (error) {
