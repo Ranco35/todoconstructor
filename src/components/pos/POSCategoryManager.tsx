@@ -80,7 +80,7 @@ export default function POSCategoryManager() {
       {error && <div className="text-red-500 mb-2">{error}</div>}
       <div className="mb-6 grid grid-cols-1 md:grid-cols-2 gap-8">
         <div className="border rounded-lg p-4 bg-blue-50">
-          <h2 className="text-lg font-semibold mb-2 text-blue-700">Categorías Recepción</h2>
+          <h2 className="text-lg font-semibold mb-2 text-blue-700">Categorías Ferreteria</h2>
           <POSCategoryTable
             categories={receptionCategories}
             loading={loading}
@@ -90,7 +90,7 @@ export default function POSCategoryManager() {
           />
         </div>
         <div className="border rounded-lg p-4 bg-orange-50">
-          <h2 className="text-lg font-semibold mb-2 text-orange-700">Categorías Restaurante</h2>
+          <h2 className="text-lg font-semibold mb-2 text-orange-700">Categorías Ferreteria2</h2>
           <POSCategoryTable
             categories={restaurantCategories}
             loading={loading}

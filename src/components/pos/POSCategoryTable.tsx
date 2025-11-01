@@ -31,7 +31,7 @@ export default function POSCategoryTable({ categories, loading, onEdit, onDelete
           <tr key={cat.id} className={!cat.isActive ? 'opacity-60' : ''}>
             <td>{cat.name}</td>
             <td>{cat.displayName}</td>
-            <td>{cat.cashRegisterTypeId === 2 ? 'Restaurante' : 'Recepción'}</td>
+            <td>{cat.cashRegisterTypeId === 2 ? 'Ferreteria2' : 'Ferreteria'}</td>
             <td>{cat.icon || '-'}</td>
             <td>
               {cat.color ? (

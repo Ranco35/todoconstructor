@@ -9,18 +9,6 @@ export const menus = {
             href: '/dashboard/customers',
         },
         {
-            label: 'Reservas',
-            href: '/dashboard/reservations',
-            items: [
-                { label: 'Dashboard', href: '/dashboard/reservations' },
-                { label: '✨ Reserva Nueva', href: '/dashboard/reservations/nueva' },
-                { label: '📅 Calendario', href: '/dashboard/reservations/calendar' },
-                { label: '📋 Lista Completa', href: '/dashboard/reservations/list' },
-                { label: '📊 Reportes', href: '/dashboard/reservations/reports' },
-                { label: '🔧 Crear Tradicional', href: '/dashboard/reservations/create' },
-            ],
-        },
-        {
             label: 'Inventario',
             href: '/dashboard/inventory',
         },
@@ -81,18 +69,6 @@ export const menus = {
         {
             label: 'Clientes',
             href: '/dashboard/customers',
-        },
-        {
-            label: 'Reservas',
-            href: '/dashboard/reservations',
-            items: [
-                { label: 'Dashboard', href: '/dashboard/reservations' },
-                { label: '✨ Reserva Nueva', href: '/dashboard/reservations/nueva' },
-                { label: '📅 Calendario', href: '/dashboard/reservations/calendar' },
-                { label: '📋 Lista Completa', href: '/dashboard/reservations/list' },
-                { label: '📊 Reportes', href: '/dashboard/reservations/reports' },
-                { label: '🔧 Crear Tradicional', href: '/dashboard/reservations/create' },
-            ],
         },
         {
             label: 'Inventario',

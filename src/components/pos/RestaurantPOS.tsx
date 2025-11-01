@@ -119,7 +119,7 @@ export default function RestaurantPOS() {
   const [customerName, setCustomerName] = useState('');
   const [roomNumber, setRoomNumber] = useState('');
 
-  const REGISTER_TYPE_ID = 2 // Restaurante
+  const REGISTER_TYPE_ID = 2 // Ferreteria2
 
   // Cargar datos iniciales
   useEffect(() => {
@@ -422,7 +422,9 @@ export default function RestaurantPOS() {
     setIsProcessing(true)
     try {
       const { subtotal, discountAmount, subtotalAfterDiscount, taxAmount, total } = getCartTotals()
-      const change = paymentMethod === 'cash' && cashReceived > total ? cashReceived - total : 0
+      // Asegurar que cashReceived sea un número válido
+      const validCashReceived = Number(cashReceived) || 0
+      const change = paymentMethod === 'cash' && validCashReceived > total ? validCashReceived - total : 0
 
       // Determinar el nombre del cliente de forma más robusta
       let finalCustomerName = 'Cliente sin nombre'
@@ -448,22 +450,22 @@ export default function RestaurantPOS() {
         sessionId: session.id,
         customerName: finalCustomerName,
         tableNumber: selectedTable.number,
-        subtotal,
-        discountAmount,
+        subtotal: Number(subtotal) || 0,
+        discountAmount: Number(discountAmount) || 0,
         discountReason: discountReason || undefined,
-        taxAmount,
-        total,
+        taxAmount: Number(taxAmount) || 0,
+        total: Number(total),
         paymentMethod,
-        cashReceived: paymentMethod === 'cash' ? cashReceived : undefined,
-        change: change > 0 ? change : undefined,
+        cashReceived: paymentMethod === 'cash' ? (validCashReceived || total) : undefined,
+        change: change > 0 ? Number(change) : undefined,
         notes: notes || undefined,
         customerId: customerId,
         items: cart.map(item => ({
-          productId: item.id,
-          productName: item.name,
-          quantity: item.quantity,
-          unitPrice: item.price,
-          total: item.price * item.quantity,
+          productId: Number(item.id),
+          productName: String(item.name),
+          quantity: Number(item.quantity),
+          unitPrice: Number(item.price),
+          total: Number(item.price * item.quantity),
           notes: item.notes
         }))
       }
@@ -640,7 +642,7 @@ export default function RestaurantPOS() {
             <CardHeader className="text-center">
               <CardTitle className="flex items-center justify-center gap-2">
                 <UtensilsCrossed className="h-6 w-6 text-orange-600" />
-                POS Restaurante - AdminTermas
+                POS Ferreteria2 - AdminTermas
               </CardTitle>
             </CardHeader>
             <CardContent className="space-y-6">
@@ -683,7 +685,7 @@ export default function RestaurantPOS() {
         <Dialog open={showSessionModal} onOpenChange={setShowSessionModal}>
           <DialogContent>
             <DialogHeader>
-              <DialogTitle>Iniciar Sesión de Caja - Restaurante</DialogTitle>
+              <DialogTitle>Iniciar Sesión de Caja - Ferreteria2</DialogTitle>
             </DialogHeader>
             <div className="space-y-4">
               <div>
@@ -723,7 +725,7 @@ export default function RestaurantPOS() {
       <div className="min-h-screen bg-gray-50 flex items-center justify-center">
         <div className="text-center">
           <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-orange-600 mx-auto"></div>
-          <p className="mt-4 text-gray-600">Cargando POS Restaurante...</p>
+          <p className="mt-4 text-gray-600">Cargando POS Ferreteria2...</p>
         </div>
       </div>
     )
@@ -738,7 +740,7 @@ export default function RestaurantPOS() {
             <div className="flex items-center space-x-4">
               <h1 className="text-xl font-semibold text-gray-900 flex items-center gap-2">
                 <UtensilsCrossed className="h-5 w-5 text-orange-600" />
-                POS Restaurante
+                POS Ferreteria2
               </h1>
               <div className="flex items-center space-x-2">
                 {isConnected ? (
@@ -856,7 +858,7 @@ export default function RestaurantPOS() {
                 <CardHeader>
                   <CardTitle className="flex items-center gap-2">
                     <Table className="h-5 w-5" />
-                    Mesas del Restaurante
+                    Mesas del POS Ferreteria2
                   </CardTitle>
                 </CardHeader>
                 <CardContent>

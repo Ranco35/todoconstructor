@@ -170,7 +170,7 @@ export default function ReceptionPOS() {
   const [diagnosticMessages, setDiagnosticMessages] = useState<string[]>([])
   const [showDiagnosticAlert, setShowDiagnosticAlert] = useState(false)
 
-  const REGISTER_TYPE_ID = 1 // Recepción
+  const REGISTER_TYPE_ID = 1 // Ferreteria
 
   // Cargar datos iniciales
   useEffect(() => {
@@ -543,7 +543,10 @@ export default function ReceptionPOS() {
     setIsProcessing(true)
     try {
       const { subtotal, discountAmount, subtotalAfterDiscount, taxAmount, total } = getCartTotals()
-      const change = paymentMethod === 'cash' && cashReceived > total ? cashReceived - total : 0
+      
+      // Asegurar que cashReceived sea un número válido
+      const validCashReceived = Number(cashReceived) || 0
+      const change = paymentMethod === 'cash' && validCashReceived > total ? validCashReceived - total : 0
 
       // Determinar el nombre del cliente de forma más robusta
       let finalCustomerName = 'Cliente sin nombre'
@@ -562,21 +565,21 @@ export default function ReceptionPOS() {
         customerName: finalCustomerName,
         clientId: selectedClient?.id || undefined,
         roomNumber: roomNumber || undefined,
-        subtotal,
-        discountAmount,
+        subtotal: Number(subtotal) || 0,
+        discountAmount: Number(discountAmount) || 0,
         discountReason: getDiscountReason(),
-        taxAmount,
-        total,
+        taxAmount: Number(taxAmount) || 0,
+        total: Number(total),
         paymentMethod,
-        cashReceived: paymentMethod === 'cash' ? cashReceived : undefined,
-        change: change > 0 ? change : undefined,
+        cashReceived: paymentMethod === 'cash' ? (validCashReceived || total) : undefined,
+        change: change > 0 ? Number(change) : undefined,
         notes: notes || undefined,
         items: cart.map(item => ({
-          productId: item.id,
-          productName: item.name,
-          quantity: item.quantity,
-          unitPrice: item.price,
-          total: item.price * item.quantity
+          productId: Number(item.id),
+          productName: String(item.name),
+          quantity: Number(item.quantity),
+          unitPrice: Number(item.price),
+          total: Number(item.price * item.quantity)
         }))
       }
 
@@ -881,7 +884,7 @@ export default function ReceptionPOS() {
       <div className="min-h-screen bg-gray-50 flex items-center justify-center">
         <div className="text-center">
           <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-purple-600 mx-auto"></div>
-          <p className="mt-4 text-gray-600">Cargando POS Recepción...</p>
+          <p className="mt-4 text-gray-600">Cargando POS Ferreteria...</p>
         </div>
       </div>
     )
@@ -896,7 +899,7 @@ export default function ReceptionPOS() {
             <div className="flex items-center space-x-4">
               <h1 className="text-xl font-semibold text-gray-900 flex items-center gap-2">
                 <Home className="h-5 w-5 text-purple-600" />
-                POS Recepción
+                POS Ferreteria
               </h1>
               <div className="flex items-center space-x-2">
                 {isConnected ? (

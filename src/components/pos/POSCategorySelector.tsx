@@ -7,7 +7,7 @@ import type { POSProductCategory } from '@/types/pos/category';
 interface POSCategorySelectorProps {
   value?: number;
   onChange: (categoryId: number) => void;
-  typeId?: number; // 1: Recepción, 2: Restaurante
+  typeId?: number; // 1: Ferreteria, 2: Ferreteria2
 }
 
 export default function POSCategorySelector({ value, onChange, typeId = 2 }: POSCategorySelectorProps) {

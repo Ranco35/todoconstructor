@@ -14,7 +14,7 @@ const defaultValues = {
   displayName: '',
   icon: '',
   color: '#3B82F6',
-  cashRegisterTypeId: 1, // Cambiado a Recepción por defecto
+  cashRegisterTypeId: 1, // Cambiado a Ferreteria por defecto
   isActive: true,
   sortOrder: 0,
 };
@@ -56,7 +56,7 @@ export default function POSCategoryForm({ initialData, onSave, onCancel }: Props
   };
 
   const getCashRegisterTypeName = (typeId: number) => {
-    return typeId === 1 ? 'Recepción' : 'Restaurante';
+    return typeId === 1 ? 'Ferreteria' : 'Ferreteria2';
   };
 
   const getCashRegisterTypeColor = (typeId: number) => {
@@ -246,8 +246,8 @@ export default function POSCategoryForm({ initialData, onSave, onCancel }: Props
             onChange={handleChange} 
             className={`w-full border border-gray-300 rounded px-3 py-2 focus:ring-2 focus:ring-blue-500 focus:border-blue-500 ${values.cashRegisterTypeId === 1 ? 'bg-blue-50' : 'bg-orange-50'}`}
           >
-            <option value={1}>🏨 Recepción</option>
-            <option value={2}>🍽️ Restaurante</option>
+            <option value={1}>🔨 Ferreteria</option>
+            <option value={2}>🔨 Ferreteria2</option>
           </select>
         </div>
 
@@ -310,7 +310,7 @@ export default function POSCategoryForm({ initialData, onSave, onCancel }: Props
                 className="flex items-center justify-center gap-2 bg-blue-600 hover:bg-blue-700 text-white px-6 py-3 rounded-lg font-medium transition-colors"
                 disabled={!values.name || !values.displayName}
               >
-                🏨 Crear para Recepción
+                🔨 Crear para Ferreteria
               </button>
               <button
                 type="button"
@@ -318,7 +318,7 @@ export default function POSCategoryForm({ initialData, onSave, onCancel }: Props
                 className="flex items-center justify-center gap-2 bg-orange-600 hover:bg-orange-700 text-white px-6 py-3 rounded-lg font-medium transition-colors"
                 disabled={!values.name || !values.displayName}
               >
-                🍽️ Crear para Restaurante
+                🔨 Crear para Ferreteria2
               </button>
             </div>
             <div className="text-xs text-gray-500 text-center">
