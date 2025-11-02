@@ -43,23 +43,6 @@ export const menus = {
                 { label: '📊 Reportes', href: '/dashboard/purchases/reports' },
             ],
         },
-        {
-            label: 'Caja Chica',
-            href: '/dashboard/pettyCash',
-            items: [
-                { label: 'Dashboard', href: '/dashboard/pettyCash' },
-                { label: 'Historial de Sesiones', href: '/dashboard/pettyCash/sessions' },
-                { label: '🛡️ Panel Administrativo', href: '/dashboard/pettyCash/admin' },
-            ],
-        },
-        {
-            label: '🔒 Administración',
-            href: '/dashboard/admin',
-            items: [
-                { label: '🔧 Gestión de SKUs', href: '/dashboard/admin/sku-management' },
-                { label: '📦 Productos Modulares', href: '/dashboard/admin/productos-modulares' },
-            ],
-        },
     ],
     ADMINISTRADOR: [
         {
@@ -105,23 +88,6 @@ export const menus = {
                 { label: '📊 Reportes', href: '/dashboard/purchases/reports' },
             ],
         },
-        {
-            label: 'Caja Chica',
-            href: '/dashboard/pettyCash',
-            items: [
-                { label: 'Dashboard', href: '/dashboard/pettyCash' },
-                { label: 'Historial de Sesiones', href: '/dashboard/pettyCash/sessions' },
-                { label: '🛡️ Panel Administrativo', href: '/dashboard/pettyCash/admin' },
-            ],
-        },
-        {
-            label: '🔒 Administración',
-            href: '/dashboard/admin',
-            items: [
-                { label: '🔧 Gestión de SKUs', href: '/dashboard/admin/sku-management' },
-                { label: '📦 Productos Modulares', href: '/dashboard/admin/productos-modulares' },
-            ],
-        },
     ],
     JEFE_SECCION: [
         {
@@ -132,27 +98,11 @@ export const menus = {
             label: 'Inventario',
             href: '/dashboard/inventory',
         },
-        {
-            label: 'Caja Chica',
-            href: '/dashboard/pettyCash',
-            items: [
-                { label: 'Dashboard', href: '/dashboard/pettyCash' },
-                { label: 'Historial de Sesiones', href: '/dashboard/pettyCash/sessions' },
-            ],
-        },
     ],
     USUARIO_FINAL: [
         {
             label: 'Dashboard',
             href: '/dashboard',
-        },
-        {
-            label: 'Caja Chica',
-            href: '/dashboard/pettyCash',
-            items: [
-                { label: 'Dashboard', href: '/dashboard/pettyCash' },
-                { label: 'Historial de Sesiones', href: '/dashboard/pettyCash/sessions' },
-            ],
         },
     ],
 };

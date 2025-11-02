@@ -100,22 +100,22 @@ export default function UniversalHorizontalMenu({
   return (
     <div className="bg-white shadow-lg border-b border-gray-200 sticky top-0 z-50 w-full mt-2">
       <div className="max-w-full mx-auto px-4 sm:px-6 lg:px-8">
-        <div className="flex justify-between items-center h-16">
+        <div className="flex justify-between items-center h-16 gap-4">
           {/* Logo y título */}
-          <div className="flex items-center space-x-4">
-            <Link href="/" className="flex items-center space-x-3">
-              <div className="w-10 h-10 bg-gradient-to-br from-orange-600 to-red-600 rounded-lg flex items-center justify-center">
+          <div className="flex items-center flex-shrink-0">
+            <Link href="/" className="flex items-center gap-3">
+              <div className="w-10 h-10 bg-gradient-to-br from-orange-600 to-red-600 rounded-lg flex items-center justify-center flex-shrink-0">
                 <span className="text-white font-bold text-lg">🔨</span>
               </div>
-              <div>
-                <h1 className="text-xl font-bold text-gray-900">TC Constructor</h1>
-                <p className="text-xs text-gray-500">Sistema de Ferretería</p>
+              <div className="hidden sm:block">
+                <h1 className="text-xl font-bold text-gray-900 whitespace-nowrap">Constructor</h1>
+                <p className="text-xs text-gray-500 whitespace-nowrap">Sistema de Ferretería</p>
               </div>
             </Link>
           </div>
 
           {/* Navegación Principal - Desktop */}
-          <nav className="hidden lg:flex space-x-1 flex-1 justify-center max-w-4xl mx-auto">
+          <nav className="hidden lg:flex space-x-1 flex-1 justify-center">
             {currentMenus.map((section) => {
               const hasItems = section.items && section.items.length > 0;
               
@@ -125,16 +125,16 @@ export default function UniversalHorizontalMenu({
                     <>
                       <button
                         onClick={() => handleDropdownToggle(section.label, hasItems)}
-                        className={`group relative px-4 py-2 rounded-lg text-sm font-medium transition-all duration-200 flex items-center space-x-2 ${
+                        className={`group relative px-3 py-2 rounded-lg text-sm font-medium transition-all duration-200 flex items-center gap-2 whitespace-nowrap ${
                           isActiveSection(section.href)
                             ? 'bg-blue-100 text-blue-700 shadow-sm'
                             : 'text-gray-600 hover:text-blue-600 hover:bg-blue-50'
                         }`}
                       >
-                        <span>{getSectionIcon(section.label)}</span>
-                        <span>{section.label}</span>
+                        <span className="text-base">{getSectionIcon(section.label)}</span>
+                        <span className="whitespace-nowrap">{section.label}</span>
                         <svg 
-                          className={`w-4 h-4 transition-transform ${activeDropdown === section.label ? 'rotate-180' : ''}`} 
+                          className={`w-3.5 h-3.5 transition-transform flex-shrink-0 ${activeDropdown === section.label ? 'rotate-180' : ''}`} 
                           fill="none" 
                           stroke="currentColor" 
                           viewBox="0 0 24 24"
@@ -144,23 +144,23 @@ export default function UniversalHorizontalMenu({
                       </button>
 
                       {activeDropdown === section.label && (
-                        <div className="absolute top-full left-0 mt-2 w-64 bg-white rounded-lg shadow-lg border border-gray-200 py-2 z-[9999]">
+                        <div className="absolute top-full left-0 mt-2 min-w-[240px] bg-white rounded-lg shadow-xl border border-gray-200 py-2 z-[9999]">
                           <div className="px-4 py-2 border-b border-gray-200">
-                            <div className="text-sm font-medium text-gray-900">{section.label}</div>
+                            <div className="text-sm font-semibold text-gray-900">{section.label}</div>
                           </div>
                           {section.items!.map((item) => (
                             <Link
                               key={item.href}
                               href={item.href}
-                              className={`block px-4 py-3 text-left hover:bg-gray-50 flex items-center space-x-3 transition-colors ${
+                              className={`block px-4 py-3 text-sm hover:bg-gray-50 flex items-center gap-3 transition-colors ${
                                 pathname === item.href
-                                  ? 'bg-blue-50 text-blue-700'
+                                  ? 'bg-blue-50 text-blue-700 font-medium'
                                   : 'text-gray-700'
                               }`}
                               onClick={() => setActiveDropdown(null)}
                             >
-                              <span className="text-lg">{getItemIcon(item.label)}</span>
-                              <span>{item.label}</span>
+                              <span className="text-base flex-shrink-0">{getItemIcon(item.label)}</span>
+                              <span className="whitespace-nowrap">{item.label}</span>
                             </Link>
                           ))}
                         </div>
@@ -169,14 +169,14 @@ export default function UniversalHorizontalMenu({
                   ) : (
                     <Link
                       href={section.href}
-                      className={`group relative px-4 py-2 rounded-lg text-sm font-medium transition-all duration-200 flex items-center space-x-2 ${
+                      className={`group relative px-3 py-2 rounded-lg text-sm font-medium transition-all duration-200 flex items-center gap-2 whitespace-nowrap ${
                         isActiveSection(section.href)
                           ? 'bg-blue-100 text-blue-700 shadow-sm'
                           : 'text-gray-600 hover:text-blue-600 hover:bg-blue-50'
                       }`}
                     >
-                      <span>{getSectionIcon(section.label)}</span>
-                      <span>{section.label}</span>
+                      <span className="text-base">{getSectionIcon(section.label)}</span>
+                      <span className="whitespace-nowrap">{section.label}</span>
                     </Link>
                   )}
                 </div>
@@ -185,23 +185,23 @@ export default function UniversalHorizontalMenu({
           </nav>
 
           {/* Usuario y Acciones */}
-          <div className="flex items-center space-x-4">
+          <div className="flex items-center space-x-4 flex-shrink-0">
             {/* Usuario Info */}
-            <div className="hidden md:flex items-center space-x-4">
+            <div className="hidden md:flex items-center">
               {currentUser && (
                 <div className="dropdown-container relative">
                   <button
                     onClick={() => handleUserDropdownClick()}
-                    className="flex items-center space-x-3 hover:bg-gray-50 p-2 rounded-lg transition-colors border border-gray-200"
+                    className="flex items-center gap-3 hover:bg-gray-50 px-3 py-2 rounded-lg transition-colors border border-gray-200 max-w-[280px]"
                   >
-                    <div className="w-10 h-10 bg-gradient-to-br from-purple-500 to-blue-600 rounded-full flex items-center justify-center text-white text-sm font-bold">
+                    <div className="w-10 h-10 bg-gradient-to-br from-purple-500 to-blue-600 rounded-full flex items-center justify-center text-white text-sm font-bold flex-shrink-0">
                       {currentUser.firstName?.charAt(0) || 'U'}{currentUser.lastName?.charAt(0) || 'S'}
                     </div>
-                    <div className="text-left min-w-0">
-                      <div className="text-sm font-medium text-gray-900 truncate">
+                    <div className="text-left flex-1 overflow-hidden">
+                      <div className="text-sm font-medium text-gray-900 truncate whitespace-nowrap">
                         {currentUser.firstName} {currentUser.lastName}
                       </div>
-                      <div className="text-xs text-gray-500 truncate">
+                      <div className="text-xs text-gray-500 truncate whitespace-nowrap">
                         {getRoleDisplayName(currentUser.role)}
                       </div>
                     </div>
@@ -216,13 +216,13 @@ export default function UniversalHorizontalMenu({
                   </button>
 
                   {activeDropdown === 'user' && (
-                    <div className="absolute right-0 mt-2 w-64 max-w-xs bg-white rounded-lg shadow-lg border border-gray-200 py-2 z-50">
+                    <div className="absolute right-0 mt-2 w-72 bg-white rounded-lg shadow-xl border border-gray-200 py-2 z-[9999]">
                       <div className="px-4 py-3 border-b border-gray-200">
-                        <p className="font-medium text-gray-900">
+                        <p className="font-medium text-gray-900 truncate">
                           {currentUser.firstName} {currentUser.lastName}
                         </p>
-                        <p className="text-sm text-gray-600">{currentUser.email}</p>
-                        <p className="text-xs text-gray-500">{getRoleDisplayName(currentUser.role)}</p>
+                        <p className="text-sm text-gray-600 truncate mt-1">{currentUser.email}</p>
+                        <p className="text-xs text-gray-500 mt-1">{getRoleDisplayName(currentUser.role)}</p>
                       </div>
                       <div className="p-2">
                         <LogoutButton />
