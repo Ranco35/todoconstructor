@@ -98,7 +98,7 @@ export default function UniversalHorizontalMenu({
   };
 
   return (
-    <div className="bg-white shadow-lg border-b border-gray-200 sticky top-0 z-50 w-full">
+    <div className="bg-white shadow-lg border-b border-gray-200 sticky top-0 z-50 w-full mt-2">
       <div className="max-w-full mx-auto px-4 sm:px-6 lg:px-8">
         <div className="flex justify-between items-center h-16">
           {/* Logo y título */}

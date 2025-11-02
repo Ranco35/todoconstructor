@@ -17,7 +17,7 @@ export default function WebsiteHeader() {
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false)
 
   return (
-    <header className="bg-white shadow-lg sticky top-0 z-50">
+    <header className="bg-white shadow-lg sticky top-0 z-50 mt-2">
       {/* Top bar con información de contacto */}
       <div className="bg-gradient-to-r from-green-800 to-blue-800 text-white py-2">
         <div className="container mx-auto px-4 flex justify-between items-center text-sm">
