@@ -340,7 +340,7 @@ export async function getPaymentSummary(
         paymentMethod,
         amount,
         POSSale!inner(sessionId, createdAt),
-        POSSale.CashSession!inner(cashRegisterTypeId)
+        POSSale.CashSession(cashRegisterTypeId)
       `)
     
     // Aplicar filtros

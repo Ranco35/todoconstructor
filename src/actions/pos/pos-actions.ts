@@ -947,7 +947,7 @@ export async function getAllPOSSales(filters: {
       .select(`
         *,
         items:POSSaleItem(*),
-        session:CashSession!inner(cashRegisterTypeId, id, sessionNumber)
+        session:CashSession(cashRegisterTypeId, id, sessionNumber)
       `, { count: 'exact' })
     
     // Aplicar filtros
