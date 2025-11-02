@@ -41,7 +41,6 @@ interface MultiplePaymentModalProps {
   saleTotal: number
   customerName?: string
   tableNumber?: string
-  roomNumber?: string
   isProcessing?: boolean
 }
 
@@ -62,7 +61,6 @@ export default function MultiplePaymentModal({
   saleTotal,
   customerName,
   tableNumber,
-  roomNumber,
   isProcessing = false
 }: MultiplePaymentModalProps) {
   const [payments, setPayments] = useState<PaymentInput[]>([])
@@ -180,7 +178,7 @@ export default function MultiplePaymentModal({
 
         <div className="space-y-6">
           {/* Información de la venta */}
-          <div className="p-4 bg-gray-50 rounded-lg">
+          <div className="p-4 bg-white border rounded-lg">
             <h3 className="text-sm font-medium text-gray-700 mb-3">Información de la Venta</h3>
             <div className="grid grid-cols-2 md:grid-cols-4 gap-4 text-sm">
               <div>
@@ -196,13 +194,6 @@ export default function MultiplePaymentModal({
                   <div className="font-medium">{tableNumber}</div>
                 </div>
               )}
-              
-              <div>
-                <span className="text-gray-500">Habitación:</span>
-                <div className="font-medium">
-                  {roomNumber || <span className="text-gray-400 italic">No especificada</span>}
-                </div>
-              </div>
               
               <div>
                 <span className="text-gray-500">Total a Pagar:</span>
@@ -345,7 +336,7 @@ export default function MultiplePaymentModal({
 
                 {/* Vuelto calculado */}
                 {payment.paymentMethod === 'cash' && payment.receivedAmount && payment.amount && (
-                  <div className="mt-3 p-2 bg-green-50 border border-green-200 rounded">
+                  <div className="mt-3 p-2 bg-white border border-green-500 rounded">
                     <div className="text-sm">
                       <span className="text-green-700">Vuelto: </span>
                       <span className="font-bold text-green-800">
@@ -393,7 +384,7 @@ export default function MultiplePaymentModal({
           <Separator />
 
           {/* Resumen de pagos */}
-          <div className="p-4 bg-slate-50 rounded-lg">
+          <div className="p-4 bg-white border rounded-lg">
             <div className="space-y-2">
               <div className="flex justify-between text-sm">
                 <span>Total de la Venta:</span>
@@ -410,14 +401,14 @@ export default function MultiplePaymentModal({
                   {validationResult.valid ? (
                     <>
                       <CheckCircle2 className="h-4 w-4 text-green-600" />
-                      <Badge className="bg-green-100 text-green-800">
+                      <Badge variant="outline" className="text-green-700 border-green-500">
                         Completo
                       </Badge>
                     </>
                   ) : (
                     <>
                       <AlertTriangle className="h-4 w-4 text-amber-600" />
-                      <Badge variant="outline" className="text-amber-800 border-amber-300">
+                      <Badge variant="outline" className="text-amber-700 border-amber-500">
                         {validationResult.message}
                       </Badge>
                     </>

@@ -117,7 +117,6 @@ export default function RestaurantPOS() {
   // Estado para cliente seleccionado
   const [customerId, setCustomerId] = useState<number | undefined>(undefined);
   const [customerName, setCustomerName] = useState('');
-  const [roomNumber, setRoomNumber] = useState('');
 
   const REGISTER_TYPE_ID = 2 // Ferreteria2
 
@@ -480,7 +479,6 @@ export default function RestaurantPOS() {
         clearCart()
         setCustomerId(undefined)
         setCustomerName('')
-        setRoomNumber('')
         setCashReceived(0)
         setNotes('')
         clearDiscount()
@@ -544,7 +542,6 @@ export default function RestaurantPOS() {
         customerName: finalCustomerName,
         clientId: customerId,
         tableNumber: selectedTable.number,
-        roomNumber: roomNumber || undefined,
         subtotal,
         discountAmount,
         discountReason: discountReason || undefined,
@@ -581,7 +578,6 @@ export default function RestaurantPOS() {
         clearCart()
         setCustomerId(undefined)
         setCustomerName('')
-        setRoomNumber('')
         setCashReceived(0)
         setNotes('')
         clearDiscount()
@@ -1042,19 +1038,6 @@ export default function RestaurantPOS() {
                       </div>
                     )}
                   </div>
-                  
-                  <div>
-                    <Label htmlFor="roomNumber" className="text-xs font-medium text-gray-700 mb-1 block">
-                      Número de habitación (opcional)
-                    </Label>
-                    <Input
-                      id="roomNumber"
-                      value={roomNumber}
-                      onChange={(e) => setRoomNumber(e.target.value)}
-                      placeholder="Ej: 101, 205..."
-                      className="bg-white text-sm"
-                    />
-                  </div>
                 </div>
 
                 {cart.length === 0 ? (
@@ -1472,7 +1455,6 @@ export default function RestaurantPOS() {
         saleTotal={getCartTotals().total}
         customerName={customerName}
         tableNumber={selectedTable?.number}
-        roomNumber={roomNumber}
         isProcessing={isProcessing}
       />
     </div>

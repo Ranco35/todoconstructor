@@ -97,7 +97,6 @@ export default function ReceptionPOS() {
   const [showPaymentModal, setShowPaymentModal] = useState(false)
   const [paymentMethod, setPaymentMethod] = useState<'cash' | 'card' | 'transfer'>('cash')
   const [customerName, setCustomerName] = useState('')
-  const [roomNumber, setRoomNumber] = useState('')
   const [cashReceived, setCashReceived] = useState<number>(0)
   const [notes, setNotes] = useState('')
   const [isProcessing, setIsProcessing] = useState(false)
@@ -564,7 +563,6 @@ export default function ReceptionPOS() {
         sessionId: session?.id || null, // Permitir null para modo sin sesión
         customerName: finalCustomerName,
         clientId: selectedClient?.id || undefined,
-        roomNumber: roomNumber || undefined,
         subtotal: Number(subtotal) || 0,
         discountAmount: Number(discountAmount) || 0,
         discountReason: getDiscountReason(),
@@ -589,7 +587,6 @@ export default function ReceptionPOS() {
         // Limpiar formulario
         clearCart()
         clearClientSelection()
-        setRoomNumber('')
         setCashReceived(0)
         setNotes('')
         // Los descuentos se limpian automáticamente al limpiar el carrito
@@ -641,7 +638,6 @@ export default function ReceptionPOS() {
         sessionId: session?.id || null, // Permitir null para modo sin sesión
         customerName: finalCustomerName,
         clientId: selectedClient?.id || undefined,
-        roomNumber: roomNumber || undefined,
         subtotal,
         discountAmount,
         discountReason: getDiscountReason(),
@@ -673,7 +669,6 @@ export default function ReceptionPOS() {
         // Limpiar formulario
         clearCart()
         clearClientSelection()
-        setRoomNumber('')
         setCashReceived(0)
         setNotes('')
         // Los descuentos se limpian automáticamente al limpiar el carrito
@@ -1194,19 +1189,6 @@ export default function ReceptionPOS() {
                         </div>
                       </div>
                     )}
-                  </div>
-                  
-                  <div>
-                    <Label htmlFor="roomNumber" className="text-xs font-medium text-gray-700 mb-1 block">
-                      Número de habitación (opcional)
-                    </Label>
-                    <Input
-                      id="roomNumber"
-                      value={roomNumber}
-                      onChange={(e) => setRoomNumber(e.target.value)}
-                      placeholder="Ej: 101, 205..."
-                      className="bg-white text-sm"
-                    />
                   </div>
                 </div>
 
@@ -1773,7 +1755,6 @@ export default function ReceptionPOS() {
         onConfirm={handleMultiplePayment}
         saleTotal={getCartTotals().total}
         customerName={customerName}
-        roomNumber={roomNumber}
         isProcessing={isProcessing}
       />
     </div>

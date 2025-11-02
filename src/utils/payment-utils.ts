@@ -31,7 +31,7 @@ export const NewSalePaymentSchema = z.object({
 })
 
 export const MultiplePaymentSchema = z.object({
-  sessionId: z.number(),
+  sessionId: z.number().nullable(),
   customerName: z.string().optional(),
   customerDocument: z.string().optional(),
   clientId: z.number().optional(),

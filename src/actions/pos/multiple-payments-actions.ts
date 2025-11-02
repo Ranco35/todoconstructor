@@ -74,26 +74,38 @@ export async function createPOSSaleWithMultiplePayments(
     // Validar datos
     const validatedData = MultiplePaymentSchema.parse(saleData)
     
-    // Verificar que la sesión existe y es activa
-    const { data: session, error: sessionError } = await supabase
-      .from('CashSession')
-      .select('*, cashRegisterTypeId')
-      .eq('id', validatedData.sessionId)
-      .eq('status', 'open')
-      .single()
-    
-    if (sessionError || !session) {
-      return { success: false, error: 'Sesión de caja no válida' }
+    // Verificar sesión solo si sessionId no es null
+    let session = null
+    if (validatedData.sessionId) {
+      const { data: sessionData, error: sessionError } = await supabase
+        .from('CashSession')
+        .select('*, cashRegisterTypeId')
+        .eq('id', validatedData.sessionId)
+        .eq('status', 'open')
+        .single()
+      
+      if (sessionError || !sessionData) {
+        return { success: false, error: 'Sesión de caja no válida' }
+      }
+      session = sessionData
     }
     
-    // Generar número de venta
+    // Generar número de venta (usar tipo de caja por defecto si no hay sesión)
+    const registerTypeId = session?.cashRegisterTypeId || 1 // Ferretería por defecto
     const { data: saleNumber, error: numberError } = await supabase
-      .rpc('generate_sale_number', { register_type_id: session.cashRegisterTypeId })
+      .rpc('generate_sale_number', { register_type_id: registerTypeId })
     
     if (numberError) {
       console.error('Error generating sale number:', numberError)
       return { success: false, error: 'Error generando número de venta' }
     }
+    
+    // Determinar el método de pago principal (el primero o el de mayor monto)
+    const mainPayment = validatedData.payments.length === 1 
+      ? validatedData.payments[0].paymentMethod
+      : validatedData.payments.reduce((prev, current) => 
+          current.amount > prev.amount ? current : prev
+        ).paymentMethod
     
     // Iniciar transacción
     const { data: sale, error: saleError } = await supabase
@@ -112,6 +124,7 @@ export async function createPOSSaleWithMultiplePayments(
         discountReason: validatedData.discountReason,
         total: validatedData.total,
         notes: validatedData.notes,
+        paymentMethod: mainPayment, // Usar el método de pago principal
         // Los campos de pago se actualizarán automáticamente por el trigger
         paidAmount: 0,
         pendingAmount: validatedData.total,
@@ -174,21 +187,23 @@ export async function createPOSSaleWithMultiplePayments(
       return { success: false, error: 'Error obteniendo datos de la venta' }
     }
     
-    // Actualizar el monto actual de la sesión (solo efectivo)
-    const cashAmount = validatedData.payments
-      .filter(p => p.paymentMethod === 'cash')
-      .reduce((sum, p) => sum + p.amount, 0)
-    
-    if (cashAmount > 0) {
-      const { error: updateError } = await supabase
-        .from('CashSession')
-        .update({
-          currentAmount: (session.currentAmount || 0) + cashAmount
-        })
-        .eq('id', validatedData.sessionId)
+    // Actualizar el monto actual de la sesión (solo efectivo y solo si hay sesión)
+    if (validatedData.sessionId && session) {
+      const cashAmount = validatedData.payments
+        .filter(p => p.paymentMethod === 'cash')
+        .reduce((sum, p) => sum + p.amount, 0)
       
-      if (updateError) {
-        console.error('Error updating session amount:', updateError)
+      if (cashAmount > 0) {
+        const { error: updateError } = await supabase
+          .from('CashSession')
+          .update({
+            currentAmount: (session.currentAmount || 0) + cashAmount
+          })
+          .eq('id', validatedData.sessionId)
+        
+        if (updateError) {
+          console.error('Error updating session amount:', updateError)
+        }
       }
     }
     
