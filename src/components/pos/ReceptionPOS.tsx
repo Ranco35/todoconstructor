@@ -1132,7 +1132,7 @@ export default function ReceptionPOS() {
               </CardHeader>
               <CardContent className="space-y-4">
                 {/* Datos del cliente y habitación */}
-                <div className="space-y-3 p-3 bg-gray-50 border border-gray-200 rounded-lg">
+                <div className="space-y-3 p-3 bg-white border border-gray-300 rounded-lg">
                   <div>
                     <div className="flex items-center gap-2 mb-2">
                       <Label className="text-sm font-medium text-gray-700">
@@ -1153,7 +1153,7 @@ export default function ReceptionPOS() {
                     
                     {/* Mostrar información del cliente seleccionado */}
                     {selectedClient && (
-                      <div className="bg-green-50 border border-green-200 rounded-lg p-3 mt-2">
+                      <div className="bg-white border border-green-500 rounded-lg p-3 mt-2">
                         <div className="flex items-center justify-between">
                           <div>
                             <p className="font-medium text-green-900 text-sm">
@@ -1180,7 +1180,7 @@ export default function ReceptionPOS() {
 
                     {/* Mensaje de advertencia cuando no hay cliente seleccionado */}
                     {!selectedClient && cart.length > 0 && (
-                      <div className="bg-red-50 border border-red-200 rounded-lg p-3 mt-2">
+                      <div className="bg-white border border-red-500 rounded-lg p-3 mt-2">
                         <div className="flex items-center gap-2">
                           <AlertCircle className="h-4 w-4 text-red-600" />
                           <p className="text-sm text-red-700">
@@ -1200,7 +1200,7 @@ export default function ReceptionPOS() {
                   <>
                     <div className="space-y-3 max-h-96 overflow-y-auto">
                       {cart.map((item) => (
-                        <div key={item.id} className="p-3 bg-gray-50 rounded-lg space-y-3">
+                        <div key={item.id} className="p-3 bg-white border rounded-lg space-y-3">
                           {/* Línea superior: Info del producto y controles de cantidad */}
                           <div className="flex items-center justify-between">
                             <div className="flex-1">
@@ -1212,7 +1212,7 @@ export default function ReceptionPOS() {
                               </p>
                                 <span className="text-xs text-gray-500">x {item.quantity}</span>
                                 {item.discountType && item.discountType !== 'none' && (
-                                  <Badge variant="outline" className="text-xs bg-green-100 text-green-700">
+                                  <Badge variant="outline" className="text-xs text-green-700 border-green-500">
                                     -{item.discountType === 'percentage' ? `${item.discountValue}%` : formatCurrency(item.discountValue || 0)}
                                   </Badge>
                                 )}
@@ -1248,9 +1248,9 @@ export default function ReceptionPOS() {
                           </div>
 
                           {/* Sección de descuento por producto */}
-                          <div className="p-2 bg-blue-50 border border-blue-200 rounded text-xs">
+                          <div className="p-2 bg-white border border-blue-500 rounded text-xs">
                             <div className="flex items-center gap-2 mb-2">
-                              <Label className="text-xs font-medium">💸 Descuento:</Label>
+                              <Label className="text-xs font-medium text-blue-700">💸 Descuento:</Label>
                               <Select
                                 value={item.discountType || 'none'}
                                 onValueChange={(value: 'none' | 'percentage' | 'fixed_amount') => {
@@ -1391,8 +1391,8 @@ export default function ReceptionPOS() {
             {/* Columna izquierda: Resumen e información */}
             <div className="space-y-4">
               {/* Resumen de venta */}
-              <div className="p-4 bg-gradient-to-r from-purple-50 to-blue-50 rounded-lg border border-purple-200">
-                <h3 className="font-semibold text-purple-900 mb-3 flex items-center gap-2">
+              <div className="p-4 bg-white rounded-lg border">
+                <h3 className="font-semibold text-gray-900 mb-3 flex items-center gap-2">
                   <Calculator className="h-4 w-4" />
                   Resumen de Venta
                 </h3>
@@ -1439,9 +1439,9 @@ export default function ReceptionPOS() {
 
               {/* Sección de descuentos */}
               {/* Los descuentos ahora se aplican individualmente por producto en el carrito */}
-              <div className="p-4 bg-green-50 border border-green-200 rounded-lg">
+              <div className="p-4 bg-white border border-green-500 rounded-lg">
                 <div className="flex items-center gap-2 mb-2">
-                  <span className="text-sm font-medium text-green-800">💡 Información</span>
+                  <span className="text-sm font-medium text-green-700">💡 Información</span>
                 </div>
                 <p className="text-xs text-green-700">
                   Los descuentos se aplican directamente a cada producto en el carrito antes de procesar el pago.
@@ -1516,7 +1516,7 @@ export default function ReceptionPOS() {
                   </div>
                   
                   {cashReceived > 0 && (
-                    <div className="mt-3 p-3 bg-gradient-to-r from-green-50 to-emerald-50 rounded-lg border border-green-200">
+                    <div className="mt-3 p-3 bg-white rounded-lg border border-green-500">
                       <p className="text-sm">
                         Vuelto: <span className="font-bold text-green-700">
                           {formatCurrency(Math.max(0, cashReceived - getCartTotals().total))}

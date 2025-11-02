@@ -5,7 +5,9 @@ import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select'
-import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog'
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogPortal, DialogOverlay } from '@/components/ui/dialog'
+import * as DialogPrimitive from "@radix-ui/react-dialog"
+import { cn } from '@/lib/utils'
 import { Badge } from '@/components/ui/badge'
 import { Textarea } from '@/components/ui/textarea'
 import { Separator } from '@/components/ui/separator'
@@ -17,7 +19,8 @@ import {
   Building2,
   FileText,
   AlertTriangle,
-  CheckCircle2
+  CheckCircle2,
+  X
 } from 'lucide-react'
 import { formatCurrency } from '@/utils/currency'
 import { PAYMENT_METHODS, type POSSalePayment, validatePaymentTotal } from '@/utils/payment-utils'
@@ -168,13 +171,31 @@ export default function MultiplePaymentModal({
 
   return (
     <Dialog open={isOpen} onOpenChange={handleClose}>
-      <DialogContent className="max-w-4xl max-h-[90vh] overflow-y-auto">
-        <DialogHeader>
-          <DialogTitle className="flex items-center gap-2">
-            <CreditCard className="h-5 w-5" />
-            Procesar Pago - Múltiples Métodos
-          </DialogTitle>
-        </DialogHeader>
+      <DialogPortal>
+        {/* Overlay blanco personalizado */}
+        <DialogPrimitive.Overlay 
+          className={cn(
+            "fixed inset-0 z-50 bg-white data-[state=open]:animate-in data-[state=closed]:animate-out data-[state=closed]:fade-out-0 data-[state=open]:fade-in-0"
+          )}
+        />
+        {/* Contenido del modal */}
+        <DialogPrimitive.Content
+          className={cn(
+            "fixed left-[50%] top-[50%] z-50 grid w-full max-w-4xl translate-x-[-50%] translate-y-[-50%] gap-4 border bg-white p-6 shadow-lg duration-200 data-[state=open]:animate-in data-[state=closed]:animate-out data-[state=closed]:fade-out-0 data-[state=open]:fade-in-0 data-[state=closed]:zoom-out-95 data-[state=open]:zoom-in-95 data-[state=closed]:slide-out-to-left-1/2 data-[state=closed]:slide-out-to-top-[48%] data-[state=open]:slide-in-from-left-1/2 data-[state=open]:slide-in-from-top-[48%] sm:rounded-lg max-h-[90vh] overflow-y-auto"
+          )}
+        >
+          {/* Botón de cerrar */}
+          <DialogPrimitive.Close className="absolute right-4 top-4 rounded-sm opacity-70 ring-offset-background transition-opacity hover:opacity-100 focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2 disabled:pointer-events-none">
+            <X className="h-4 w-4" />
+            <span className="sr-only">Cerrar</span>
+          </DialogPrimitive.Close>
+
+          <DialogHeader>
+            <DialogTitle className="flex items-center gap-2">
+              <CreditCard className="h-5 w-5" />
+              Procesar Pago - Múltiples Métodos
+            </DialogTitle>
+          </DialogHeader>
 
         <div className="space-y-6">
           {/* Información de la venta */}
@@ -436,7 +457,8 @@ export default function MultiplePaymentModal({
             </Button>
           </div>
         </div>
-      </DialogContent>
+        </DialogPrimitive.Content>
+      </DialogPortal>
     </Dialog>
   )
 } 

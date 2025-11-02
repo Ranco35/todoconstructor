@@ -1007,7 +1007,7 @@ export default function RestaurantPOS() {
               </CardHeader>
               <CardContent className="space-y-4">
                 {/* Datos del cliente y habitación */}
-                <div className="space-y-3 p-3 bg-gray-50 border border-gray-200 rounded-lg">
+                <div className="space-y-3 p-3 bg-white border border-gray-300 rounded-lg">
                   <div>
                     <div className="flex items-center gap-2 mb-2">
                       <Label className="text-sm font-medium text-gray-700">
@@ -1028,7 +1028,7 @@ export default function RestaurantPOS() {
 
                     {/* Mensaje de advertencia cuando no hay cliente seleccionado */}
                     {!customerId && cart.length > 0 && (
-                      <div className="bg-red-50 border border-red-200 rounded-lg p-3 mt-2">
+                      <div className="bg-white border border-red-500 rounded-lg p-3 mt-2">
                         <div className="flex items-center gap-2">
                           <AlertCircle className="h-4 w-4 text-red-600" />
                           <p className="text-sm text-red-700">
@@ -1048,7 +1048,7 @@ export default function RestaurantPOS() {
                   <>
                     <div className="space-y-3 max-h-96 overflow-y-auto">
                       {cart.map((item) => (
-                        <div key={item.id} className="p-3 bg-gray-50 rounded-lg space-y-2">
+                        <div key={item.id} className="p-3 bg-white border rounded-lg space-y-2">
                           <div className="flex items-center justify-between">
                             <div className="flex-1">
                               <h4 className="font-medium text-sm">{item.name}</h4>
@@ -1191,7 +1191,7 @@ export default function RestaurantPOS() {
           </DialogHeader>
           <div className="space-y-4">
             {/* Resumen de venta */}
-            <div className="p-4 bg-gray-50 rounded-lg">
+            <div className="p-4 bg-white border rounded-lg">
               <div className="space-y-2">
                 {(() => {
                   const { subtotal, discountAmount, subtotalAfterDiscount, taxAmount, total } = getCartTotals();
@@ -1233,12 +1233,12 @@ export default function RestaurantPOS() {
             </div>
 
             {/* Sección de descuentos */}
-            <div className="p-4 bg-blue-50 border border-blue-200 rounded-lg">
+            <div className="p-4 bg-white border border-blue-500 rounded-lg">
               <div className="flex items-center justify-between mb-3">
                 <div className="flex items-center gap-2">
-                  <span className="text-sm font-medium text-blue-800">💸 Descuento Especial</span>
+                  <span className="text-sm font-medium text-blue-700">💸 Descuento Especial</span>
                   {discountType !== 'none' && (
-                    <Badge variant="outline" className="text-xs bg-green-100 text-green-800">
+                    <Badge variant="outline" className="text-xs text-green-700 border-green-500">
                       Aplicado
                     </Badge>
                   )}
@@ -1400,9 +1400,9 @@ export default function RestaurantPOS() {
                 </div>
                 
                 {cashReceived > 0 && (
-                  <div className="mt-2 p-2 bg-blue-50 rounded">
+                  <div className="mt-2 p-2 bg-white border border-green-500 rounded">
                     <p className="text-sm">
-                      Vuelto: <span className="font-bold">
+                      Vuelto: <span className="font-bold text-green-700">
                         {formatCurrency(Math.max(0, cashReceived - getCartTotals().total))}
                       </span>
                     </p>
