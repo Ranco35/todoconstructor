@@ -1443,13 +1443,15 @@ export default function ProductFormModern({ initialData, action, isEdit = false 
                       </label>
                       <POSCategoryDoubleSelector
                         value={{
-                          restaurante: formData.posCategories?.find(x => x.cashRegisterTypeId === 2)?.posCategoryId || '',
-                          recepcion: formData.posCategories?.find(x => x.cashRegisterTypeId === 1)?.posCategoryId || ''
+                          ferreteria2: formData.posCategories?.find(x => x.cashRegisterTypeId === 2)?.posCategoryId || null,
+                          ferreteria: formData.posCategories?.find(x => x.cashRegisterTypeId === 1)?.posCategoryId || null
                         }}
                         onChange={val => {
+                          console.log('🔍 DEBUG - POSCategoryDoubleSelector onChange:', val);
                           const arr = [];
-                          if (val.restaurante) arr.push({ posCategoryId: val.restaurante, cashRegisterTypeId: 2 });
-                          if (val.recepcion) arr.push({ posCategoryId: val.recepcion, cashRegisterTypeId: 1 });
+                          if (val.ferreteria2) arr.push({ posCategoryId: val.ferreteria2, cashRegisterTypeId: 2 });
+                          if (val.ferreteria) arr.push({ posCategoryId: val.ferreteria, cashRegisterTypeId: 1 });
+                          console.log('🔍 DEBUG - Nuevo array posCategories:', arr);
                           handleInputChange('posCategories', arr);
                         }}
                       />
