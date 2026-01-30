@@ -10,6 +10,7 @@ import { ArrowLeft, FileText, User, DollarSign, Edit3, Link as LinkIcon, CreditC
 import Link from 'next/link';
 import PaymentModal from '@/components/sales/PaymentModal';
 import InvoicePaymentHistory from '@/components/sales/InvoicePaymentHistory';
+import InvoiceAuditHistory from '@/components/sales/InvoiceAuditHistory';
 
 function getStatusBadge(status: string) {
   const config: Record<string, { label: string; color: string }> = {
@@ -226,6 +227,9 @@ export default function InvoiceDetailPage({ params }: { params: Promise<{ id: st
               invoiceTotal={invoice.total}
               onPaymentAdded={handlePaymentSuccess}
             />
+
+            {/* Auditoría de factura */}
+            <InvoiceAuditHistory invoiceId={invoiceId} />
           </div>
 
           {/* Resumen Financiero (1/3) */}

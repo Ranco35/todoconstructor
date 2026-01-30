@@ -8,6 +8,7 @@ import { Badge } from '@/components/ui/badge'
 import { toast } from '@/hooks/use-toast'
 import { ArrowLeft, User, MapPin, Calendar, DollarSign, CreditCard, Receipt, Package } from 'lucide-react'
 import Link from 'next/link'
+import POSSaleAuditHistory from '@/components/pos/POSSaleAuditHistory'
 
 interface POSSaleDetail {
   id: number
@@ -381,6 +382,9 @@ export default function POSSaleDetailPage() {
                 </div>
               </CardContent>
             </Card>
+
+            {/* Auditoría de venta */}
+            <POSSaleAuditHistory saleId={sale.id} />
           </div>
         </div>
       </div>
