@@ -138,3 +138,9 @@ Esperado: para `authenticated` (y `anon` si aplica) solo `SELECT`; no `INSERT`, 
 
 - Si el SQL Editor de Supabase no ejecuta como `authenticated`, el INSERT podría fallar por otro motivo (por ejemplo, por `REVOKE`). Lo importante es que **no** se permita insertar desde la aplicación/cliente.
 - Los triggers están definidos con `SECURITY DEFINER`, por lo que se ejecutan con el dueño de la función y pueden insertar aunque RLS bloquee al rol `authenticated`.
+
+---
+
+## Documentación del módulo
+
+Documentación completa del módulo de auditoría (tablas, triggers, código, migraciones): [modules/audit/README.md](modules/audit/README.md).
