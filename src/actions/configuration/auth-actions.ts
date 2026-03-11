@@ -4,7 +4,7 @@ import { cookies } from 'next/headers';
 import { redirect } from 'next/navigation';
 import { revalidatePath } from 'next/cache';
 import { createServerClient, type CookieOptions } from '@supabase/ssr';
-import { UserData } from '@/types/auth';
+import { type UserData as AuthUserData } from '@/types/auth';
 
 // Types
 interface LoginCredentials {
@@ -29,7 +29,7 @@ interface UserData {
   firstName?: string;
   lastName?: string;
   role: string;
-  department: string;
+  department: string | null;
   isCashier: boolean;
   isActive: boolean;
   lastLogin?: Date | null;
@@ -89,25 +89,19 @@ export async function login(credentials: LoginCredentials): Promise<LoginResult>
     const { username, password } = credentials;
     const supabase = await createSupabaseServerClient();
     
-    // Determinar email del usuario
-    let userEmail = username;
-    if (!username.includes('@')) {
-      // Si no es email, buscar en la tabla User por username o name
-      const { data: user, error: findUserError } = await supabase
-        .from('User')
-        .select('email')
-        .or(`username.eq.${username},name.eq.${username}`)
-        .single();
+    // Determinar email del usuario usando RPC segura para evitar enumeración
+    const { data: resolvedEmail, error: resolveError } = await supabase.rpc('resolve_user_email', {
+      p_username: username
+    });
 
-      if (findUserError || !user) {
-        console.log(`Login failed: Username "${username}" not found.`);
-        return { 
-          success: false, 
-          message: "Credenciales de inicio de sesión no válidas" 
-        };
-      }
-      userEmail = user.email;
+    if (resolveError || !resolvedEmail) {
+      console.log(`Login failed: Username "${username}" not found or resolution error.`);
+      return { 
+        success: false, 
+        message: "Credenciales de inicio de sesión no válidas" 
+      };
     }
+    const userEmail = resolvedEmail;
 
     // Intentar login con Supabase Auth
     const { data, error: authError } = await supabase.auth.signInWithPassword({
@@ -119,7 +113,7 @@ export async function login(credentials: LoginCredentials): Promise<LoginResult>
       console.error('Supabase auth error:', authError.message);
       return { 
         success: false, 
-        message: `Error de autenticación: ${authError.message}` 
+        message: "Credenciales de inicio de sesión no válidas" 
       };
     }
 

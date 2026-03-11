@@ -807,96 +807,33 @@ export async function createPOSSale(saleData: z.infer<typeof POSSaleSchema>): Pr
     // Validar datos
     const validatedData = POSSaleSchema.parse(saleData)
     
-    // Verificar sesión solo si sessionId no es null
-    let session = null
-    if (validatedData.sessionId) {
-      const { data: sessionData, error: sessionError } = await supabase
-        .from('CashSession')
-        .select('*, cashRegisterTypeId')
-        .eq('id', validatedData.sessionId)
-        .eq('isActive', true)
-        .single()
-      
-      if (sessionError || !sessionData) {
-        return { success: false, error: 'Sesión de caja no válida' }
+    // Llamar a la RPC atómica
+    const { data, error } = await supabase.rpc('create_pos_sale_atomic', {
+      payload: {
+        ...validatedData,
+        mainPaymentMethod: validatedData.paymentMethod
       }
-      session = sessionData
+    })
+    
+    if (error) {
+      console.error('Error creating sale via RPC:', error)
+      return { success: false, error: error.message }
     }
     
-    // Generar número de venta (usar tipo de caja por defecto si no hay sesión)
-    const registerTypeId = session?.cashRegisterTypeId || 1 // Recepción por defecto
-    const { data: saleNumber, error: numberError } = await supabase
-      .rpc('generate_sale_number', { register_type_id: registerTypeId })
-    
-    if (numberError) {
-      console.error('Error generating sale number:', numberError)
-      return { success: false, error: 'Error generando número de venta' }
-    }
-    
-    // Crear la venta
-    const { data: sale, error: saleError } = await supabase
-      .from('POSSale')
-      .insert({
-        sessionId: validatedData.sessionId,
-        saleNumber,
-        customerName: validatedData.customerName,
-        customerDocument: validatedData.customerDocument,
-        tableNumber: validatedData.tableNumber,
-        roomNumber: validatedData.roomNumber,
-        subtotal: validatedData.subtotal,
-        taxAmount: validatedData.taxAmount,
-        discountAmount: validatedData.discountAmount,
-        discountReason: validatedData.discountReason,
-        total: validatedData.total,
-        paymentMethod: validatedData.paymentMethod,
-        cashReceived: validatedData.cashReceived,
-        change: validatedData.change,
-        notes: validatedData.notes
-      })
-      .select()
-      .single()
-    
-    if (saleError) {
-      console.error('Error creating sale:', saleError)
-      return { success: false, error: saleError.message }
-    }
-    
-    // Crear los items de la venta
-    const itemsData = validatedData.items.map(item => ({
-      saleId: sale.id,
-      productId: item.productId,
-      productName: item.productName,
-      quantity: item.quantity,
-      unitPrice: item.unitPrice,
-      total: item.total,
-      notes: item.notes
-    }))
-    
-    const { error: itemsError } = await supabase
-      .from('POSSaleItem')
-      .insert(itemsData)
-    
-    if (itemsError) {
-      console.error('Error creating sale items:', itemsError)
-      return { success: false, error: itemsError.message }
-    }
-    
-    // Actualizar el monto actual de la sesión (solo si es efectivo)
-    if (validatedData.paymentMethod === 'cash') {
-      const { error: updateError } = await supabase
-        .from('CashSession')
-        .update({
-          currentAmount: session.currentAmount + validatedData.total
-        })
-        .eq('id', validatedData.sessionId)
-      
-      if (updateError) {
-        console.error('Error updating session amount:', updateError)
-      }
+    if (!data || !data.success) {
+      return { success: false, error: 'Error al procesar la venta' }
     }
     
     revalidatePath('/dashboard/pos')
-    return { success: true, data: sale }
+    
+    // Obtener la venta creada para retornar (opcional, según necesidad del frontend)
+    const { data: sale } = await supabase
+      .from('POSSale')
+      .select('*')
+      .eq('id', data.id)
+      .single()
+
+    return { success: true, data: sale as POSSale }
   } catch (error) {
     console.error('Error in createPOSSale:', error)
     return { success: false, error: 'Error interno del servidor' }

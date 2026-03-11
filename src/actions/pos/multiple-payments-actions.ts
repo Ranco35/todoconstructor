@@ -74,32 +74,6 @@ export async function createPOSSaleWithMultiplePayments(
     // Validar datos
     const validatedData = MultiplePaymentSchema.parse(saleData)
     
-    // Verificar sesión solo si sessionId no es null
-    let session = null
-    if (validatedData.sessionId) {
-      const { data: sessionData, error: sessionError } = await supabase
-        .from('CashSession')
-        .select('*, cashRegisterTypeId')
-        .eq('id', validatedData.sessionId)
-        .eq('status', 'open')
-        .single()
-      
-      if (sessionError || !sessionData) {
-        return { success: false, error: 'Sesión de caja no válida' }
-      }
-      session = sessionData
-    }
-    
-    // Generar número de venta (usar tipo de caja por defecto si no hay sesión)
-    const registerTypeId = session?.cashRegisterTypeId || 1 // Ferretería por defecto
-    const { data: saleNumber, error: numberError } = await supabase
-      .rpc('generate_sale_number', { register_type_id: registerTypeId })
-    
-    if (numberError) {
-      console.error('Error generating sale number:', numberError)
-      return { success: false, error: 'Error generando número de venta' }
-    }
-    
     // Determinar el método de pago principal (el primero o el de mayor monto)
     const mainPayment = validatedData.payments.length === 1 
       ? validatedData.payments[0].paymentMethod
@@ -107,104 +81,27 @@ export async function createPOSSaleWithMultiplePayments(
           current.amount > prev.amount ? current : prev
         ).paymentMethod
     
-    // Iniciar transacción
-    const { data: sale, error: saleError } = await supabase
-      .from('POSSale')
-      .insert({
-        sessionId: validatedData.sessionId,
-        saleNumber,
-        customerName: validatedData.customerName,
-        customerDocument: validatedData.customerDocument,
-        clientId: validatedData.clientId,
-        tableNumber: validatedData.tableNumber,
-        roomNumber: validatedData.roomNumber,
-        subtotal: validatedData.subtotal,
-        taxAmount: validatedData.taxAmount,
-        discountAmount: validatedData.discountAmount,
-        discountReason: validatedData.discountReason,
-        total: validatedData.total,
-        notes: validatedData.notes,
-        paymentMethod: mainPayment, // Usar el método de pago principal
-        // Los campos de pago se actualizarán automáticamente por el trigger
-        paidAmount: 0,
-        pendingAmount: validatedData.total,
-        paymentStatus: 'no_payment'
-      })
-      .select()
-      .single()
+    // Llamar a la RPC atómica
+    const { data, error } = await supabase.rpc('create_pos_sale_atomic', {
+      payload: {
+        ...validatedData,
+        mainPaymentMethod: mainPayment
+      }
+    })
     
-    if (saleError) {
-      console.error('Error creating sale:', saleError)
-      return { success: false, error: saleError.message }
+    if (error) {
+      console.error('Error creating sale via RPC:', error)
+      return { success: false, error: error.message }
     }
     
-    // Crear los items de la venta
-    const itemsData = validatedData.items.map(item => ({
-      saleId: sale.id,
-      productId: item.productId,
-      productName: item.productName,
-      quantity: item.quantity,
-      unitPrice: item.unitPrice,
-      total: item.total,
-      notes: item.notes
-    }))
-    
-    const { error: itemsError } = await supabase
-      .from('POSSaleItem')
-      .insert(itemsData)
-    
-    if (itemsError) {
-      console.error('Error creating sale items:', itemsError)
-      return { success: false, error: itemsError.message }
-    }
-    
-    // Crear los pagos
-    const paymentsData = validatedData.payments.map(payment => ({
-      saleId: sale.id,
-      paymentMethod: payment.paymentMethod,
-      amount: payment.amount,
-      receivedAmount: payment.receivedAmount,
-      changeAmount: payment.changeAmount || 0,
-      cardReference: payment.cardReference,
-      bankReference: payment.bankReference,
-      cardLast4: payment.cardLast4,
-      notes: payment.notes
-    }))
-    
-    const { data: payments, error: paymentsError } = await supabase
-      .from('POSSalePayment')
-      .insert(paymentsData)
-      .select()
-    
-    if (paymentsError) {
-      console.error('Error creating payments:', paymentsError)
-      return { success: false, error: paymentsError.message }
+    if (!data || !data.success) {
+      return { success: false, error: 'Error al procesar la venta' }
     }
     
     // Obtener la venta completa con pagos actualizados
-    const result = await getPOSSaleWithPayments(sale.id)
+    const result = await getPOSSaleWithPayments(data.id)
     if (!result.success) {
       return { success: false, error: 'Error obteniendo datos de la venta' }
-    }
-    
-    // Actualizar el monto actual de la sesión (solo efectivo y solo si hay sesión)
-    if (validatedData.sessionId && session) {
-      const cashAmount = validatedData.payments
-        .filter(p => p.paymentMethod === 'cash')
-        .reduce((sum, p) => sum + p.amount, 0)
-      
-      if (cashAmount > 0) {
-        const { error: updateError } = await supabase
-          .from('CashSession')
-          .update({
-            currentAmount: (session.currentAmount || 0) + cashAmount
-          })
-          .eq('id', validatedData.sessionId)
-        
-        if (updateError) {
-          console.error('Error updating session amount:', updateError)
-        }
-      }
     }
     
     revalidatePath('/dashboard/pos')
