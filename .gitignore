@@ -71,6 +71,11 @@ next-env.d.ts
 .wwebjs_auth/
 
 # ========================
+# Legacy/archivos temporales de desarrollo
+# ========================
+_legacy/
+
+# ========================
 # Extras opcionales
 # ========================
 .idea/               # JetBrains IDEs

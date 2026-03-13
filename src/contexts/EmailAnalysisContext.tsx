@@ -3,7 +3,6 @@
 import React, { createContext, useContext, useState, useCallback, useEffect } from 'react';
 import { getPopupConfig, STORAGE_KEYS, logPopupDebug } from '@/utils/popupConfig';
 import { getTodayAnalysis } from '@/actions/emails/analysis-actions';
-import { getTodayArrivals, getTodayDepartures } from '@/actions/reservations/dashboard';
 
 interface EmailAnalysisContextType {
   isPopupOpen: boolean;
@@ -104,12 +103,12 @@ export function EmailAnalysisProvider({ children }: EmailAnalysisProviderProps) 
       let hasNewInfo = false;
 
       try {
-        // 1. Verificar nuevos análisis de correos
+        // Verificar nuevos análisis de correos
         const analysisResult = await getTodayAnalysis();
         if (analysisResult.success && analysisResult.data) {
           const currentEmailCount = analysisResult.data.length;
           const lastEmailCount = parseInt(localStorage.getItem(STORAGE_KEYS.LAST_EMAIL_COUNT) || '0');
-          
+
           if (currentEmailCount > lastEmailCount) {
             logPopupDebug(`Nuevos análisis de correos: ${currentEmailCount} vs ${lastEmailCount}`);
             hasNewInfo = true;
@@ -117,26 +116,8 @@ export function EmailAnalysisProvider({ children }: EmailAnalysisProviderProps) 
           }
         }
 
-        // 2. Verificar nuevas reservas (llegadas + salidas)
-        const [arrivalsResult, departuresResult] = await Promise.all([
-          getTodayArrivals(),
-          getTodayDepartures()
-        ]);
-
-        if (arrivalsResult.success && departuresResult.success) {
-          const currentReservationCount = (arrivalsResult.data?.length || 0) + (departuresResult.data?.length || 0);
-          const lastReservationCount = parseInt(localStorage.getItem(STORAGE_KEYS.LAST_RESERVATION_COUNT) || '0');
-
-          if (currentReservationCount > lastReservationCount) {
-            logPopupDebug(`Nuevas reservas: ${currentReservationCount} vs ${lastReservationCount}`);
-            hasNewInfo = true;
-            localStorage.setItem(STORAGE_KEYS.LAST_RESERVATION_COUNT, currentReservationCount.toString());
-          }
-        }
-
         // Si no hay nueva información específica, verificar basado en tiempo transcurrido
         if (!hasNewInfo) {
-          // Considerar nueva información si han pasado más del doble del intervalo configurado
           const extendedInterval = config.checkIntervalHours * 2;
           if (hoursSinceLastCheck >= extendedInterval) {
             logPopupDebug(`Tiempo extendido transcurrido (${hoursSinceLastCheck.toFixed(1)} >= ${extendedInterval} horas), considerando nueva información`);

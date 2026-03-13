@@ -80,13 +80,18 @@ export async function GET(request: NextRequest) {
       .limit(1);
 
     if (dbError) {
-      console.error('❌ Error en base de datos:', dbError);
-      return NextResponse.json({
-        success: false,
-        error: 'Error en base de datos',
-        step: 'database',
-        details: dbError
-      }, { status: 500 });
+      // Si la tabla no existe, no es un error crítico
+      if (dbError.code === '42P01' || dbError.message?.includes('does not exist')) {
+        console.log('Tabla EmailAnalysis no existe aún, se creará cuando sea necesario');
+      } else {
+        console.error('Error en base de datos:', dbError);
+        return NextResponse.json({
+          success: false,
+          error: 'Error en base de datos',
+          step: 'database',
+          details: dbError
+        }, { status: 500 });
+      }
     }
 
     console.log('✅ Base de datos consultada exitosamente');

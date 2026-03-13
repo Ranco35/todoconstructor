@@ -18,8 +18,6 @@ function DashboardContent({ children }: { children: React.ReactNode }) {
   useEffect(() => {
     async function loadUser() {
       try {
-        console.log('🔍 Dashboard Layout: Verificando usuario...');
-        
         // Usar Supabase auth directo en cliente con cookies
         const supabase = createClient();
         
@@ -35,24 +33,20 @@ function DashboardContent({ children }: { children: React.ReactNode }) {
         ]) as any;
         
         if (sessionError) {
-          console.log('❌ Dashboard Layout: Error obteniendo sesión:', sessionError.message);
+          console.error('Dashboard: Error obteniendo sesión:', sessionError.message);
           setShouldRedirect(true);
           return;
         }
         
         if (!session) {
-          console.log('❌ Dashboard Layout: No hay sesión activa, redirigiendo a login');
           setShouldRedirect(true);
           return;
         }
-        
-        console.log('✅ Dashboard Layout: Sesión encontrada:', session.user.email);
         
         // Verificar usuario (usar la sesión que ya tenemos)
         const user = session.user;
         
         if (!user) {
-          console.log('❌ Dashboard Layout: Usuario no encontrado en sesión, redirigiendo a login');
           setShouldRedirect(true);
           return;
         }
@@ -87,7 +81,6 @@ function DashboardContent({ children }: { children: React.ReactNode }) {
           lastLogin: null
         };
 
-        console.log('✅ Dashboard Layout: Usuario verificado:', userData.email, 'Rol:', userData.role);
         setCurrentUser(userData);
         
         // Mostrar popup de análisis al cargar el dashboard (simula login)
@@ -96,11 +89,10 @@ function DashboardContent({ children }: { children: React.ReactNode }) {
         }, 2000); // Esperar 2 segundos después de cargar
         
       } catch (err: any) {
-        console.error('💥 Dashboard Layout Error:', err);
+        console.error('Dashboard Layout Error:', err);
         
         // Si es timeout o error de perfil, usar datos básicos de la sesión
         if (err.message === 'Profile timeout' || err.message.includes('Profile')) {
-          console.log('⚠️ Dashboard Layout: Usando datos básicos de sesión debido a timeout');
           
           // Crear datos básicos del usuario desde la sesión
           const basicUserData = {
@@ -117,7 +109,6 @@ function DashboardContent({ children }: { children: React.ReactNode }) {
           };
           
           setCurrentUser(basicUserData);
-          console.log('✅ Dashboard Layout: Usuario básico configurado:', basicUserData.email);
         } else {
           // Para otros errores, mostrar error y redirigir
           setError(err.message);
@@ -133,13 +124,10 @@ function DashboardContent({ children }: { children: React.ReactNode }) {
     // Escuchar cambios de autenticación
     const supabase = createClient();
     const { data: { subscription } } = supabase.auth.onAuthStateChange((event, session) => {
-      console.log('🔄 Dashboard Layout: Cambio de autenticación:', event, session?.user?.email);
       
       if (event === 'SIGNED_OUT' || !session) {
-        console.log('🚪 Dashboard Layout: Usuario deslogueado, redirigiendo...');
         setShouldRedirect(true);
       } else if (event === 'SIGNED_IN' && session) {
-        console.log('✅ Dashboard Layout: Usuario logueado, recargando datos...');
         loadUser();
       }
     });
