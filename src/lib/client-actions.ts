@@ -121,6 +121,27 @@ export async function getClientByRut(rut: string) {
   }
 }
 
+export async function getClientByEmail(email: string) {
+  try {
+    const response = await fetch(`/api/clients/by-email?email=${encodeURIComponent(email)}`);
+    if (!response.ok) {
+      const errorText = await response.text();
+      let errorMessage = 'Error desconocido';
+      try {
+        const errorJson = JSON.parse(errorText);
+        errorMessage = errorJson.error || errorMessage;
+      } catch {
+        errorMessage = errorText || `Error ${response.status}`;
+      }
+      return { success: false, error: errorMessage };
+    }
+    return await response.json();
+  } catch (error: any) {
+    console.error('❌ [CLIENT-WRAPPER] Error en getClientByEmail:', error);
+    return { success: false, error: error?.message || 'Error obteniendo cliente por email' };
+  }
+}
+
 export async function createClient(data: any) {
   try {
     console.log('🔍 [CLIENT-WRAPPER] Creando cliente:', data);

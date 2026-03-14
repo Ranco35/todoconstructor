@@ -43,6 +43,15 @@ export const menus = {
                 { label: '📊 Reportes', href: '/dashboard/purchases/reports' },
             ],
         },
+        {
+            label: 'CRM',
+            href: '/dashboard/crm',
+            items: [
+                { label: 'Pipeline', href: '/dashboard/crm' },
+                { label: '➕ Nuevo Lead', href: '/dashboard/crm/create' },
+                { label: '📊 Reportes', href: '/dashboard/crm/reports' },
+            ],
+        },
     ],
     ADMINISTRADOR: [
         {
@@ -86,6 +95,15 @@ export const menus = {
                 { label: '📄 Facturas', href: '/dashboard/purchases/invoices' },
                 { label: '💰 Pagos', href: '/dashboard/purchases/payments' },
                 { label: '📊 Reportes', href: '/dashboard/purchases/reports' },
+            ],
+        },
+        {
+            label: 'CRM',
+            href: '/dashboard/crm',
+            items: [
+                { label: 'Pipeline', href: '/dashboard/crm' },
+                { label: '➕ Nuevo Lead', href: '/dashboard/crm/create' },
+                { label: '📊 Reportes', href: '/dashboard/crm/reports' },
             ],
         },
     ],

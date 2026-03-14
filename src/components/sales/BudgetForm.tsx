@@ -7,10 +7,12 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { Plus, Trash2, Download } from 'lucide-react';
+import { Plus, Trash2, Download, LayoutTemplate } from 'lucide-react';
 import ClientSelector from '../clients/ClientSelector';
 import ProductSelector from './ProductSelector';
+import BudgetTemplatePicker from './budget/BudgetTemplatePicker';
 import { exportBudgetToPDF } from '@/utils/pdfExport';
+import type { BudgetTemplate } from '@/types/ventas/budget-template';
 
 interface BudgetLine {
   tempId: string;
@@ -65,6 +67,35 @@ export default function BudgetForm({ onSubmit, onCancel, initialData, isEditing 
 
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [templatePickerOpen, setTemplatePickerOpen] = useState(false);
+
+  const handleTemplateSelect = (template: BudgetTemplate) => {
+    const newLines: BudgetLine[] = template.linesTemplate
+      .filter(l => l.displayType === 'product')
+      .map(l => {
+        const qty = l.quantity || 1;
+        const price = l.unitPrice || 0;
+        const disc = l.discountPercent || 0;
+        return {
+          tempId: `temp-${Date.now()}-${Math.random().toString(36).slice(2, 7)}`,
+          productId: l.productId || null,
+          productName: l.productName || '',
+          description: l.description || '',
+          quantity: qty,
+          unitPrice: price,
+          discountPercent: disc,
+          subtotal: qty * price * (1 - disc / 100),
+        };
+      });
+
+    setFormData(prev => ({
+      ...prev,
+      notes: template.notesTemplate || prev.notes,
+      paymentTerms: template.paymentTerms || prev.paymentTerms,
+      currency: template.currency || prev.currency,
+      lines: [...prev.lines, ...newLines],
+    }));
+  };
 
   // Actualizar formulario cuando lleguen datos iniciales (para modo edición)
   useEffect(() => {
@@ -266,16 +297,28 @@ export default function BudgetForm({ onSubmit, onCancel, initialData, isEditing 
                         <span className="bg-white bg-opacity-20 rounded-lg p-2 mr-3">🛒</span>
                         Líneas del Presupuesto
                       </CardTitle>
-                      <Button 
-                        type="button" 
-                        onClick={addLine} 
-                        size="sm" 
-                        variant="secondary"
-                        className="bg-white bg-opacity-20 hover:bg-opacity-30 text-white border-white border-opacity-30"
-                      >
-                        <Plus className="w-4 h-4 mr-2" />
-                        Agregar Línea
-                      </Button>
+                      <div className="flex gap-2">
+                        <Button
+                          type="button"
+                          onClick={() => setTemplatePickerOpen(true)}
+                          size="sm"
+                          variant="secondary"
+                          className="bg-white bg-opacity-20 hover:bg-opacity-30 text-white border-white border-opacity-30"
+                        >
+                          <LayoutTemplate className="w-4 h-4 mr-2" />
+                          Plantilla
+                        </Button>
+                        <Button
+                          type="button"
+                          onClick={addLine}
+                          size="sm"
+                          variant="secondary"
+                          className="bg-white bg-opacity-20 hover:bg-opacity-30 text-white border-white border-opacity-30"
+                        >
+                          <Plus className="w-4 h-4 mr-2" />
+                          Agregar Línea
+                        </Button>
+                      </div>
                     </CardHeader>
                     <CardContent className="p-6">
                       <div className="space-y-6">
@@ -554,6 +597,11 @@ export default function BudgetForm({ onSubmit, onCancel, initialData, isEditing 
           </div>
         </div>
       </div>
+      <BudgetTemplatePicker
+        open={templatePickerOpen}
+        onOpenChange={setTemplatePickerOpen}
+        onSelect={handleTemplateSelect}
+      />
     </div>
   );
 } 

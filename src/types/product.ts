@@ -6,6 +6,14 @@ export enum ProductType {
   COMBO = 'COMBO'
 }
 
+export interface ProductSupplier {
+  id?: number;            // ID de la fila en product_suppliers (undefined = nuevo)
+  supplierId: number;
+  supplierName?: string;  // Solo para visualización en UI
+  supplierCode?: string;  // Código que ESE proveedor usa para este producto
+  isPrimary: boolean;
+}
+
 export interface ProductComponent {
   id: number;
   quantity: number;
@@ -52,6 +60,7 @@ export interface ProductFormData {
     current: number;
     warehouseid?: number;
   };
+  suppliers?: ProductSupplier[];
   components?: ProductComponent[];
   // Campos específicos para equipos/máquinas (INVENTARIO)
   isEquipment?: boolean;

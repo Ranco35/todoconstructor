@@ -2,7 +2,7 @@
 
 import { useState, useEffect, useCallback, useRef, useMemo } from 'react';
 import { useRouter } from 'next/navigation';
-import { ProductType, ProductFormData } from '@/types/product';
+import { ProductType, ProductFormData, ProductSupplier } from '@/types/product';
 import TipoProductoSelector from './TipoProductoSelector';
 import BodegaSelector from './BodegaSelector';
 import CategorySelector from './CategorySelector';
@@ -351,6 +351,42 @@ export default function ProductFormModern({ initialData, action, isEdit = false 
   const handleComponentsChange = (components: any[]) => {
     handleInputChange('components', components);
   };
+
+  // ── Multi-proveedor helpers ──────────────────────────────────────────────────
+  const handleSuppliersChange = (newSuppliers: ProductSupplier[]) => {
+    const primary = newSuppliers.find(s => s.isPrimary);
+    setFormData(prev => ({
+      ...prev,
+      suppliers: newSuppliers,
+      supplierId: primary?.supplierId || undefined,
+      supplierCode: primary?.supplierCode || '',
+    }));
+  };
+
+  const addSupplierRow = () => {
+    const current = formData.suppliers || [];
+    handleSuppliersChange([...current, { supplierId: 0, isPrimary: current.length === 0 }]);
+  };
+
+  const removeSupplierRow = (idx: number) => {
+    const current = formData.suppliers || [];
+    const updated = current.filter((_, i) => i !== idx);
+    if (current[idx]?.isPrimary && updated.length > 0) {
+      updated[0] = { ...updated[0], isPrimary: true };
+    }
+    handleSuppliersChange(updated);
+  };
+
+  const setPrimarySupplier = (idx: number) => {
+    const current = formData.suppliers || [];
+    handleSuppliersChange(current.map((s, i) => ({ ...s, isPrimary: i === idx })));
+  };
+
+  const updateSupplierField = (idx: number, field: keyof ProductSupplier, value: any) => {
+    const current = formData.suppliers || [];
+    handleSuppliersChange(current.map((s, i) => i === idx ? { ...s, [field]: value } : s));
+  };
+  // ────────────────────────────────────────────────────────────────────────────
 
   // Manejar cambios en precio sugerido
   const handleSuggestedPriceChange = (price: number) => {
@@ -1168,58 +1204,109 @@ export default function ProductFormModern({ initialData, action, isEdit = false 
                   <h2 className="text-xl font-semibold text-slate-800">Información del Proveedor</h2>
                 </div>
 
+                {/* ── Multi-proveedor ───────────────────────────────────────────────────── */}
+                {showSupplier && (
+                  <div className="mb-6">
+                    <div className="flex items-center justify-between mb-3">
+                      <div>
+                        <label className="block text-sm font-semibold text-slate-700">
+                          Proveedores del Producto
+                        </label>
+                        <p className="text-xs text-slate-500 mt-0.5">
+                          El proveedor marcado con ★ es el principal. Cada uno puede tener su propio código de referencia.
+                        </p>
+                      </div>
+                      <button
+                        type="button"
+                        onClick={addSupplierRow}
+                        className="flex items-center gap-1.5 px-3 py-1.5 text-sm bg-blue-600 hover:bg-blue-700 text-white rounded-lg transition-colors"
+                      >
+                        <span className="text-base leading-none">+</span> Agregar proveedor
+                      </button>
+                    </div>
+
+                    {/* Lista de proveedores */}
+                    {(formData.suppliers || []).length === 0 ? (
+                      <div className="border-2 border-dashed border-slate-200 rounded-lg p-6 text-center">
+                        <Truck className="mx-auto text-slate-300 mb-2" size={32} />
+                        <p className="text-sm text-slate-400">Sin proveedores asignados.</p>
+                        <p className="text-xs text-slate-400 mt-0.5">Haz clic en &quot;Agregar proveedor&quot; para asociar uno.</p>
+                      </div>
+                    ) : (
+                      <div className="space-y-2">
+                        {(formData.suppliers || []).map((supplier, idx) => (
+                          <div
+                            key={idx}
+                            className={`flex items-center gap-2 p-3 rounded-lg border transition-colors ${
+                              supplier.isPrimary
+                                ? 'border-blue-300 bg-blue-50'
+                                : 'border-slate-200 bg-white hover:border-slate-300'
+                            }`}
+                          >
+                            {/* Botón principal (estrella) */}
+                            <button
+                              type="button"
+                              onClick={() => setPrimarySupplier(idx)}
+                              title={supplier.isPrimary ? 'Proveedor principal' : 'Marcar como principal'}
+                              className={`flex-shrink-0 text-lg leading-none transition-colors ${
+                                supplier.isPrimary ? 'text-yellow-500' : 'text-slate-300 hover:text-yellow-400'
+                              }`}
+                            >
+                              ★
+                            </button>
+
+                            {/* Selector de proveedor */}
+                            <div className="flex-1 min-w-0">
+                              <SupplierSearchSelector
+                                value={supplier.supplierId || undefined}
+                                onValueChange={(id) => updateSupplierField(idx, 'supplierId', id)}
+                                placeholder="Buscar proveedor..."
+                                showCreateOption={true}
+                                onCreateNew={() => window.open('/dashboard/suppliers/create', '_blank')}
+                              />
+                            </div>
+
+                            {/* Código del proveedor */}
+                            <div className="w-36 flex-shrink-0">
+                              <input
+                                type="text"
+                                value={supplier.supplierCode || ''}
+                                onChange={(e) => updateSupplierField(idx, 'supplierCode', e.target.value)}
+                                placeholder="Código ref."
+                                title="Código que ese proveedor usa para este producto"
+                                className="w-full px-3 py-2 text-sm border border-slate-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                              />
+                            </div>
+
+                            {/* Botón eliminar */}
+                            <button
+                              type="button"
+                              onClick={() => removeSupplierRow(idx)}
+                              title="Quitar proveedor"
+                              className="flex-shrink-0 text-slate-400 hover:text-red-500 transition-colors p-1 rounded"
+                            >
+                              <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4" viewBox="0 0 20 20" fill="currentColor">
+                                <path fillRule="evenodd" d="M9 2a1 1 0 00-.894.553L7.382 4H4a1 1 0 000 2v10a2 2 0 002 2h8a2 2 0 002-2V6a1 1 0 100-2h-3.382l-.724-1.447A1 1 0 0011 2H9zM7 8a1 1 0 012 0v6a1 1 0 11-2 0V8zm5-1a1 1 0 00-1 1v6a1 1 0 102 0V8a1 1 0 00-1-1z" clipRule="evenodd" />
+                              </svg>
+                            </button>
+                          </div>
+                        ))}
+                      </div>
+                    )}
+                  </div>
+                )}
+
                 <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-                  {/* Proveedor */}
-                  {showSupplier && (
-                    <div>
-                      <SupplierSearchSelector
-                        value={formData.supplierId}
-                        onValueChange={(supplierId) => handleInputChange('supplierId', supplierId)}
-                        placeholder="Buscar proveedor por nombre, email, ciudad..."
-                        label="Proveedor"
-                        showCreateOption={true}
-                        onCreateNew={() => {
-                          // Abrir nueva pestaña para crear proveedor
-                          window.open('/dashboard/suppliers/create', '_blank');
-                        }}
-                      />
-                      <p className="text-xs text-slate-500 mt-1">Proveedor principal del producto</p>
-                    </div>
-                  )}
-
-                  {/* Código del Proveedor */}
-                  {showSupplier && (
-                    <div>
-                      <label className="block text-sm font-medium text-slate-700 mb-2">
-                        Código del Proveedor
-                      </label>
-                      <input
-                        type="text"
-                        value={formData.supplierCode || ''}
-                        onChange={(e) => handleInputChange('supplierCode', e.target.value)}
-                        placeholder="Ej: FUM-001, SERV-PLAGAS-MENSUAL"
-                        className="w-full px-4 py-3 border border-slate-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all duration-200"
-                      />
-                      <p className="text-xs text-slate-500 mt-1">Código que el proveedor usa para identificar este producto/servicio</p>
-                    </div>
-                  )}
-
                   {/* Unidad de Compra */}
                   {showPurchaseUnit && (
                     <div>
                       <label className="block text-sm font-medium text-slate-700 mb-2">
                         Unidad de Compra
                       </label>
-                      {/* 🔍 LOG SIMPLE: Mostramos en consola el valor que se pasa */}
-                      {(() => {
-                        console.log('🔍 PROPS → UnitMeasureSelector COMPRA: value=', currentPurchaseUnitId);
-                        return null;
-                      })()}
                       <UnitMeasureSelector
                         value={currentPurchaseUnitId}
                         onChange={(unitId) => {
                           handleInputChange('purchaseUnitId', unitId);
-                          // También actualizar el campo unit con el nombre de la unidad
                           if (unitId) {
                             const units = getAllUnits();
                             const selectedUnit = units.find((u: any) => u.id === unitId);
@@ -1241,11 +1328,6 @@ export default function ProductFormModern({ initialData, action, isEdit = false 
                       <label className="block text-sm font-medium text-slate-700 mb-2">
                         Unidad de Venta
                       </label>
-                      {/* 🔍 LOG SIMPLE: Mostramos en consola el valor que se pasa */}
-                      {(() => {
-                        console.log('🔍 PROPS → UnitMeasureSelector VENTA: value=', currentSalesUnitId);
-                        return null;
-                      })()}
                       <UnitMeasureSelector
                         value={currentSalesUnitId}
                         onChange={(unitId) => handleInputChange('salesUnitId', unitId)}

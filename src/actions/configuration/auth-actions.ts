@@ -293,5 +293,20 @@ export async function getAllUsersForConfiguration(): Promise<UserData[]> {
 // Alias para mantener compatibilidad
 export const getUsers = getAllUsers;
 
+/**
+ * Verifica si el usuario actual es administrador
+ */
+export async function isAdminUser(): Promise<boolean> {
+  try {
+    const currentUser = await getCurrentUser();
+    if (!currentUser) return false;
+    const isAdmin = currentUser.role === 'ADMINISTRADOR' || currentUser.role === 'SUPER_USER';
+    return isAdmin;
+  } catch (error) {
+    console.error('Error verificando rol de administrador:', error);
+    return false;
+  }
+}
+
 // Exportar el tipo UserData para compatibilidad
-export type { UserData }; 
+export type { UserData };
