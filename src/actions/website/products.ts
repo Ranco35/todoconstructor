@@ -1,6 +1,6 @@
 'use server'
 
-import { createClient } from '@/lib/supabase-server'
+import { getSupabaseServiceClient } from '@/lib/supabase-server'
 import { 
   getProductsWithPromotions, 
   getProductsWithPromotionsByCategory, 
@@ -43,7 +43,7 @@ export interface ProductCategory {
  * DEPRECATED: Usar getProductsWithPromotions() para incluir ofertas
  */
 export async function getProductsWithStock(): Promise<ProductWithStock[]> {
-  const supabase = await createClient()
+  const supabase = await getSupabaseServiceClient()
 
   try {
     const { data, error } = await supabase
@@ -120,7 +120,7 @@ export async function getProductsWithStock(): Promise<ProductWithStock[]> {
  * Obtiene las categorías de productos disponibles
  */
 export async function getProductCategories(): Promise<ProductCategory[]> {
-  const supabase = await createClient()
+  const supabase = await getSupabaseServiceClient()
 
   try {
     const { data, error } = await supabase
@@ -145,7 +145,7 @@ export async function getProductCategories(): Promise<ProductCategory[]> {
  * DEPRECATED: Usar getProductsWithPromotionsByCategory() para incluir ofertas
  */
 export async function getProductsByCategory(categoryId: number): Promise<ProductWithStock[]> {
-  const supabase = await createClient()
+  const supabase = await getSupabaseServiceClient()
 
   try {
     const { data, error } = await supabase
@@ -222,7 +222,7 @@ export async function getProductsByCategory(categoryId: number): Promise<Product
  * DEPRECATED: Usar searchProductsWithPromotions() para incluir ofertas
  */
 export async function searchProducts(query: string): Promise<ProductWithStock[]> {
-  const supabase = await createClient()
+  const supabase = await getSupabaseServiceClient()
 
   try {
     const { data, error } = await supabase

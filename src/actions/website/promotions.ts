@@ -1,6 +1,6 @@
 'use server'
 
-import { createClient } from '@/lib/supabase-server'
+import { getSupabaseServiceClient } from '@/lib/supabase-server'
 import { 
   ActivePromotion, 
   calculatePromotionPrice, 
@@ -42,7 +42,7 @@ export interface ProductWithPromotion {
  * Obtiene todas las promociones activas
  */
 export async function getActivePromotions(): Promise<ActivePromotion[]> {
-  const supabase = await createClient();
+  const supabase = await getSupabaseServiceClient();
 
   try {
     const now = new Date().toISOString();
@@ -72,7 +72,7 @@ export async function getActivePromotions(): Promise<ActivePromotion[]> {
  * Obtiene productos con promociones aplicadas
  */
 export async function getProductsWithPromotions(): Promise<ProductWithPromotion[]> {
-  const supabase = await createClient();
+  const supabase = await getSupabaseServiceClient();
 
   try {
     // Obtener TODOS los productos (con y sin stock)
