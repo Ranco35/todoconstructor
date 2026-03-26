@@ -77,6 +77,12 @@ next-env.d.ts
 _legacy/
 
 # ========================
+# MCP y scripts con credenciales
+# ========================
+.mcp.json
+scripts/
+
+# ========================
 # Extras opcionales
 # ========================
 .idea/               # JetBrains IDEs

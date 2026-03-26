@@ -1,4 +1,4 @@
-'use client';
+import 'server-only';
 
 import { supabaseS3Config, getS3ClientConfig, validateS3Config } from './supabase-s3-config';
 

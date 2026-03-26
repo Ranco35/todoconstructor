@@ -1,7 +1,8 @@
+import 'server-only';
+
 /**
  * Configuración S3 para Supabase Storage
- * ⚠️ IMPORTANTE: Esta configuración contiene credenciales sensibles
- * En producción, usar variables de entorno
+ * SOLO SERVER-SIDE — las credenciales nunca se exponen al browser
  */
 
 export interface SupabaseS3Config {
@@ -16,12 +17,11 @@ export interface SupabaseS3Config {
   };
 }
 
-// Configuración S3 de Supabase
 export const supabaseS3Config: SupabaseS3Config = {
-  endpoint: process.env.SUPABASE_S3_ENDPOINT || 'https://oojczqgarhyxcrrxjsiy.storage.supabase.co/storage/v1/s3',
+  endpoint: process.env.SUPABASE_S3_ENDPOINT || '',
   region: process.env.SUPABASE_S3_REGION || 'us-east-2',
-  accessKeyId: process.env.SUPABASE_S3_ACCESS_KEY_ID || '82b8833db8556ae350e2406299b42b67',
-  secretAccessKey: process.env.SUPABASE_S3_SECRET_ACCESS_KEY || 'd1433d5d91db2746aa5dd8aa550d6ef937c85f10ea7b09dd04e833bd57a5f620',
+  accessKeyId: process.env.SUPABASE_S3_ACCESS_KEY_ID || '',
+  secretAccessKey: process.env.SUPABASE_S3_SECRET_ACCESS_KEY || '',
   buckets: {
     products: process.env.SUPABASE_PRODUCT_BUCKET || 'Imagenes Productos',
     clients: process.env.SUPABASE_CLIENT_BUCKET || 'client-images',
@@ -29,21 +29,19 @@ export const supabaseS3Config: SupabaseS3Config = {
   }
 };
 
-// Función para verificar la configuración
 export function validateS3Config(): boolean {
   const config = supabaseS3Config;
-  
+
   const requiredFields = [
     config.endpoint,
     config.region,
     config.accessKeyId,
     config.secretAccessKey
   ];
-  
+
   return requiredFields.every(field => field && field.length > 0);
 }
 
-// Función para obtener configuración S3 para AWS SDK
 export function getS3ClientConfig() {
   return {
     endpoint: supabaseS3Config.endpoint,
@@ -52,8 +50,7 @@ export function getS3ClientConfig() {
       accessKeyId: supabaseS3Config.accessKeyId,
       secretAccessKey: supabaseS3Config.secretAccessKey
     },
-    forcePathStyle: true, // Necesario para Supabase S3
+    forcePathStyle: true,
     signatureVersion: 'v4'
   };
 }
-

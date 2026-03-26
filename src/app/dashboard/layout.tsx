@@ -21,30 +21,27 @@ function DashboardContent({ children }: { children: React.ReactNode }) {
         // Usar Supabase auth directo en cliente con cookies
         const supabase = createClient();
         
-        // Intentar obtener sesión primero con timeout
-        const sessionPromise = supabase.auth.getSession();
-        const timeoutPromise = new Promise((_, reject) => 
+        // Verificar usuario con getUser() (valida JWT contra servidor)
+        const userPromise = supabase.auth.getUser();
+        const timeoutPromise = new Promise((_, reject) =>
           setTimeout(() => reject(new Error('Session timeout')), 5000)
         );
-        
-        const { data: { session }, error: sessionError } = await Promise.race([
-          sessionPromise,
+
+        const { data: { user }, error: sessionError } = await Promise.race([
+          userPromise,
           timeoutPromise
         ]) as any;
-        
+
         if (sessionError) {
-          console.error('Dashboard: Error obteniendo sesión:', sessionError.message);
+          console.error('Dashboard: Error verificando usuario:', sessionError.message);
           setShouldRedirect(true);
           return;
         }
-        
-        if (!session) {
+
+        if (!user) {
           setShouldRedirect(true);
           return;
         }
-        
-        // Verificar usuario (usar la sesión que ya tenemos)
-        const user = session.user;
         
         if (!user) {
           setShouldRedirect(true);

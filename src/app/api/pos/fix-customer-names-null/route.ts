@@ -1,12 +1,14 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { fixPOSSalesCustomerNamesNull } from '@/actions/pos/pos-actions';
+import { getAuthenticatedUser, unauthorizedResponse } from '@/lib/api-auth';
 
 export async function POST(request: NextRequest) {
+  const user = await getAuthenticatedUser(request);
+  if (!user) return unauthorizedResponse();
+
   try {
-    console.log('🔧 Endpoint: Corrigiendo ventas con customerName = NULL...');
-    
     const result = await fixPOSSalesCustomerNamesNull();
-    
+
     if (result.success) {
       return NextResponse.json({
         success: true,
@@ -19,12 +21,10 @@ export async function POST(request: NextRequest) {
         error: result.error
       }, { status: 500 });
     }
-    
   } catch (error) {
-    console.error('❌ Error en endpoint fix-customer-names-null:', error);
     return NextResponse.json({
       success: false,
       error: 'Error interno del servidor'
     }, { status: 500 });
   }
-} 
+}
