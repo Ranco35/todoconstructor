@@ -550,7 +550,226 @@ export function registerInventarioTools(server: McpServer) {
     }
   );
 
-  // 18. Historial inventario físico
+  // 18. Registrar ajuste de stock
+  server.tool(
+    "inventario-registrar_ajuste",
+    "Registrar un ajuste de stock: entrada, salida o ajuste de inventario para un producto en una bodega.",
+    {
+      producto_id: z.number().describe("ID del producto"),
+      bodega_id: z.number().describe("ID de la bodega"),
+      tipo: z.enum(["ENTRADA", "SALIDA", "AJUSTE"]).describe("Tipo de movimiento"),
+      cantidad: z.number().describe("Cantidad a ajustar (positiva)"),
+      razon: z.string().describe("Razón del ajuste"),
+      notas: z.string().optional().describe("Notas adicionales"),
+    },
+    async ({ producto_id, bodega_id, tipo, cantidad, razon, notas }) => {
+      if (cantidad <= 0) return err("La cantidad debe ser mayor a 0");
+
+      // Verificar que el producto existe
+      const { data: producto, error: prodError } = await supabase
+        .from("Product")
+        .select("id, name, sku")
+        .eq("id", producto_id)
+        .single();
+
+      if (prodError || !producto) return err(`Producto con ID ${producto_id} no encontrado`);
+
+      // Verificar que la bodega existe
+      const { data: bodega, error: bodError } = await supabase
+        .from("Warehouse")
+        .select("id, name")
+        .eq("id", bodega_id)
+        .single();
+
+      if (bodError || !bodega) return err(`Bodega con ID ${bodega_id} no encontrada`);
+
+      // Obtener stock actual
+      const { data: wp } = await supabase
+        .from("Warehouse_Product")
+        .select("id, quantity")
+        .eq("productId", producto_id)
+        .eq("warehouseId", bodega_id)
+        .single();
+
+      const stockAnterior = wp ? Number(wp.quantity || 0) : 0;
+      let nuevoStock: number;
+
+      if (tipo === "ENTRADA") {
+        nuevoStock = stockAnterior + cantidad;
+      } else if (tipo === "SALIDA") {
+        nuevoStock = stockAnterior - cantidad;
+        if (nuevoStock < 0) return err(`Stock insuficiente. Stock actual: ${stockAnterior}, intentando sacar: ${cantidad}`);
+      } else {
+        // AJUSTE: la cantidad ES el nuevo stock
+        nuevoStock = cantidad;
+      }
+
+      // Actualizar o crear el registro de stock
+      if (wp) {
+        const { error: updateError } = await supabase
+          .from("Warehouse_Product")
+          .update({ quantity: nuevoStock, updatedAt: new Date().toISOString() })
+          .eq("id", wp.id);
+
+        if (updateError) return err(`Error actualizando stock: ${updateError.message}`);
+      } else {
+        const { error: insertError } = await supabase
+          .from("Warehouse_Product")
+          .insert({
+            productId: producto_id,
+            warehouseId: bodega_id,
+            quantity: nuevoStock,
+            minStock: 0,
+            maxStock: 0,
+          });
+
+        if (insertError) return err(`Error creando registro de stock: ${insertError.message}`);
+      }
+
+      // Registrar el movimiento
+      const movimiento: Record<string, unknown> = {
+        productId: producto_id,
+        movementType: tipo,
+        quantity: cantidad,
+        reason: razon,
+        notes: notas || null,
+        createdAt: new Date().toISOString(),
+        updatedAt: new Date().toISOString(),
+      };
+
+      if (tipo === "ENTRADA" || tipo === "AJUSTE") {
+        movimiento.toWarehouseId = bodega_id;
+      } else {
+        movimiento.fromWarehouseId = bodega_id;
+      }
+
+      const { error: movError } = await supabase
+        .from("InventoryMovement")
+        .insert(movimiento);
+
+      if (movError) {
+        // El stock ya se actualizó, solo falla el registro de movimiento
+        return ok({
+          mensaje: "Stock actualizado pero error registrando movimiento",
+          advertencia: movError.message,
+          producto: producto.name,
+          bodega: bodega.name,
+          stock_anterior: stockAnterior,
+          stock_nuevo: nuevoStock,
+        });
+      }
+
+      return ok({
+        mensaje: "Ajuste de stock registrado exitosamente",
+        producto: producto.name,
+        sku: producto.sku,
+        bodega: bodega.name,
+        tipo,
+        cantidad,
+        stock_anterior: stockAnterior,
+        stock_nuevo: nuevoStock,
+        razon,
+      });
+    }
+  );
+
+  // 19. Ajuste masivo de stock
+  server.tool(
+    "inventario-ajuste_masivo",
+    "Ajustar stock de múltiples productos a la vez en una bodega (inventario físico).",
+    {
+      bodega_id: z.number().describe("ID de la bodega"),
+      ajustes: z.array(z.object({
+        sku: z.string().describe("SKU del producto"),
+        cantidad: z.number().describe("Nueva cantidad (stock real contado)"),
+      })).describe("Lista de ajustes: SKU y cantidad real"),
+      razon: z.string().optional().default("Ajuste de inventario físico vía MCP"),
+    },
+    async ({ bodega_id, ajustes, razon }) => {
+      const { data: bodega } = await supabase
+        .from("Warehouse")
+        .select("id, name")
+        .eq("id", bodega_id)
+        .single();
+
+      if (!bodega) return err(`Bodega con ID ${bodega_id} no encontrada`);
+
+      let actualizados = 0;
+      let errores = 0;
+      const resultados: Array<{ sku: string; nombre: string; anterior: number; nuevo: number }> = [];
+      const erroresDetalle: string[] = [];
+
+      for (const ajuste of ajustes) {
+        // Buscar producto por SKU
+        const { data: producto } = await supabase
+          .from("Product")
+          .select("id, name")
+          .eq("sku", ajuste.sku)
+          .single();
+
+        if (!producto) {
+          errores++;
+          erroresDetalle.push(`SKU ${ajuste.sku} no encontrado`);
+          continue;
+        }
+
+        // Obtener stock actual
+        const { data: wp } = await supabase
+          .from("Warehouse_Product")
+          .select("id, quantity")
+          .eq("productId", producto.id)
+          .eq("warehouseId", bodega_id)
+          .single();
+
+        const stockAnterior = wp ? Number(wp.quantity || 0) : 0;
+
+        if (stockAnterior === ajuste.cantidad) continue; // Sin cambios
+
+        // Actualizar stock
+        if (wp) {
+          await supabase
+            .from("Warehouse_Product")
+            .update({ quantity: ajuste.cantidad, updatedAt: new Date().toISOString() })
+            .eq("id", wp.id);
+        } else {
+          await supabase
+            .from("Warehouse_Product")
+            .insert({ productId: producto.id, warehouseId: bodega_id, quantity: ajuste.cantidad, minStock: 0, maxStock: 0 });
+        }
+
+        // Registrar movimiento
+        await supabase.from("InventoryMovement").insert({
+          productId: producto.id,
+          toWarehouseId: bodega_id,
+          movementType: "AJUSTE",
+          quantity: ajuste.cantidad,
+          reason: razon,
+          notes: `Ajuste masivo: ${stockAnterior} → ${ajuste.cantidad}`,
+          createdAt: new Date().toISOString(),
+          updatedAt: new Date().toISOString(),
+        });
+
+        actualizados++;
+        resultados.push({
+          sku: ajuste.sku,
+          nombre: producto.name,
+          anterior: stockAnterior,
+          nuevo: ajuste.cantidad,
+        });
+      }
+
+      return ok({
+        mensaje: `Ajuste masivo completado: ${actualizados} actualizados, ${errores} errores`,
+        bodega: bodega.name,
+        actualizados,
+        errores,
+        errores_detalle: erroresDetalle,
+        resultados,
+      });
+    }
+  );
+
+  // 20. Historial inventario físico
   server.tool(
     "inventario-historial_fisico",
     "Consultar historial de conteos de inventario físico.",
