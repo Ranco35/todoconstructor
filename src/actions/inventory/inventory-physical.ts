@@ -5,6 +5,7 @@ interface InventoryPhysicalProduct {
   sku: string;
   nombre: string;
   cantidadReal: number;
+  cantidadRealProvista: boolean; // true si el usuario ingresó un valor en la celda
   comentario?: string;
   bodega?: string;
   marca?: string;
@@ -68,18 +69,19 @@ async function parseInventoryPhysicalExcel(fileBuffer: ArrayBuffer): Promise<Inv
       
       for (const row of jsonData) {
         const rowData = row as any;
+        const rawCantidadReal = rowData['Cantidad Real (Conteo Físico)'] ??
+          rowData['cantidad real (conteo físico)'] ??
+          rowData['Stock contado'] ??
+          rowData['stock contado'] ??
+          rowData['Cantidad Real'] ??
+          rowData['cantidad real'] ??
+          undefined;
+        const cantidadRealProvista = rawCantidadReal !== undefined && rawCantidadReal !== '' && rawCantidadReal !== null;
         const product: InventoryPhysicalProduct = {
           sku: (rowData['SKU'] || rowData['sku'] || '').toString().trim(),
           nombre: (rowData['Nombre Producto'] || rowData['Nombre'] || rowData['nombre'] || '').toString().trim(),
-          cantidadReal: Number(
-            rowData['Cantidad Real (Conteo Físico)'] ||
-            rowData['cantidad real (conteo físico)'] ||
-            rowData['Stock contado'] || 
-            rowData['stock contado'] || 
-            rowData['Cantidad Real'] ||
-            rowData['cantidad real'] ||
-            0
-          ),
+          cantidadReal: cantidadRealProvista ? Number(rawCantidadReal) : 0,
+          cantidadRealProvista,
           comentario: (rowData['Comentarios'] || rowData['comentarios'] || '').toString().trim(),
           bodega: (rowData['Bodega'] || rowData['bodega'] || '').toString().trim(),
           marca: (rowData['Marca'] || rowData['marca'] || '').toString().trim(),
@@ -88,10 +90,10 @@ async function parseInventoryPhysicalExcel(fileBuffer: ArrayBuffer): Promise<Inv
           imagen: (rowData['Imagen'] || rowData['imagen'] || '').toString().trim(),
           cantidadActual: Number(rowData['Cantidad Actual'] || rowData['cantidad actual'] || 0)
         };
-        
+
         if (product.sku) {
           products.push(product);
-          console.log('🔍 [PARSER] Producto parseado (fallback):', product.nombre, '| SKU:', product.sku, '| Cantidad Real:', product.cantidadReal);
+          console.log('🔍 [PARSER] Producto parseado (fallback):', product.nombre, '| SKU:', product.sku, '| Cantidad Real:', product.cantidadReal, '| Provista:', cantidadRealProvista);
         }
       }
       
@@ -126,19 +128,22 @@ async function parseInventoryPhysicalExcel(fileBuffer: ArrayBuffer): Promise<Inv
         console.log('🔍 [DEBUG] Todas las claves del rowData:', Object.keys(rowData as object));
       }
       
+      // Detectar si la celda de cantidad real fue llenada
+      const rawCantidadReal2 = rowData['Cantidad Real (Conteo Físico)'] ??
+        rowData['cantidad real (conteo físico)'] ??
+        rowData['Stock contado'] ??
+        rowData['stock contado'] ??
+        rowData['Cantidad Real'] ??
+        rowData['cantidad real'] ??
+        undefined;
+      const cantidadRealProvista2 = rawCantidadReal2 !== undefined && rawCantidadReal2 !== '' && rawCantidadReal2 !== null;
+
       // Mapear campos específicos del inventario físico
       const product: InventoryPhysicalProduct = {
         sku: (rowData['SKU'] || rowData['sku'] || '').toString().trim(),
         nombre: (rowData['Nombre Producto'] || rowData['Nombre'] || rowData['nombre'] || '').toString().trim(),
-        cantidadReal: Number(
-          rowData['Cantidad Real (Conteo Físico)'] ||
-          rowData['cantidad real (conteo físico)'] ||
-          rowData['Stock contado'] || 
-          rowData['stock contado'] || 
-          rowData['Cantidad Real'] ||
-          rowData['cantidad real'] ||
-          0
-        ),
+        cantidadReal: cantidadRealProvista2 ? Number(rawCantidadReal2) : 0,
+        cantidadRealProvista: cantidadRealProvista2,
         comentario: (rowData['Comentarios'] || rowData['comentarios'] || '').toString().trim(),
         bodega: (rowData['Bodega'] || rowData['bodega'] || '').toString().trim(),
         marca: (rowData['Marca'] || rowData['marca'] || '').toString().trim(),
@@ -147,11 +152,11 @@ async function parseInventoryPhysicalExcel(fileBuffer: ArrayBuffer): Promise<Inv
         imagen: (rowData['Imagen'] || rowData['imagen'] || '').toString().trim(),
         cantidadActual: Number(rowData['Cantidad Actual'] || rowData['cantidad actual'] || 0)
       };
-      
+
       // Solo agregar productos con SKU válido
       if (product.sku && product.sku !== '') {
         products.push(product);
-        console.log('🔍 [PARSER] Producto parseado:', product.nombre, '| SKU:', product.sku, '| Cantidad Real:', product.cantidadReal);
+        console.log('🔍 [PARSER] Producto parseado:', product.nombre, '| SKU:', product.sku, '| Cantidad Real:', product.cantidadReal, '| Provista:', cantidadRealProvista2);
       }
     }
     
@@ -217,46 +222,50 @@ export async function exportInventoryPhysicalTemplate(warehouseId: number, categ
 
     categoryName = category.name || ''
 
-    // Obtener todos los productos de la categoría
-    console.log('🔍 [TEMPLATE] Consultando productos de categoría:', categoryId)
+    // Obtener todos los productos de la categoría CON su stock real en la bodega
+    console.log('🔍 [TEMPLATE] Consultando productos de categoría:', categoryId, 'con stock de bodega:', warehouseId)
     const { data: categoryProducts, error } = await supabase
       .from('Product')
       .select(`
         id, name, sku, brand, description, supplierid, image
       `)
       .eq('categoryid', categoryId)
-      .not('name', 'is', null) // Excluir productos sin nombre
-      .neq('name', '') // Excluir productos con nombre vacío
+      .not('name', 'is', null)
+      .neq('name', '')
 
     if (error) {
       console.error('Error en consulta Product por categoría:', error)
       throw new Error(`Error obteniendo productos de la categoría: ${error.message}`)
     }
 
-    console.log('🔍 [TEMPLATE] Productos raw de categoría:', categoryProducts?.length || 0)
-    if (categoryProducts && categoryProducts.length > 0) {
-      console.log('🔍 [TEMPLATE] Primer producto raw:', {
-        id: categoryProducts[0].id,
-        name: categoryProducts[0].name,
-        sku: categoryProducts[0].sku,
-        brand: categoryProducts[0].brand
-      })
+    console.log('🔍 [TEMPLATE] Productos de categoría encontrados:', categoryProducts?.length || 0)
+
+    // Obtener stock real de la bodega para estos productos
+    const productIds = categoryProducts?.map(p => p.id) || []
+    let stockMap: Record<number, number> = {}
+
+    if (productIds.length > 0) {
+      const { data: warehouseStock, error: stockError } = await supabase
+        .from('Warehouse_Product')
+        .select('productId, quantity')
+        .eq('warehouseId', warehouseId)
+        .in('productId', productIds)
+
+      if (stockError) {
+        console.error('Error obteniendo stock de bodega:', stockError)
+      } else if (warehouseStock) {
+        stockMap = Object.fromEntries(warehouseStock.map(ws => [ws.productId, ws.quantity || 0]))
+        console.log('🔍 [TEMPLATE] Stock encontrado para', warehouseStock.length, 'productos en bodega')
+      }
     }
 
-    // Formatear productos para que coincidan con el formato de bodega
+    // Formatear productos con su stock real (0 si no están asignados a la bodega)
     products = categoryProducts?.map(product => ({
-      quantity: 0, // Los productos de categoría empiezan en 0
+      quantity: stockMap[product.id] ?? 0,
       Product: product
     })) || []
-    
-    console.log('✅ [TEMPLATE] Productos de categoría encontrados:', products?.length || 0)
-    console.log('🔍 [TEMPLATE] Primer producto de categoría de muestra:', products?.[0])
-    console.log('🔍 [TEMPLATE] Estructura del primer producto:', {
-      hasProduct: !!products?.[0]?.Product,
-      productName: products?.[0]?.Product?.name,
-      productSku: products?.[0]?.Product?.sku,
-      productId: products?.[0]?.Product?.id
-    })
+
+    console.log('✅ [TEMPLATE] Productos de categoría con stock real:', products?.length || 0)
   } else {
     // Obtener productos y stock de la bodega
     console.log('🔍 [TEMPLATE] Consultando productos de bodega:', warehouseId)
@@ -483,18 +492,26 @@ export async function importInventoryPhysicalExcel({
       };
     }
 
+  let skipped = 0;
   for (const prod of productosRaw) {
     const sku = prod.sku || '';
     const nombre = prod.nombre || '';
     const stockContado = prod.cantidadReal || 0;
     const comentario = prod.comentario || '';
-    
-    console.log(`🔍 [PROCESANDO] SKU: ${sku} | Nombre: ${nombre} | Stock Contado: ${stockContado}`);
-    
+
+    console.log(`🔍 [PROCESANDO] SKU: ${sku} | Nombre: ${nombre} | Stock Contado: ${stockContado} | Provista: ${prod.cantidadRealProvista}`);
+
     if (!sku) {
       errors++;
       errorDetails.push(`Producto sin SKU: ${nombre}`);
       console.log(`❌ [ERROR] Producto sin SKU: ${nombre}`);
+      continue;
+    }
+
+    // Saltar productos donde no se ingresó cantidad real (celda vacía)
+    if (!prod.cantidadRealProvista) {
+      skipped++;
+      console.log(`⏭️ [SALTADO] SKU: ${sku} - No se ingresó cantidad real, se mantiene stock actual`);
       continue;
     }
     
@@ -568,6 +585,10 @@ export async function importInventoryPhysicalExcel({
         differences.push({ sku, nombre, stockAnterior, stockContado, diferencia: 0, comentario });
       }
     }
+  }
+
+  if (skipped > 0) {
+    console.log(`⏭️ [RESUMEN] ${skipped} productos saltados por no tener cantidad real ingresada`);
   }
 
   // Registrar historial de inventario físico
