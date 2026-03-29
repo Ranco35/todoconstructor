@@ -26,10 +26,10 @@ export function registerInventarioTools(server: McpServer) {
       let query = supabase
         .from("Product")
         .select(
-          `id, name, sku, barcode, type, costprice, saleprice, vat, brand, description, isActive,
+          `id, name, sku, type, costprice, saleprice, vat, brand, description,
            category:Category(id, name), supplier:Supplier(id, name)`
         )
-        .or(`name.ilike.%${termino}%,sku.ilike.%${termino}%,barcode.ilike.%${termino}%`)
+        .or(`name.ilike.%${termino}%,sku.ilike.%${termino}%`)
         .range(offset, offset + limite - 1);
 
       if (tipo) query = query.eq("type", tipo);
@@ -85,7 +85,6 @@ export function registerInventarioTools(server: McpServer) {
     {
       name: z.string().describe("Nombre del producto"),
       sku: z.string().optional().describe("SKU (se genera automáticamente si no se provee)"),
-      barcode: z.string().optional(),
       type: z.enum(["CONSUMIBLE", "ALMACENABLE", "SERVICIO", "INVENTARIO", "COMBO"]).default("ALMACENABLE"),
       costprice: z.number().optional().default(0),
       saleprice: z.number().optional().default(0),
@@ -98,7 +97,7 @@ export function registerInventarioTools(server: McpServer) {
       bodega_id: z.number().optional().describe("ID de bodega para stock inicial"),
       stock_inicial: z.number().optional().default(0).describe("Cantidad de stock inicial"),
     },
-    async ({ name, sku, barcode, type, costprice, saleprice, vat, categoryId, supplierid, brand, description, unit, bodega_id, stock_inicial }) => {
+    async ({ name, sku, type, costprice, saleprice, vat, categoryId, supplierid, brand, description, unit, bodega_id, stock_inicial }) => {
       // Generar SKU si no se provee
       let finalSku = sku;
       if (!finalSku) {
@@ -126,18 +125,16 @@ export function registerInventarioTools(server: McpServer) {
         .insert({
           name,
           sku: finalSku,
-          barcode: barcode || null,
           type,
           costprice: costprice || 0,
           saleprice: saleprice || 0,
           vat: vat || 19,
-          final_price_with_vat: finalPriceWithVat,
+          finalPrice: finalPriceWithVat,
           categoryid: categoryId || null,
           supplierid: supplierid || null,
           brand: brand || null,
           description: description || null,
           unit: unit || null,
-          isActive: true,
         })
         .select("id, name, sku, type, costprice, saleprice, vat")
         .single();
@@ -167,7 +164,6 @@ export function registerInventarioTools(server: McpServer) {
       id: z.number().describe("ID del producto"),
       name: z.string().optional(),
       sku: z.string().optional(),
-      barcode: z.string().optional(),
       type: z.enum(["CONSUMIBLE", "ALMACENABLE", "SERVICIO", "INVENTARIO", "COMBO"]).optional(),
       costprice: z.number().optional(),
       saleprice: z.number().optional(),
@@ -176,13 +172,11 @@ export function registerInventarioTools(server: McpServer) {
       supplierid: z.number().optional(),
       brand: z.string().optional(),
       description: z.string().optional(),
-      isActive: z.boolean().optional(),
     },
-    async ({ id, name, sku, barcode, type, costprice, saleprice, vat, categoryId, supplierid, brand, description, isActive }) => {
+    async ({ id, name, sku, type, costprice, saleprice, vat, categoryId, supplierid, brand, description }) => {
       const updates: Record<string, unknown> = {};
       if (name !== undefined) updates.name = name;
       if (sku !== undefined) updates.sku = sku;
-      if (barcode !== undefined) updates.barcode = barcode;
       if (type !== undefined) updates.type = type;
       if (costprice !== undefined) updates.costprice = costprice;
       if (saleprice !== undefined) updates.saleprice = saleprice;
@@ -191,14 +185,13 @@ export function registerInventarioTools(server: McpServer) {
       if (supplierid !== undefined) updates.supplierid = supplierid;
       if (brand !== undefined) updates.brand = brand;
       if (description !== undefined) updates.description = description;
-      if (isActive !== undefined) updates.isActive = isActive;
 
       // Recalcular precio final si cambió precio o IVA
       if (saleprice !== undefined || vat !== undefined) {
         const { data: current } = await supabase.from("Product").select("saleprice, vat").eq("id", id).single();
         const sp = saleprice ?? current?.saleprice ?? 0;
         const v = vat ?? current?.vat ?? 19;
-        updates.final_price_with_vat = sp * (1 + v / 100);
+        updates.finalPrice = sp * (1 + v / 100);
       }
 
       if (Object.keys(updates).length === 0) return err("No se proporcionaron campos para actualizar");
@@ -390,24 +383,16 @@ export function registerInventarioTools(server: McpServer) {
 
       if (error) return err(error.message);
 
-      const [contactos, bancos, impuestos, ordenes] = await Promise.all([
-        supabase.from("SupplierContact").select("id, supplierId, name, position, email, phone, mobile, isPrimary, active").eq("supplierId", id),
-        supabase.from("SupplierBank").select("*").eq("supplierId", id),
-        supabase.from("SupplierTax").select("id, supplierId, taxType, taxRate, taxCode, description, active, isRetention").eq("supplierId", id),
-        supabase
-          .from("purchase_orders")
-          .select("id, number, status, total, created_at")
-          .eq("supplier_id", id)
-          .order("created_at", { ascending: false })
-          .limit(5),
-      ]);
+      const { data: ordenes } = await supabase
+        .from("purchase_orders")
+        .select("id, number, status, total, created_at")
+        .eq("supplier_id", id)
+        .order("created_at", { ascending: false })
+        .limit(5);
 
       return ok({
         proveedor,
-        contactos: contactos.data || [],
-        cuentas_bancarias: bancos.data || [],
-        info_tributaria: impuestos.data || [],
-        ultimas_ordenes: ordenes.data || [],
+        ultimas_ordenes: ordenes || [],
       });
     }
   );
@@ -514,39 +499,30 @@ export function registerInventarioTools(server: McpServer) {
 
       const { data: lineas } = await supabase
         .from("purchase_invoice_lines")
-        .select("*, product:Product(id, name, sku), cost_center:Cost_Center(id, name)")
+        .select("*, product:Product(id, name, sku)")
         .eq("purchase_invoice_id", id);
 
-      const { data: pagos } = await supabase
-        .from("purchase_invoice_payments")
-        .select("id, purchase_invoice_id, payment_date, amount, payment_method, reference, notes")
-        .eq("purchase_invoice_id", id);
-
-      return ok({ factura, lineas: lineas || [], pagos: pagos || [] });
+      return ok({ factura, lineas: lineas || [] });
     }
   );
 
-  // 17. Pagos a proveedores
+  // 17. Productos de un proveedor
   server.tool(
-    "inventario-pagos_proveedores",
-    "Consultar pagos realizados a proveedores.",
+    "inventario-productos_proveedor",
+    "Consultar productos asociados a un proveedor.",
     {
-      proveedor_id: z.number().optional(),
-      limite: z.number().optional().default(20),
-      offset: z.number().optional().default(0),
+      proveedor_id: z.number().describe("ID del proveedor"),
+      limite: z.number().optional().default(50),
     },
-    async ({ proveedor_id, limite, offset }) => {
-      let query = supabase
-        .from("SupplierPayment")
-        .select("*, supplier:Supplier(id, name)")
-        .order("created_at", { ascending: false })
-        .range(offset, offset + limite - 1);
+    async ({ proveedor_id, limite }) => {
+      const { data, error } = await supabase
+        .from("product_suppliers")
+        .select("*, product:Product(id, name, sku, costprice, saleprice)")
+        .eq("supplier_id", proveedor_id)
+        .limit(limite);
 
-      if (proveedor_id) query = query.eq("supplierId", proveedor_id);
-
-      const { data, error } = await query;
       if (error) return err(error.message);
-      return ok({ total: data?.length || 0, pagos: data || [] });
+      return ok({ total: data?.length || 0, productos: data || [] });
     }
   );
 
