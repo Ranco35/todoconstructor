@@ -1,6 +1,8 @@
 import React from 'react';
 import { getClient } from '@/actions/clients';
 import { getAllLeadsByClientId } from '@/actions/crm/leads';
+import { getBudgetsByClientId } from '@/actions/sales/budgets/list';
+import { getInvoicesByClientId } from '@/actions/sales/invoices/list';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
@@ -20,11 +22,47 @@ import {
   DollarSign,
   FileText,
   Target,
-  ExternalLink
+  ExternalLink,
+  FileSpreadsheet,
+  Receipt
 } from 'lucide-react';
 import Link from 'next/link';
 import { notFound } from 'next/navigation';
 import { ClientType, ClientStatus, Gender } from '@/types/client';
+
+const BUDGET_STATUS_LABEL: Record<string, string> = {
+  draft: 'Borrador',
+  sent: 'Enviado',
+  accepted: 'Aceptado',
+  rejected: 'Rechazado',
+  expired: 'Expirado',
+  converted: 'Convertido',
+};
+
+const BUDGET_STATUS_COLOR: Record<string, string> = {
+  draft: '#6B7280',
+  sent: '#3B82F6',
+  accepted: '#10B981',
+  rejected: '#EF4444',
+  expired: '#F59E0B',
+  converted: '#059669',
+};
+
+const INVOICE_STATUS_LABEL: Record<string, string> = {
+  draft: 'Borrador',
+  sent: 'Enviada',
+  paid: 'Pagada',
+  overdue: 'Vencida',
+  cancelled: 'Cancelada',
+};
+
+const INVOICE_STATUS_COLOR: Record<string, string> = {
+  draft: '#6B7280',
+  sent: '#3B82F6',
+  paid: '#10B981',
+  overdue: '#EF4444',
+  cancelled: '#9CA3AF',
+};
 
 interface ClientDetailsPageProps {
   params: Promise<{
@@ -40,9 +78,11 @@ export default async function ClientDetailsPage({ params }: ClientDetailsPagePro
     notFound();
   }
 
-  const [clientResult, leadsResult] = await Promise.all([
+  const [clientResult, leadsResult, budgetsResult, invoicesResult] = await Promise.all([
     getClient(clientId),
     getAllLeadsByClientId(clientId),
+    getBudgetsByClientId(clientId),
+    getInvoicesByClientId(clientId),
   ]);
 
   if (!clientResult.success || !clientResult.data) {
@@ -51,6 +91,8 @@ export default async function ClientDetailsPage({ params }: ClientDetailsPagePro
 
   const client = clientResult.data;
   const crmLeads: any[] = leadsResult.success ? (leadsResult.data || []) : [];
+  const budgets: any[] = budgetsResult.success ? (budgetsResult.data || []) : [];
+  const invoices: any[] = invoicesResult.success ? (invoicesResult.data || []) : [];
 
   const getClientName = () => {
     if (client.tipoCliente === ClientType.EMPRESA) {
@@ -530,6 +572,136 @@ export default async function ClientDetailsPage({ params }: ClientDetailsPagePro
                           )}
                           {isLost && lead.loss_reason && (
                             <p className="italic">Motivo: {lead.loss_reason}</p>
+                          )}
+                        </div>
+                      </Link>
+                    );
+                  })}
+                </div>
+              )}
+            </CardContent>
+          </Card>
+
+          {/* Historial de Presupuestos */}
+          <Card>
+            <CardHeader>
+              <CardTitle className="flex items-center gap-2">
+                <FileSpreadsheet className="h-5 w-5" />
+                Historial de Presupuestos ({budgets.length})
+              </CardTitle>
+            </CardHeader>
+            <CardContent>
+              {budgets.length === 0 ? (
+                <div className="flex flex-col items-center justify-center py-6 text-center">
+                  <FileSpreadsheet className="h-10 w-10 text-gray-300 mb-2" />
+                  <p className="text-sm text-muted-foreground">
+                    Sin presupuestos registrados
+                  </p>
+                </div>
+              ) : (
+                <div className="space-y-3">
+                  {budgets.map((budget) => {
+                    const statusColor = BUDGET_STATUS_COLOR[budget.status] || '#6B7280';
+                    const statusLabel = BUDGET_STATUS_LABEL[budget.status] || budget.status;
+                    return (
+                      <Link
+                        key={budget.id}
+                        href={`/dashboard/sales/budgets/${budget.id}`}
+                        className="block p-3 border rounded-lg hover:border-blue-400 hover:shadow-sm transition"
+                      >
+                        <div className="flex items-start justify-between gap-2">
+                          <p className="font-medium text-sm flex-1 truncate">
+                            {budget.number || `Presupuesto #${budget.id}`}
+                          </p>
+                          <ExternalLink className="h-3 w-3 text-gray-400 flex-shrink-0 mt-0.5" />
+                        </div>
+                        <div className="flex items-center gap-2 mt-2 flex-wrap">
+                          <Badge
+                            variant="outline"
+                            className="text-[10px] font-semibold"
+                            style={{
+                              borderColor: statusColor,
+                              color: statusColor,
+                              backgroundColor: `${statusColor}15`,
+                            }}
+                          >
+                            {statusLabel}
+                          </Badge>
+                          {budget.total > 0 && (
+                            <span className="text-[11px] font-medium text-green-700">
+                              {formatCurrency(Number(budget.total))}
+                            </span>
+                          )}
+                        </div>
+                        <div className="mt-1.5 text-[11px] text-muted-foreground space-y-0.5">
+                          <p>Creado: {formatDate(budget.created_at)}</p>
+                          {budget.expiration_date && (
+                            <p>Vence: {formatDate(budget.expiration_date)}</p>
+                          )}
+                        </div>
+                      </Link>
+                    );
+                  })}
+                </div>
+              )}
+            </CardContent>
+          </Card>
+
+          {/* Historial de Facturas */}
+          <Card>
+            <CardHeader>
+              <CardTitle className="flex items-center gap-2">
+                <Receipt className="h-5 w-5" />
+                Historial de Facturas ({invoices.length})
+              </CardTitle>
+            </CardHeader>
+            <CardContent>
+              {invoices.length === 0 ? (
+                <div className="flex flex-col items-center justify-center py-6 text-center">
+                  <Receipt className="h-10 w-10 text-gray-300 mb-2" />
+                  <p className="text-sm text-muted-foreground">
+                    Sin facturas registradas
+                  </p>
+                </div>
+              ) : (
+                <div className="space-y-3">
+                  {invoices.map((invoice) => {
+                    const statusColor = INVOICE_STATUS_COLOR[invoice.status] || '#6B7280';
+                    const statusLabel = INVOICE_STATUS_LABEL[invoice.status] || invoice.status;
+                    return (
+                      <Link
+                        key={invoice.id}
+                        href={`/dashboard/sales/invoices/${invoice.id}`}
+                        className="block p-3 border rounded-lg hover:border-blue-400 hover:shadow-sm transition"
+                      >
+                        <div className="flex items-start justify-between gap-2">
+                          <p className="font-medium text-sm flex-1 truncate">
+                            {invoice.number || `Factura #${invoice.id}`}
+                          </p>
+                          <ExternalLink className="h-3 w-3 text-gray-400 flex-shrink-0 mt-0.5" />
+                        </div>
+                        <div className="flex items-center gap-2 mt-2 flex-wrap">
+                          <Badge
+                            variant="outline"
+                            className="text-[10px] font-semibold"
+                            style={{
+                              borderColor: statusColor,
+                              color: statusColor,
+                              backgroundColor: `${statusColor}15`,
+                            }}
+                          >
+                            {statusLabel}
+                          </Badge>
+                          {invoice.total > 0 && (
+                            <span className="text-[11px] font-medium text-green-700">
+                              {formatCurrency(Number(invoice.total))}
+                            </span>
+                          )}
+                        </div>
+                        <div className="mt-1.5 text-[11px] text-muted-foreground space-y-0.5">
+                          <p>Emitida: {formatDate(invoice.created_at)}</p>
+                          {invoice.due_date && (
+                            <p>Vence: {formatDate(invoice.due_date)}</p>
                           )}
                         </div>
                       </Link>

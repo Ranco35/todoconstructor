@@ -337,4 +337,30 @@ export async function getRecentInvoices(limit: number = 10): Promise<{ success: 
     console.error('Error inesperado al obtener facturas recientes:', error);
     return { success: false, error: 'Error interno del servidor.' };
   }
-} 
+}
+
+/**
+ * Devuelve un resumen ligero de TODAS las facturas de un cliente.
+ * Usado por la vista de detalle del cliente (Historial de Facturas).
+ */
+export async function getInvoicesByClientId(clientId: number): Promise<{ success: boolean; data?: any[]; error?: string }> {
+  try {
+    const supabase = await getSupabaseServerClient();
+
+    const { data, error } = await supabase
+      .from('invoices')
+      .select('id, number, status, total, currency, created_at, due_date')
+      .eq('client_id', clientId)
+      .order('created_at', { ascending: false });
+
+    if (error) {
+      console.error('Error al obtener facturas por cliente:', error);
+      return { success: false, error: error.message };
+    }
+
+    return { success: true, data: data || [] };
+  } catch (error) {
+    console.error('Error inesperado en getInvoicesByClientId:', error);
+    return { success: false, error: 'Error interno del servidor.' };
+  }
+}

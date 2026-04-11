@@ -170,4 +170,30 @@ export async function getBudgetStats(): Promise<{ success: boolean; data?: { byS
     console.error('Error al obtener estadísticas de presupuestos:', error);
     return { success: false, error: 'Error al obtener estadísticas.' };
   }
-} 
+}
+
+/**
+ * Devuelve un resumen ligero de TODOS los presupuestos de un cliente.
+ * Usado por la vista de detalle del cliente (Historial de Presupuestos).
+ */
+export async function getBudgetsByClientId(clientId: number): Promise<{ success: boolean; data?: any[]; error?: string }> {
+  try {
+    const supabase = await getSupabaseServerClient();
+
+    const { data, error } = await supabase
+      .from('sales_quotes')
+      .select('id, number, status, total, currency, created_at, expiration_date')
+      .eq('client_id', clientId)
+      .order('created_at', { ascending: false });
+
+    if (error) {
+      console.error('Error al obtener presupuestos por cliente:', error);
+      return { success: false, error: error.message };
+    }
+
+    return { success: true, data: data || [] };
+  } catch (error) {
+    console.error('Error inesperado en getBudgetsByClientId:', error);
+    return { success: false, error: 'Error interno del servidor.' };
+  }
+}
