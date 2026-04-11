@@ -2,7 +2,11 @@ import { NextResponse, type NextRequest } from 'next/server'
 import { createServerClient, type CookieOptions } from '@supabase/ssr'
 
 // Rutas API que NO requieren autenticación (webhooks, públicas)
+// IMPORTANTE: /api/auth debe ser pública para permitir el propio login.
+// Las rutas dentro de /api/auth que requieren sesión (ej. current-user)
+// hacen su propia verificación con getUser() y retornan 401 si corresponde.
 const PUBLIC_API_ROUTES = [
+  '/api/auth',
   '/api/webhooks',
   '/api/cron',
   '/api/mcp',

@@ -42,31 +42,39 @@ export async function POST(request: NextRequest) {
       }
     );
 
-    // Determinar email del usuario con timeout
+    // Determinar email del usuario
     let userEmail: string = normalizedUsername;
     if (!normalizedUsername.includes('@')) {
       try {
         // Usar cliente de servicio para bypassear RLS al resolver username → email
         const serviceClient = await getSupabaseServiceClient();
 
-        // Crear promise con timeout para la búsqueda de usuario
-        const userSearchPromise = serviceClient
-          .from('User')
-          .select('email')
-          .or(`username.eq.${normalizedUsername},name.eq.${normalizedUsername}`)
-          .single();
+        // Buscar en orden: username exacto → name exacto → username (case-insensitive)
+        // → name (case-insensitive). Se usan .limit(1) en vez de .single() para evitar
+        // errores cuando hay múltiples filas coincidentes (nombres duplicados).
+        const lookupByColumn = async (
+          column: 'username' | 'name',
+          useIlike: boolean
+        ): Promise<string | null> => {
+          const query = serviceClient.from('User').select('email');
+          const filtered = useIlike
+            ? query.ilike(column, normalizedUsername)
+            : query.eq(column, normalizedUsername);
+          const { data, error } = await filtered.limit(1);
+          if (error) {
+            console.warn(`Login lookup error (${column}, ilike=${useIlike}):`, error.message);
+            return null;
+          }
+          return data?.[0]?.email ?? null;
+        };
 
-        const timeoutPromise = new Promise((_, reject) => 
-          setTimeout(() => reject(new Error('User search timeout')), 3000)
-        );
+        let resolvedEmail: string | null = await lookupByColumn('username', false);
+        if (!resolvedEmail) resolvedEmail = await lookupByColumn('name', false);
+        if (!resolvedEmail) resolvedEmail = await lookupByColumn('username', true);
+        if (!resolvedEmail) resolvedEmail = await lookupByColumn('name', true);
 
-        const { data: userData } = await Promise.race([
-          userSearchPromise,
-          timeoutPromise
-        ]) as any;
-
-        if (userData?.email) {
-          userEmail = userData.email;
+        if (resolvedEmail) {
+          userEmail = resolvedEmail;
         } else {
           const final401 = NextResponse.json(
             { success: false, message: 'Usuario no encontrado' },
@@ -78,6 +86,7 @@ export async function POST(request: NextRequest) {
           return final401;
         }
       } catch (resolveErr: any) {
+        console.error('Error al resolver usuario en login:', resolveErr);
         const final401 = NextResponse.json(
           { success: false, message: `No fue posible validar el usuario: ${resolveErr?.message || 'Error'}` },
           { status: 401 }
