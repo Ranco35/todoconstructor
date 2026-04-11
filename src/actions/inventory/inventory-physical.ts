@@ -183,25 +183,41 @@ interface InventoryPhysicalImportResult {
   errorDetails: string[];
 }
 
-export async function exportInventoryPhysicalTemplate(warehouseId: number, categoryId?: number, includeAllProducts?: boolean) {
+export async function exportInventoryPhysicalTemplate(
+  warehouseId: number | null | undefined,
+  categoryId?: number,
+  includeAllProducts?: boolean
+) {
   try {
     console.log('🔍 [TEMPLATE] Iniciando generación de plantilla:', { warehouseId, categoryId, includeAllProducts })
-    
-    const supabase = await getSupabaseServerClient()
 
-    // Obtener información de la bodega
-    const { data: warehouse, error: warehouseError } = await supabase
-      .from('Warehouse')
-      .select('name')
-      .eq('id', warehouseId)
-      .single()
-
-    if (warehouseError) {
-      console.error('❌ [TEMPLATE] Error obteniendo información de bodega:', warehouseError)
-      throw new Error(`Error obteniendo información de la bodega: ${warehouseError.message}`)
+    // Debe haber al menos una bodega o un modo "todos los productos de una categoría".
+    // Si el modo es sólo bodega, warehouseId es obligatorio.
+    if (!warehouseId && !(includeAllProducts && categoryId)) {
+      throw new Error('Debes seleccionar una bodega, o una categoría con la opción "Todos los productos".')
     }
 
-    console.log('✅ [TEMPLATE] Bodega encontrada:', warehouse.name)
+    const supabase = await getSupabaseServerClient()
+
+    // Obtener información de la bodega (sólo si se seleccionó una)
+    let warehouseName = ''
+    if (warehouseId) {
+      const { data: warehouse, error: warehouseError } = await supabase
+        .from('Warehouse')
+        .select('name')
+        .eq('id', warehouseId)
+        .single()
+
+      if (warehouseError) {
+        console.error('❌ [TEMPLATE] Error obteniendo información de bodega:', warehouseError)
+        throw new Error(`Error obteniendo información de la bodega: ${warehouseError.message}`)
+      }
+
+      warehouseName = warehouse?.name || ''
+      console.log('✅ [TEMPLATE] Bodega encontrada:', warehouseName)
+    } else {
+      console.log('ℹ️ [TEMPLATE] Descarga por categoría sin bodega específica')
+    }
 
   let products: any[] = []
   let categoryName = ''
@@ -240,11 +256,11 @@ export async function exportInventoryPhysicalTemplate(warehouseId: number, categ
 
     console.log('🔍 [TEMPLATE] Productos de categoría encontrados:', categoryProducts?.length || 0)
 
-    // Obtener stock real de la bodega para estos productos
+    // Obtener stock real de la bodega para estos productos (sólo si hay bodega seleccionada)
     const productIds = categoryProducts?.map(p => p.id) || []
     let stockMap: Record<number, number> = {}
 
-    if (productIds.length > 0) {
+    if (warehouseId && productIds.length > 0) {
       const { data: warehouseStock, error: stockError } = await supabase
         .from('Warehouse_Product')
         .select('productId, quantity')
@@ -259,7 +275,7 @@ export async function exportInventoryPhysicalTemplate(warehouseId: number, categ
       }
     }
 
-    // Formatear productos con su stock real (0 si no están asignados a la bodega)
+    // Formatear productos con su stock real (0 si no están asignados a la bodega, o si no hay bodega)
     products = categoryProducts?.map(product => ({
       quantity: stockMap[product.id] ?? 0,
       Product: product
@@ -267,9 +283,12 @@ export async function exportInventoryPhysicalTemplate(warehouseId: number, categ
 
     console.log('✅ [TEMPLATE] Productos de categoría con stock real:', products?.length || 0)
   } else {
-    // Obtener productos y stock de la bodega
+    // Obtener productos y stock de la bodega (requiere bodega)
+    if (!warehouseId) {
+      throw new Error('Selecciona una bodega para descargar los productos asignados a ella')
+    }
     console.log('🔍 [TEMPLATE] Consultando productos de bodega:', warehouseId)
-    
+
     const { data: warehouseProducts, error } = await supabase
       .from('Warehouse_Product')
       .select(`
@@ -317,8 +336,15 @@ export async function exportInventoryPhysicalTemplate(warehouseId: number, categ
   const titleCell = worksheet.getCell('A1')
   
   // Construir título con categoría si aplica
-  let titleText = `TOMA FÍSICA DE INVENTARIO - ${(warehouse.name || 'BODEGA').toUpperCase()}`
-  if (includeAllProducts && categoryName) {
+  let titleText = 'TOMA FÍSICA DE INVENTARIO'
+  if (warehouseName) {
+    titleText += ` - ${warehouseName.toUpperCase()}`
+  } else if (includeAllProducts && categoryName) {
+    titleText += ` - CATEGORÍA: ${categoryName.toUpperCase()}`
+  } else {
+    titleText += ' - BODEGA'
+  }
+  if (warehouseName && includeAllProducts && categoryName) {
     titleText += ` - CATEGORÍA: ${categoryName.toUpperCase()}`
   }
   
@@ -339,9 +365,12 @@ export async function exportInventoryPhysicalTemplate(warehouseId: number, categ
   
   // FILA 3: Filtros
   const filtrosCell = worksheet.getCell('A3')
-  const filtroTexto = includeAllProducts && categoryId 
-    ? `Filtros: Categoría: ${categoryName}`
-    : `Filtros: Bodega: ${warehouse.name}`
+  const filtroPartes: string[] = []
+  if (warehouseName) filtroPartes.push(`Bodega: ${warehouseName}`)
+  if (includeAllProducts && categoryName) filtroPartes.push(`Categoría: ${categoryName}`)
+  const filtroTexto = filtroPartes.length > 0
+    ? `Filtros: ${filtroPartes.join(' | ')}`
+    : 'Filtros:'
   filtrosCell.value = filtroTexto
   filtrosCell.font = { italic: true, size: 10 }
   
@@ -396,7 +425,7 @@ export async function exportInventoryPhysicalTemplate(warehouseId: number, categ
     
     const rowData = [
       wp.Product?.sku || '',
-      warehouse.name || '',
+      warehouseName || '',
       wp.Product?.name || '',
       wp.Product?.brand || '',
       wp.Product?.description || '',

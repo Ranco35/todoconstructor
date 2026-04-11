@@ -9,10 +9,14 @@ export async function POST(request: NextRequest) {
     const { warehouseId, categoryId, includeAllProducts } = await request.json()
     console.log('🔍 [API] Parámetros recibidos:', { warehouseId, categoryId, includeAllProducts })
 
-    if (!warehouseId) {
-      console.error('❌ [API] warehouseId es requerido')
+    // Se permite:
+    //  - Modo bodega: warehouseId requerido
+    //  - Modo categoría ("Todos los productos de una categoría"): categoryId requerido,
+    //    bodega opcional (si no se indica, stock se exporta en 0)
+    if (!warehouseId && !(includeAllProducts && categoryId)) {
+      console.error('❌ [API] Se requiere bodega o categoría')
       return NextResponse.json(
-        { error: 'warehouseId es requerido' },
+        { error: 'Debes seleccionar una bodega, o una categoría con la opción "Todos los productos".' },
         { status: 400 }
       )
     }
@@ -38,10 +42,13 @@ export async function POST(request: NextRequest) {
     
     // Usar la nueva función con colores
     console.log('🔍 [API] Llamando a exportInventoryPhysicalTemplate...')
-    const buffer = await exportInventoryPhysicalTemplate(warehouseId, categoryId, includeAllProducts)
-    
+    const buffer = await exportInventoryPhysicalTemplate(warehouseId ?? null, categoryId, includeAllProducts)
+
     // Generar nombre de archivo descriptivo
-    let filename = `inventario-fisico-bodega-${warehouseId}`
+    let filename = 'inventario-fisico'
+    if (warehouseId) {
+      filename += `-bodega-${warehouseId}`
+    }
     if (includeAllProducts && categoryId) {
       if (categoryName) {
         filename += `-categoria-${categoryName}`

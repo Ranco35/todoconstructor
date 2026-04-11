@@ -111,13 +111,16 @@ export default function InventoryPhysicalForm() {
   }
 
   const handleDownloadTemplate = async () => {
-    if (!selectedWarehouseId) {
+    // Validaciones:
+    // - Modo categoría: se requiere categoría; bodega es opcional.
+    // - Modo bodega (por defecto): se requiere bodega.
+    if (includeAllProducts) {
+      if (!selectedCategoryId) {
+        alert('Selecciona una categoría para incluir todos los productos')
+        return
+      }
+    } else if (!selectedWarehouseId) {
       alert('Selecciona una bodega primero')
-      return
-    }
-
-    if (includeAllProducts && !selectedCategoryId) {
-      alert('Selecciona una categoría para incluir todos los productos')
       return
     }
 
@@ -128,7 +131,7 @@ export default function InventoryPhysicalForm() {
         headers: {
           'Content-Type': 'application/json',
         },
-        body: JSON.stringify({ 
+        body: JSON.stringify({
           warehouseId: selectedWarehouseId,
           categoryId: selectedCategoryId,
           includeAllProducts: includeAllProducts
@@ -136,17 +139,25 @@ export default function InventoryPhysicalForm() {
       })
 
       if (!response.ok) {
-        throw new Error('Error descargando plantilla')
+        // Intentar leer el mensaje de error del servidor
+        let serverMessage = `Error ${response.status}`
+        try {
+          const errBody = await response.json()
+          serverMessage = errBody?.error || errBody?.message || serverMessage
+        } catch {
+          // respuesta no JSON — mantener el mensaje por defecto
+        }
+        throw new Error(serverMessage)
       }
 
       const blob = await response.blob()
       const url = URL.createObjectURL(blob)
       const a = document.createElement('a')
       a.href = url
-      const filename = includeAllProducts && selectedCategoryId 
-        ? `inventario-fisico-bodega-${selectedWarehouseId}-categoria-${selectedCategoryId}.xlsx`
-        : `inventario-fisico-bodega-${selectedWarehouseId}.xlsx`
-      a.download = filename
+      const parts: string[] = ['inventario-fisico']
+      if (selectedWarehouseId) parts.push(`bodega-${selectedWarehouseId}`)
+      if (includeAllProducts && selectedCategoryId) parts.push(`categoria-${selectedCategoryId}`)
+      a.download = `${parts.join('-')}.xlsx`
       document.body.appendChild(a)
       a.click()
       document.body.removeChild(a)
@@ -296,14 +307,22 @@ export default function InventoryPhysicalForm() {
           {/* Paso 2: Descarga de Plantilla */}
           <div className="space-y-2">
             <Label>Descargar Plantilla Excel</Label>
-            <Button 
+            <Button
               onClick={handleDownloadTemplate}
-              disabled={!selectedWarehouseId || isDownloading || (includeAllProducts && !selectedCategoryId)}
+              disabled={
+                isDownloading ||
+                (includeAllProducts ? !selectedCategoryId : !selectedWarehouseId)
+              }
               className="w-full"
             >
               <Download className="h-4 w-4 mr-2" />
               {isDownloading ? 'Descargando...' : 'Descargar Plantilla'}
             </Button>
+            {includeAllProducts && !selectedWarehouseId && selectedCategoryId && (
+              <p className="text-xs text-gray-500">
+                Descargarás todos los productos de la categoría. La columna "Cantidad Actual" será 0 al no haber bodega seleccionada.
+              </p>
+            )}
           </div>
 
           <Separator />
