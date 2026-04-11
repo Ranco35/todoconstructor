@@ -391,6 +391,48 @@ export async function getActiveLeadsByClientId(clientId: number): Promise<{ succ
 }
 
 /**
+ * Obtiene TODOS los leads de un cliente específico (incluyendo perdidos/ganados).
+ * Usado por la vista de detalle del cliente para mostrar el historial CRM completo.
+ */
+export async function getAllLeadsByClientId(clientId: number): Promise<{ success: boolean; data?: any[]; error?: string }> {
+  try {
+    const supabase = await getSupabaseServerClient();
+
+    const { data: leads, error } = await supabase
+      .from('crm_leads')
+      .select(`
+        id,
+        title,
+        description,
+        source,
+        stage_id,
+        priority,
+        estimated_value,
+        probability,
+        expected_close_date,
+        actual_close_date,
+        loss_reason,
+        loss_reason_category,
+        created_at,
+        updated_at,
+        stage:crm_stages(id, name, description, color, is_final)
+      `)
+      .eq('client_id', clientId)
+      .order('created_at', { ascending: false });
+
+    if (error) {
+      console.error('Error fetching leads for client:', error);
+      return { success: false, error: error.message };
+    }
+
+    return { success: true, data: leads || [] };
+  } catch (error) {
+    console.error('Error in getAllLeadsByClientId:', error);
+    return { success: false, error: 'Error interno del servidor' };
+  }
+}
+
+/**
  * Obtiene estadísticas del CRM
  */
 export async function getCRMStats(): Promise<{ success: boolean; data?: any; error?: string }> {

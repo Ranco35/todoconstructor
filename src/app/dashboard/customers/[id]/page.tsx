@@ -1,23 +1,26 @@
 import React from 'react';
 import { getClient } from '@/actions/clients';
+import { getAllLeadsByClientId } from '@/actions/crm/leads';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
-import { 
-  Users, 
-  ArrowLeft, 
-  Edit, 
-  Building2, 
-  User, 
-  Phone, 
-  Mail, 
+import {
+  Users,
+  ArrowLeft,
+  Edit,
+  Building2,
+  User,
+  Phone,
+  Mail,
   MapPin,
   Globe,
   Calendar,
   Star,
   Tag as TagIcon,
   DollarSign,
-  FileText
+  FileText,
+  Target,
+  ExternalLink
 } from 'lucide-react';
 import Link from 'next/link';
 import { notFound } from 'next/navigation';
@@ -37,13 +40,17 @@ export default async function ClientDetailsPage({ params }: ClientDetailsPagePro
     notFound();
   }
 
-  const clientResult = await getClient(clientId);
+  const [clientResult, leadsResult] = await Promise.all([
+    getClient(clientId),
+    getAllLeadsByClientId(clientId),
+  ]);
 
   if (!clientResult.success || !clientResult.data) {
     notFound();
   }
 
   const client = clientResult.data;
+  const crmLeads: any[] = leadsResult.success ? (leadsResult.data || []) : [];
 
   const getClientName = () => {
     if (client.tipoCliente === ClientType.EMPRESA) {
@@ -457,8 +464,83 @@ export default async function ClientDetailsPage({ params }: ClientDetailsPagePro
               </div>
             </CardContent>
           </Card>
+
+          {/* Historial CRM */}
+          <Card>
+            <CardHeader>
+              <CardTitle className="flex items-center gap-2">
+                <Target className="h-5 w-5" />
+                Historial CRM ({crmLeads.length})
+              </CardTitle>
+            </CardHeader>
+            <CardContent>
+              {crmLeads.length === 0 ? (
+                <div className="flex flex-col items-center justify-center py-6 text-center">
+                  <Target className="h-10 w-10 text-gray-300 mb-2" />
+                  <p className="text-sm text-muted-foreground">
+                    Sin leads CRM registrados
+                  </p>
+                </div>
+              ) : (
+                <div className="space-y-3">
+                  {crmLeads.map((lead) => {
+                    const stage = lead.stage;
+                    const stageColor = stage?.color || '#6B7280';
+                    const stageLabel = stage?.description || stage?.name || 'Sin etapa';
+                    const isLost = stage?.name === 'perdido';
+                    const isWon = stage?.name === 'ganado';
+
+                    return (
+                      <Link
+                        key={lead.id}
+                        href={`/dashboard/crm/${lead.id}`}
+                        className="block p-3 border rounded-lg hover:border-blue-400 hover:shadow-sm transition"
+                      >
+                        <div className="flex items-start justify-between gap-2">
+                          <p className="font-medium text-sm flex-1 line-clamp-2">
+                            {lead.title}
+                          </p>
+                          <ExternalLink className="h-3 w-3 text-gray-400 flex-shrink-0 mt-0.5" />
+                        </div>
+                        <div className="flex items-center gap-2 mt-2 flex-wrap">
+                          <Badge
+                            variant="outline"
+                            className="text-[10px] font-semibold"
+                            style={{
+                              borderColor: stageColor,
+                              color: stageColor,
+                              backgroundColor: `${stageColor}15`,
+                            }}
+                          >
+                            {stageLabel}
+                          </Badge>
+                          {lead.estimated_value > 0 && (
+                            <span className="text-[11px] font-medium text-green-700">
+                              {formatCurrency(lead.estimated_value)}
+                            </span>
+                          )}
+                        </div>
+                        <div className="mt-1.5 text-[11px] text-muted-foreground space-y-0.5">
+                          <p>Creado: {formatDate(lead.created_at)}</p>
+                          {isLost && lead.actual_close_date && (
+                            <p>Perdido: {formatDate(lead.actual_close_date)}</p>
+                          )}
+                          {isWon && lead.actual_close_date && (
+                            <p>Ganado: {formatDate(lead.actual_close_date)}</p>
+                          )}
+                          {isLost && lead.loss_reason && (
+                            <p className="italic">Motivo: {lead.loss_reason}</p>
+                          )}
+                        </div>
+                      </Link>
+                    );
+                  })}
+                </div>
+              )}
+            </CardContent>
+          </Card>
         </div>
       </div>
     </div>
   );
-} 
+}
