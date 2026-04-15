@@ -207,13 +207,6 @@ export default async function InventoryDashboardPage() {
               color="bg-green-50 border-green-200 hover:bg-green-100"
             />
             <QuickAction
-              title="Reportes"
-              description="Generar reportes de inventario"
-              icon="📈"
-              href="/dashboard/inventory/reports"
-              color="bg-purple-50 border-purple-200 hover:bg-purple-100"
-            />
-            <QuickAction
               title="Ajuste de Inventario"
               description="Toma de inventario físico"
               icon="📋"
@@ -328,16 +321,6 @@ export default async function InventoryDashboardPage() {
               <div>
                 <p className="font-medium text-gray-900">Nuevo Producto</p>
                 <p className="text-sm text-gray-600">Agregar al inventario</p>
-              </div>
-            </div>
-          </Link>
-          
-          <Link href="/dashboard/inventory/reports" className="p-4 bg-gray-50 rounded-lg hover:bg-gray-100 transition-colors">
-            <div className="flex items-center space-x-3">
-              <span className="text-xl">📈</span>
-              <div>
-                <p className="font-medium text-gray-900">Reportes</p>
-                <p className="text-sm text-gray-600">Análisis de inventario</p>
               </div>
             </div>
           </Link>
