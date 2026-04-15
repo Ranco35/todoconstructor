@@ -34,9 +34,14 @@ export interface MovementFilters {
 export async function createInventoryMovement(movement: InventoryMovement) {
   try {
     const supabase = await getSupabaseServerClient()
-    
+
     // Validaciones básicas
-    if (movement.quantity <= 0) {
+    // AJUSTE permite cantidad 0 (fijar stock en cero); el resto debe ser > 0
+    if (movement.movementType === 'AJUSTE') {
+      if (movement.quantity < 0 || isNaN(movement.quantity)) {
+        return { success: false, error: 'La cantidad del ajuste no puede ser negativa' }
+      }
+    } else if (movement.quantity <= 0) {
       return { success: false, error: 'La cantidad debe ser mayor a 0' }
     }
 
@@ -50,6 +55,10 @@ export async function createInventoryMovement(movement: InventoryMovement) {
 
     if (movement.movementType === 'SALIDA' && !movement.fromWarehouseId) {
       return { success: false, error: 'Las salidas requieren bodega de origen' }
+    }
+
+    if (movement.movementType === 'AJUSTE' && !movement.toWarehouseId && !movement.fromWarehouseId) {
+      return { success: false, error: 'El ajuste de inventario requiere seleccionar una bodega' }
     }
 
     // Verificar stock disponible para salidas y transferencias
@@ -111,6 +120,43 @@ export async function createInventoryMovement(movement: InventoryMovement) {
         p_warehouse_id: movement.fromWarehouseId,
         p_quantity_change: -movement.quantity
       })
+    } else if (movement.movementType === 'AJUSTE') {
+      // AJUSTE: la cantidad es el NUEVO stock absoluto, NO se suma.
+      // Se reemplaza el valor directamente para que coincida con el conteo físico real.
+      const adjustWarehouseId = movement.toWarehouseId ?? movement.fromWarehouseId
+      const { data: existingWp } = await supabase
+        .from('Warehouse_Product')
+        .select('id')
+        .eq('productId', movement.productId)
+        .eq('warehouseId', adjustWarehouseId)
+        .maybeSingle()
+
+      if (existingWp) {
+        const { error: adjustError } = await supabase
+          .from('Warehouse_Product')
+          .update({ quantity: movement.quantity, updatedAt: new Date().toISOString() })
+          .eq('id', existingWp.id)
+
+        if (adjustError) {
+          console.error('Error al ajustar stock:', adjustError)
+          return { success: false, error: `Error al ajustar el stock: ${adjustError.message}` }
+        }
+      } else {
+        const { error: insertWpError } = await supabase
+          .from('Warehouse_Product')
+          .insert({
+            productId: movement.productId,
+            warehouseId: adjustWarehouseId,
+            quantity: movement.quantity,
+            minStock: 0,
+            maxStock: null
+          })
+
+        if (insertWpError) {
+          console.error('Error al crear registro de stock para ajuste:', insertWpError)
+          return { success: false, error: `Error al crear el registro de stock: ${insertWpError.message}` }
+        }
+      }
     }
 
     revalidatePath('/dashboard/inventory/movements')
