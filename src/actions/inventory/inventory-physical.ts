@@ -1,4 +1,20 @@
-import { getSupabaseServerClient, getSupabaseServiceClient } from '@/lib/supabase-server'
+import { getSupabaseServerClient } from '@/lib/supabase-server'
+import { createClient } from '@supabase/supabase-js'
+
+// Cliente service_role REAL: sin cookies ni sesión de usuario, usa solo la
+// service_role key → bypassa RLS de verdad. El helper getSupabaseServiceClient()
+// del archivo supabase-server.ts usa @supabase/ssr con cookies y termina usando
+// el JWT del usuario desde la cookie, por lo que RLS NO se bypassea.
+function getInventoryAdminClient() {
+  const url = process.env.NEXT_PUBLIC_SUPABASE_URL
+  const key = process.env.SUPABASE_SERVICE_ROLE_KEY || process.env.SUPABASE_SERVICE_KEY
+  if (!url || !key) {
+    throw new Error('SUPABASE_SERVICE_ROLE_KEY no está configurada; no se puede actualizar inventario con bypass de RLS.')
+  }
+  return createClient(url, key, {
+    auth: { persistSession: false, autoRefreshToken: false }
+  })
+}
 
 // Interfaz específica para productos de inventario físico
 interface InventoryPhysicalProduct {
@@ -499,10 +515,11 @@ export async function importInventoryPhysicalExcel({
   userId: string;
   comentarios?: string;
 }): Promise<InventoryPhysicalImportResult> {
-  // 🔑 CRÍTICO: Usar service role para bypassear RLS.
-  // Con anon key + RLS, si el cookie de sesión falla el UPDATE
-  // se resuelve sin error pero no modifica filas (stock queda intacto).
-  const supabase = await getSupabaseServiceClient();
+  // 🔑 CRÍTICO: cliente service_role PURO (sin cookies) para bypassear RLS.
+  // El helper compartido getSupabaseServiceClient usa cookies vía @supabase/ssr
+  // y termina autenticando con el JWT del usuario desde la cookie, NO con la
+  // service_role key → RLS sigue activo y los UPDATE silenciosamente no afectan filas.
+  const supabase = getInventoryAdminClient();
 
   try {
     // Parsear Excel específicamente para inventario físico
