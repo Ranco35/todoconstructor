@@ -1,4 +1,4 @@
-import { getSupabaseServerClient } from '@/lib/supabase-server'
+import { getSupabaseServerClient, getSupabaseServiceClient } from '@/lib/supabase-server'
 
 // Interfaz específica para productos de inventario físico
 interface InventoryPhysicalProduct {
@@ -499,8 +499,11 @@ export async function importInventoryPhysicalExcel({
   userId: string;
   comentarios?: string;
 }): Promise<InventoryPhysicalImportResult> {
-  const supabase = await getSupabaseServerClient();
-  
+  // 🔑 CRÍTICO: Usar service role para bypassear RLS.
+  // Con anon key + RLS, si el cookie de sesión falla el UPDATE
+  // se resuelve sin error pero no modifica filas (stock queda intacto).
+  const supabase = await getSupabaseServiceClient();
+
   try {
     // Parsear Excel específicamente para inventario físico
     const productosRaw = await parseInventoryPhysicalExcel(fileBuffer);
@@ -552,23 +555,39 @@ export async function importInventoryPhysicalExcel({
       continue;
     }
     
-    // Buscar producto por SKU
-    console.log(`🔍 [BD] Buscando producto con SKU: ${sku}`);
-    const { data: product, error: prodError } = await supabase
+    // Buscar producto por SKU (ilike para tolerar diferencias de mayúsculas/minúsculas y trim)
+    const skuTrim = sku.trim();
+    console.log(`🔍 [BD] Buscando producto con SKU: "${skuTrim}"`);
+    const { data: productos, error: prodError } = await supabase
       .from('Product')
-      .select('id')
-      .eq('sku', sku)
-      .single();
-    
-    if (prodError || !product) {
+      .select('id, sku')
+      .ilike('sku', skuTrim)
+      .limit(2);
+
+    if (prodError) {
       errors++;
-      errorDetails.push(`No se encontró producto con SKU: ${sku}`);
-      console.log(`❌ [ERROR] No se encontró producto con SKU: ${sku}`, prodError);
+      errorDetails.push(`Error buscando producto con SKU ${skuTrim}: ${prodError.message}`);
+      console.log(`❌ [ERROR] Error BD buscando SKU ${skuTrim}:`, prodError);
       continue;
     }
-    
-    console.log(`✅ [BD] Producto encontrado: ID ${product.id} para SKU ${sku}`);
-    
+
+    if (!productos || productos.length === 0) {
+      errors++;
+      errorDetails.push(`No se encontró producto con SKU: ${skuTrim}`);
+      console.log(`❌ [ERROR] No se encontró producto con SKU: ${skuTrim}`);
+      continue;
+    }
+
+    if (productos.length > 1) {
+      errors++;
+      errorDetails.push(`Hay más de un producto con SKU ${skuTrim}. Corrige duplicados antes de ajustar.`);
+      console.log(`❌ [ERROR] SKU duplicado: ${skuTrim}`);
+      continue;
+    }
+
+    const product = productos[0];
+    console.log(`✅ [BD] Producto encontrado: ID ${product.id} para SKU ${skuTrim}`);
+
     // Buscar relación con bodega
     console.log(`🔍 [BD] Buscando relación producto ${product.id} con bodega ${warehouseId}`);
     const { data: wp, error: wpError } = await supabase
@@ -576,42 +595,66 @@ export async function importInventoryPhysicalExcel({
       .select('id, quantity')
       .eq('warehouseId', warehouseId)
       .eq('productId', product.id)
-      .single();
-      
-    if (wpError || !wp) {
+      .maybeSingle();
+
+    if (wpError) {
       errors++;
-      errorDetails.push(`El producto con SKU ${sku} no está asignado a esta bodega. Debe asignarse primero antes de ajustar el inventario.`);
-      console.log(`❌ [ERROR] Producto ${sku} no asignado a bodega ${warehouseId}`, wpError);
+      errorDetails.push(`Error consultando stock para SKU ${skuTrim}: ${wpError.message}`);
+      console.log(`❌ [ERROR] BD stock ${skuTrim}:`, wpError);
       continue;
     }
-    
-    const stockAnterior = wp.quantity || 0;
-    console.log(`📊 [COMPARACIÓN] SKU: ${sku} | Stock Anterior: ${stockAnterior} | Stock Contado: ${stockContado}`);
-    
+
+    if (!wp) {
+      errors++;
+      errorDetails.push(`El producto con SKU ${skuTrim} no está asignado a esta bodega. Debe asignarse primero antes de ajustar el inventario.`);
+      console.log(`❌ [ERROR] Producto ${skuTrim} no asignado a bodega ${warehouseId}`);
+      continue;
+    }
+
+    const stockAnterior = Number(wp.quantity) || 0;
+    console.log(`📊 [COMPARACIÓN] SKU: ${skuTrim} | Stock Anterior: ${stockAnterior} | Stock Contado: ${stockContado}`);
+
     if (stockAnterior !== stockContado) {
-      console.log(`🔄 [ACTUALIZANDO] SKU: ${sku} de ${stockAnterior} a ${stockContado}`);
-      
-      // Actualizar stock
-      const { error: updateError } = await supabase
+      console.log(`🔄 [ACTUALIZANDO] SKU: ${skuTrim} de ${stockAnterior} a ${stockContado}`);
+
+      // Actualizar stock devolviendo la fila para verificar que realmente se modificó.
+      // Con RLS, un UPDATE bloqueado se resuelve sin error pero sin cambios → data = []
+      const { data: updatedRows, error: updateError } = await supabase
         .from('Warehouse_Product')
         .update({ quantity: stockContado, updatedAt: now })
-        .eq('id', wp.id);
-        
+        .eq('id', wp.id)
+        .select('id, quantity');
+
       if (updateError) {
         errors++;
-        errorDetails.push(`Error actualizando stock para SKU ${sku}: ${updateError.message}`);
-        console.log(`❌ [ERROR] Error actualizando stock para ${sku}:`, updateError);
+        errorDetails.push(`Error actualizando stock para SKU ${skuTrim}: ${updateError.message}`);
+        console.log(`❌ [ERROR] Error actualizando stock para ${skuTrim}:`, updateError);
         continue;
       }
-      
+
+      if (!updatedRows || updatedRows.length === 0) {
+        errors++;
+        errorDetails.push(`El stock de ${skuTrim} no se pudo actualizar (posible bloqueo por permisos). Stock se mantiene en ${stockAnterior}.`);
+        console.log(`❌ [ERROR] UPDATE sin filas afectadas para ${skuTrim} (RLS?)`);
+        continue;
+      }
+
+      const nuevoStockConfirmado = Number(updatedRows[0]?.quantity ?? stockContado);
+      if (nuevoStockConfirmado !== stockContado) {
+        errors++;
+        errorDetails.push(`El stock de ${skuTrim} quedó en ${nuevoStockConfirmado} (esperado ${stockContado}).`);
+        console.log(`❌ [ERROR] Stock final distinto al esperado para ${skuTrim}: ${nuevoStockConfirmado} vs ${stockContado}`);
+        continue;
+      }
+
       updated++;
-      differences.push({ sku, nombre, stockAnterior, stockContado, diferencia: stockContado - stockAnterior, comentario });
-      console.log(`✅ [ACTUALIZADO] SKU: ${sku} actualizado exitosamente`);
+      differences.push({ sku: skuTrim, nombre, stockAnterior, stockContado, diferencia: stockContado - stockAnterior, comentario });
+      console.log(`✅ [ACTUALIZADO] SKU: ${skuTrim} → ${nuevoStockConfirmado}`);
     } else {
-      console.log(`⚪ [SIN CAMBIOS] SKU: ${sku} - Stock igual (${stockAnterior})`);
+      console.log(`⚪ [SIN CAMBIOS] SKU: ${skuTrim} - Stock igual (${stockAnterior})`);
       // Agregar a log cuando no hay diferencia pero con comentario
       if (comentario) {
-        differences.push({ sku, nombre, stockAnterior, stockContado, diferencia: 0, comentario });
+        differences.push({ sku: skuTrim, nombre, stockAnterior, stockContado, diferencia: 0, comentario });
       }
     }
   }
