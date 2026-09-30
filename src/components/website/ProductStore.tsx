@@ -93,7 +93,7 @@ export default function ProductStore() {
       filtered = filtered.filter(product => {
         const price = product.hasPromotion && product.promotionPrice 
           ? product.promotionPrice 
-          : (product.finalPrice || product.saleprice || 0)
+          : (product.originalPrice || 0)
         return price >= activeFilters.minPrice!
       })
     }
@@ -102,7 +102,7 @@ export default function ProductStore() {
       filtered = filtered.filter(product => {
         const price = product.hasPromotion && product.promotionPrice 
           ? product.promotionPrice 
-          : (product.finalPrice || product.saleprice || 0)
+          : (product.originalPrice || 0)
         return price <= activeFilters.maxPrice!
       })
     }
