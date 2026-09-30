@@ -3,7 +3,7 @@
 import { getSupabaseServerClient } from '@/lib/supabase-server'
 import { revalidatePath } from 'next/cache'
 import { z } from 'zod'
-import { precioVenta } from '@/lib/cotizacion-ferreteria'
+import { precioVenta, type ProductoPrecio } from '@/lib/cotizacion-ferreteria'
 
 // ===============================
 // TYPES AND SCHEMAS
@@ -299,7 +299,9 @@ export async function getPOSProductsByType(registerTypeId: number): Promise<{ su
           isPOSEnabled,
           saleprice,
           vat,
-          "finalPrice"
+          "finalPrice",
+          categoryid,
+          supplierid
         )
       `)
       .eq('isActive', true)
@@ -321,19 +323,14 @@ export async function getPOSProductsByType(registerTypeId: number): Promise<{ su
     const productsWithUpdatedPrices = filteredData.map(posProduct => {
       const product = posProduct.product;
       
-      // Los precios finales congelados YA incluyen IVA, usarlos directamente
-      let finalPrice = posProduct.price; // Precio por defecto de POSProduct
+      // Mismo cálculo que la web y el MCP (precioVenta): finalPrice congelado
+      // o neto × (1 + IVA). vat = 0 es exento: no se le suma IVA.
+      const precio = product ? precioVenta(product) : null
+      let finalPrice = posProduct.price; // Respaldo si el producto no tiene precio
       let priceSource = 'POSProduct';
-      
-      if (product && product.finalPrice) {
-        // PRIORIDAD 1: Precio final congelado (YA incluye IVA)
-        finalPrice = product.finalPrice;
-        priceSource = 'finalPrice';
-      } else if (product && product.saleprice) {
-        // PRIORIDAD 2: Calcular desde precio neto si no hay precio congelado
-        const vatRate = product.vat || 19;
-        finalPrice = Math.round(product.saleprice * (1 + vatRate / 100));
-        priceSource = 'calculated';
+      if (precio?.tiene_precio) {
+        finalPrice = precio.precio_con_iva;
+        priceSource = product.finalPrice > 0 ? 'finalPrice' : 'calculated';
       }
       
       // Log para verificar precios
@@ -2104,14 +2101,16 @@ export async function updatePOSProductPrices(): Promise<{ success: boolean; data
       .select(`
         id,
         name,
-        price as precio_actual_pos,
+        precio_actual_pos:price,
         "productId",
         product:Product(
           id,
           name,
           saleprice,
           "finalPrice",
-          vat
+          vat,
+          categoryid,
+          supplierid
         )
       `)
       .not('productId', 'is', null)
@@ -2129,8 +2128,12 @@ export async function updatePOSProductPrices(): Promise<{ success: boolean; data
     for (const posProduct of posProducts || []) {
       if (posProduct.product) {
         const product = posProduct.product
-        const newPrice = product.finalPrice || Math.round(product.saleprice * (1 + (product.vat || 19) / 100))
-        
+        // FK a uno: PostgREST entrega un objeto aunque el tipo inferido diga arreglo.
+        const precio = precioVenta(product as unknown as ProductoPrecio)
+        // Sin precio cargado no se pisa POSProduct.price con 0.
+        if (!precio.tiene_precio) continue
+        const newPrice = precio.precio_con_iva
+
         if (posProduct.precio_actual_pos !== newPrice) {
           updates.push({
             id: posProduct.id,
