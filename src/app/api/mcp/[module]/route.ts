@@ -4,7 +4,7 @@
  * Endpoint dinámico que expone un MCP server específico por módulo.
  * Ej: /api/mcp/inventario?key=YOUR_KEY, /api/mcp/ventas?key=YOUR_KEY
  *
- * Módulos disponibles: inventario, ventas
+ * Módulos disponibles: inventario, ventas, ferreteria (recepción de Termas: solo lectura, key MCP_API_KEY_FERRETERIA)
  */
 
 import { NextRequest, NextResponse } from "next/server";
