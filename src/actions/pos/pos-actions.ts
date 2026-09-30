@@ -3,6 +3,7 @@
 import { getSupabaseServerClient } from '@/lib/supabase-server'
 import { revalidatePath } from 'next/cache'
 import { z } from 'zod'
+import { precioVenta } from '@/lib/cotizacion-ferreteria'
 
 // ===============================
 // TYPES AND SCHEMAS
@@ -433,9 +434,11 @@ export async function syncPOSProducts(): Promise<{ success: boolean; data?: any;
         sku,
         saleprice,
         "finalPrice",
+        vat,
         costprice,
         image,
         categoryid,
+        supplierid,
         isPOSEnabled
       `)
       .eq('isPOSEnabled', true)
@@ -488,6 +491,8 @@ export async function syncPOSProducts(): Promise<{ success: boolean; data?: any;
     
     // Para cada producto, crear registros en POSProduct para ambos tipos de POS si tienen categorías disponibles
     for (const product of productsToSync) {
+      // POSProduct.price guarda el precio CON IVA; saleprice es neto.
+      const precioConIva = precioVenta(product).precio_con_iva
       console.log(`📝 Preparando producto "${product.name}" para sincronización...`)
       
       // Agregar a Recepción si tiene categoría
@@ -497,7 +502,7 @@ export async function syncPOSProducts(): Promise<{ success: boolean; data?: any;
           name: product.name,
           description: product.description,
           sku: product.sku ? `${product.sku}-REC` : `PROD-${product.id}-REC`, // SKU único para Recepción
-          price: Math.round(product.finalPrice || product.saleprice || 0), // USAR PRECIO FINAL CONGELADO SI ESTÁ DISPONIBLE
+          price: precioConIva,
           cost: Math.round(product.costprice || 0), // CORREGIDO: Redondear costo también
           image: product.image,
           categoryId: receptionCategory.id,
@@ -515,7 +520,7 @@ export async function syncPOSProducts(): Promise<{ success: boolean; data?: any;
           name: product.name,
           description: product.description,
           sku: product.sku ? `${product.sku}-REST` : `PROD-${product.id}-REST`, // SKU único para Restaurante
-          price: Math.round(product.finalPrice || product.saleprice || 0), // USAR PRECIO FINAL CONGELADO SI ESTÁ DISPONIBLE
+          price: precioConIva,
           cost: Math.round(product.costprice || 0), // CORREGIDO: Redondear costo también
           image: product.image,
           categoryId: restaurantCategory.id,
