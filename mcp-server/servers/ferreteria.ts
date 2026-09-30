@@ -27,23 +27,27 @@ const CAMPOS = "id, name, sku, brand, unit, type, description, saleprice, finalP
 export function registerFerreteriaTools(server: McpServer) {
   const supabase = getMcpSupabase();
 
+  // Si una lectura falla se lanza el error: cotizar con stock 0 o sin la promoción
+  // por un fallo silencioso es peor que decirle a Claude que no pudo leer el dato.
   const promocionesActivas = async (): Promise<ActivePromotion[]> => {
     const ahora = new Date().toISOString();
-    const { data } = await supabase
+    const { data, error } = await supabase
       .from("PricePromotions")
       .select("*")
       .eq("isActive", true)
       .lte("startDate", ahora)
       .gte("endDate", ahora)
       .order("priority", { ascending: false });
+    if (error) throw new Error(`No se pudieron leer las promociones: ${error.message}`);
     return (data || []) as ActivePromotion[];
   };
 
   const stockDe = async (ids: number[]) => {
-    const { data } = await supabase
+    const { data, error } = await supabase
       .from("Warehouse_Product")
       .select("productId, quantity, warehouse:Warehouse(id, name)")
       .in("productId", ids);
+    if (error) throw new Error(`No se pudo leer el stock: ${error.message}. No informes stock hasta que se resuelva.`);
     const porProducto = new Map<number, { total: number; bodegas: Array<{ bodega: string; cantidad: number }> }>();
     for (const r of (data || []) as any[]) {
       const id = Number(r.productId);
