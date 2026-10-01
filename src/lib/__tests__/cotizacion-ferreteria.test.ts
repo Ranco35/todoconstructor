@@ -32,7 +32,13 @@ test('promoción de la categoría baja el precio y se informa', () => {
   const p = precioVenta(prod(), [promo({ appliesTo: 'categories', targetIds: [5] })])
   assert.equal(p.precio_con_iva, 11900)
   assert.equal(p.precio_final, 10710)
-  assert.deepEqual(p.promocion, { nombre: 'Promo', ahorro: 1190 })
+  assert.deepEqual(p.promocion, { nombre: 'Promo', tipo: 'discount_percentage', ahorro: 1190 })
+})
+
+test('sin precio final usa el IVA del producto, no siempre 19 %', () => {
+  // La web mostraba el neto cuando finalPrice venía vacío; este es el precio que debe ver.
+  assert.equal(precioVenta(prod({ finalPrice: 0, vat: 0 })).precio_con_iva, 10000)
+  assert.equal(precioVenta(prod({ finalPrice: 0, vat: null })).precio_con_iva, 11900)
 })
 
 test('promoción de otra categoría no aplica', () => {

@@ -25,7 +25,7 @@ export interface PrecioVenta {
   /** Precio unitario con IVA que se cobra (con promoción si hay). */
   precio_final: number
   iva_pct: number
-  promocion: { nombre: string; ahorro: number } | null
+  promocion: { nombre: string; tipo: string; ahorro: number } | null
   /** false si el producto no tiene precio de venta cargado: no se puede cotizar. */
   tiene_precio: boolean
 }
@@ -40,7 +40,9 @@ export function precioVenta(p: ProductoPrecio, promociones: ActivePromotion[] = 
   const promo = findBestPromotionForProduct(p.id, p.categoryid, p.supplierid, promociones)
   const conPromo = promo ? Math.round(calculatePromotionPrice(precio_con_iva, promo)) : precio_con_iva
   // Solo se informa como promoción si baja el precio: un recargo no se vende como oferta.
-  const promocion = promo && conPromo < precio_con_iva ? { nombre: promo.name, ahorro: precio_con_iva - conPromo } : null
+  const promocion = promo && conPromo < precio_con_iva
+    ? { nombre: promo.name, tipo: promo.promotionType, ahorro: precio_con_iva - conPromo }
+    : null
   return { precio_con_iva, precio_final: promocion ? conPromo : precio_con_iva, iva_pct, promocion, tiene_precio: true }
 }
 

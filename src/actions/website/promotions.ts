@@ -1,11 +1,8 @@
 'use server'
 
 import { getSupabaseServiceClient } from '@/lib/supabase-server'
-import { 
-  ActivePromotion, 
-  calculatePromotionPrice, 
-  findBestPromotionForProduct 
-} from '@/lib/promotions-utils'
+import { ActivePromotion } from '@/lib/promotions-utils'
+import { precioVenta } from '@/lib/cotizacion-ferreteria'
 
 export interface ProductWithPromotion {
   id: number;
@@ -118,37 +115,20 @@ export async function getProductsWithPromotions(): Promise<ProductWithPromotion[
       const category = categoriesData.find(cat => cat.id === product.categoryid);
       const warehouse = warehousesData.find(wh => wh.id === product.Warehouse_Product?.[0]?.warehouseId);
       
-      // Obtener precio original
-      const originalPrice = product.finalPrice || product.saleprice || 0;
-      
-      // Buscar promoción aplicable
-      const bestPromotion = findBestPromotionForProduct(
-        product.id,
-        product.categoryid,
-        product.supplierid,
-        activePromotions
-      );
-
-      let promotionPrice = null;
-      let hasPromotion = false;
-      let promotionData = undefined;
-
-      if (bestPromotion && originalPrice > 0) {
-        promotionPrice = calculatePromotionPrice(originalPrice, bestPromotion);
-        hasPromotion = promotionPrice !== originalPrice;
-        
-        if (hasPromotion) {
-          const savings = originalPrice - promotionPrice;
-          const savingsPercent = originalPrice > 0 ? (savings / originalPrice * 100) : 0;
-          
-          promotionData = {
-            name: bestPromotion.name,
-            type: bestPromotion.promotionType,
-            savings: Math.abs(savings),
-            savingsPercent: Math.abs(savingsPercent)
-          };
-        }
-      }
+      // Mismo precio que cobra el POS: finalPrice o neto × (1 + IVA), con la
+      // promoción aplicada sobre el precio con IVA (src/lib/cotizacion-ferreteria.ts).
+      const precio = precioVenta(product, activePromotions);
+      const originalPrice = precio.precio_con_iva;
+      const hasPromotion = precio.promocion !== null;
+      const promotionPrice = hasPromotion ? precio.precio_final : null;
+      const promotionData = precio.promocion
+        ? {
+            name: precio.promocion.nombre,
+            type: precio.promocion.tipo,
+            savings: precio.promocion.ahorro,
+            savingsPercent: precio.promocion.ahorro / originalPrice * 100
+          }
+        : undefined;
 
       return {
         id: product.id,

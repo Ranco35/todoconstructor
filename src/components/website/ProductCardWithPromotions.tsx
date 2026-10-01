@@ -45,7 +45,7 @@ export default function ProductCardWithPromotions({ product, onAddToCart }: Prod
   // Precio final a mostrar (con promoción si existe, sino el original)
   const displayPrice = product.hasPromotion && product.promotionPrice 
     ? product.promotionPrice 
-    : (product.finalPrice || product.saleprice || 0);
+    : (product.originalPrice || 0); // ya viene con IVA, igual que en caja
 
   // Función para manejar WhatsApp
   const handleWhatsAppClick = () => {
