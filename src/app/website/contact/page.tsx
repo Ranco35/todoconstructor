@@ -1,4 +1,5 @@
 import { Phone, MapPin, MessageCircle } from 'lucide-react'
+import { buildWhatsAppUrl } from '@/lib/website/whatsapp'
 
 export default function ContactPage() {
   return (
@@ -29,7 +30,7 @@ export default function ContactPage() {
                 Chatea con nosotros para consultas rápidas
               </p>
               <a
-                href="https://wa.me/56969095111?text=Hola,%20necesito%20información%20sobre%20productos%20de%20TC%20Constructor"
+                href={buildWhatsAppUrl('Hola, necesito información sobre productos de TC Constructor')}
                 target="_blank"
                 rel="noopener noreferrer"
                 className="inline-flex items-center bg-green-600 text-white px-6 py-3 rounded-lg font-medium hover:bg-green-700 transition-colors"

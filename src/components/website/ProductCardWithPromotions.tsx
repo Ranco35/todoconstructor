@@ -3,6 +3,7 @@
 import { useState } from 'react'
 import { ShoppingCart, Package, MapPin, Star, MessageCircle, Tag, Percent } from 'lucide-react'
 import { ProductWithPromotion } from '@/actions/website/promotions'
+import { buildWhatsAppUrl } from '@/lib/website/whatsapp'
 
 interface ProductCardWithPromotionsProps {
   product: ProductWithPromotion
@@ -53,22 +54,20 @@ export default function ProductCardWithPromotions({ product, onAddToCart }: Prod
       onAddToCart(product);
     } else {
       // Lógica por defecto para WhatsApp
-      let message = `Hola! Me interesa este producto:%0A%0A*${product.name}*%0ASKU: ${product.sku || 'No disponible'}`
-      
+      let message = `Hola! Me interesa este producto:\n\n*${product.name}*\nSKU: ${product.sku || 'No disponible'}`
+
       if (product.hasPromotion && product.promotionData) {
-        message += `%0A%0A🏷️ ¡ESTÁ EN PROMOCIÓN!%0A`
-        message += `Precio original: $${product.originalPrice?.toLocaleString() || 'Consultar'}%0A`
-        message += `*Precio con descuento: $${product.promotionPrice?.toLocaleString() || 'Consultar'}*%0A`
+        message += `\n\n🏷️ ¡ESTÁ EN PROMOCIÓN!\n`
+        message += `Precio original: $${product.originalPrice?.toLocaleString() || 'Consultar'}\n`
+        message += `*Precio con descuento: $${product.promotionPrice?.toLocaleString() || 'Consultar'}*\n`
         message += `*Ahorro: $${product.promotionData.savings.toLocaleString()} (${Math.round(product.promotionData.savingsPercent)}%)*`
       } else {
-        message += `%0APrecio: $${displayPrice.toLocaleString() || 'Consultar'}`
+        message += `\nPrecio: $${displayPrice.toLocaleString() || 'Consultar'}`
       }
-      
-      message += `%0A%0A¿Está disponible?`
-      
-      const phoneNumber = process.env.NEXT_PUBLIC_WHATSAPP_NUMBER || '56969095111'
-      const whatsappUrl = `https://wa.me/${phoneNumber}?text=${message}`
-      window.open(whatsappUrl, '_blank')
+
+      message += `\n\n¿Está disponible?`
+
+      window.open(buildWhatsAppUrl(message), '_blank')
     }
   };
 
@@ -88,6 +87,8 @@ export default function ProductCardWithPromotions({ product, onAddToCart }: Prod
       <div className="relative h-48 bg-gray-100 overflow-hidden">
         {product.image && !imageError ? (
           <img
+            loading="lazy"
+            decoding="async"
             src={product.image}
             alt={product.name}
             className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
@@ -95,6 +96,8 @@ export default function ProductCardWithPromotions({ product, onAddToCart }: Prod
           />
         ) : (
           <img
+            loading="lazy"
+            decoding="async"
             src={getGenericImage(product.category?.name || null)}
             alt={product.name}
             className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"

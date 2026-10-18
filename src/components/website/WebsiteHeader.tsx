@@ -46,7 +46,7 @@ export default function WebsiteHeader() {
           <div className="flex items-center">
             <Link href="/website" className="flex items-center space-x-3">
               <div className="w-12 h-12 bg-gradient-to-r from-green-600 to-blue-600 rounded-lg flex items-center justify-center">
-                <span className="text-white font-bold text-xl">A</span>
+                <span className="text-white font-bold text-xl">TC</span>
               </div>
               <div>
                 <h1 className="text-2xl font-bold text-gray-900">TC Constructor</h1>

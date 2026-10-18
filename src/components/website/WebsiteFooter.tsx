@@ -1,69 +1,57 @@
 'use client'
 
 import Link from 'next/link'
-import { Phone, Mail, MapPin, Facebook, Instagram, Twitter, Youtube } from 'lucide-react'
+import { Phone, Mail, MapPin, MessageCircle } from 'lucide-react'
+import { WHATSAPP_NUMBER, buildWhatsAppUrl } from '@/lib/website/whatsapp'
 
+// Solo páginas que existen; agregar aquí cuando se creen nuevas (FAQ, despacho, etc.)
 const footerLinks = {
-  productos: [
-    { name: 'Ver Todas las Categorías', href: '/website/categories' },
-    { name: 'Herramientas', href: '/website/categories' },
-    { name: 'Materiales', href: '/website/categories' },
-    { name: 'Eléctricos', href: '/website/categories' },
+  catalogo: [
+    { name: 'Todos los productos', href: '/website' },
+    { name: 'Categorías', href: '/website/categories' },
+    { name: 'Promociones', href: '/website/promotions' },
   ],
-  servicios: [
-    { name: 'Asesoría Técnica', href: '/website/services' },
-    { name: 'Entrega a Domicilio', href: '/website/delivery' },
-    { name: 'Garantías', href: '/website/warranty' },
-    { name: 'Soporte', href: '/website/support' },
+  empresa: [
+    { name: 'Sobre Nosotros', href: '/website/about' },
+    { name: 'Contacto', href: '/website/contact' },
   ],
-  información: [
-    { name: 'Política de Privacidad', href: '/website/privacy' },
-    { name: 'Términos y Condiciones', href: '/website/terms' },
-    { name: 'FAQ', href: '/website/faq' },
-    { name: 'Blog', href: '/website/blog' },
-  ]
 }
 
-const socialLinks = [
-  { name: 'Facebook', icon: Facebook, href: '#' },
-  { name: 'Instagram', icon: Instagram, href: '#' },
-  { name: 'Twitter', icon: Twitter, href: '#' },
-  { name: 'YouTube', icon: Youtube, href: '#' },
-]
-
 export default function WebsiteFooter() {
+  const year = new Date().getFullYear()
+
   return (
     <footer className="bg-gray-900 text-white">
       {/* Contenido principal */}
       <div className="container mx-auto px-4 py-16">
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-8">
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-8">
           {/* Logo y descripción */}
           <div className="lg:col-span-2">
             <div className="flex items-center space-x-3 mb-6">
               <div className="w-12 h-12 bg-gradient-to-r from-green-600 to-blue-600 rounded-lg flex items-center justify-center">
-                <span className="text-white font-bold text-xl">A</span>
+                <span className="text-white font-bold text-xl">TC</span>
               </div>
               <div>
                 <h3 className="text-2xl font-bold">TC Constructor</h3>
                 <p className="text-sm text-gray-400">Ferretería & Construcción</p>
               </div>
             </div>
-            
+
             <p className="text-gray-300 mb-6 leading-relaxed">
-              Ferretería especializada en herramientas, materiales de construcción y productos eléctricos. 
+              Ferretería especializada en herramientas, materiales de construcción y productos eléctricos.
               Todo lo que necesitas para tus proyectos de construcción y reparación.
             </p>
 
             {/* Información de contacto */}
             <div className="space-y-3">
-              <div className="flex items-center space-x-3">
+              <a href={`tel:+${WHATSAPP_NUMBER}`} className="flex items-center space-x-3 group">
                 <Phone className="w-4 h-4 text-green-400" />
-                <span className="text-gray-300">+56 9 6909 5111</span>
-              </div>
-              <div className="flex items-center space-x-3">
+                <span className="text-gray-300 group-hover:text-green-400 transition-colors">+56 9 6909 5111</span>
+              </a>
+              <a href="mailto:info@admintermas.cl" className="flex items-center space-x-3 group">
                 <Mail className="w-4 h-4 text-green-400" />
-                <span className="text-gray-300">info@admintermas.cl</span>
-              </div>
+                <span className="text-gray-300 group-hover:text-green-400 transition-colors">info@admintermas.cl</span>
+              </a>
               <div className="flex items-center space-x-3">
                 <MapPin className="w-4 h-4 text-green-400" />
                 <span className="text-gray-300">Bodegas Termas LLifen - LLifen, Futrono, Chile</span>
@@ -71,11 +59,11 @@ export default function WebsiteFooter() {
             </div>
           </div>
 
-          {/* Enlaces de productos */}
+          {/* Enlaces del catálogo */}
           <div>
-            <h4 className="text-lg font-semibold mb-6">Productos</h4>
+            <h4 className="text-lg font-semibold mb-6">Catálogo</h4>
             <ul className="space-y-3">
-              {footerLinks.productos.map((link) => (
+              {footerLinks.catalogo.map((link) => (
                 <li key={link.name}>
                   <Link
                     href={link.href}
@@ -88,11 +76,11 @@ export default function WebsiteFooter() {
             </ul>
           </div>
 
-          {/* Enlaces de servicios */}
+          {/* Enlaces de la empresa */}
           <div>
-            <h4 className="text-lg font-semibold mb-6">Servicios</h4>
+            <h4 className="text-lg font-semibold mb-6">Empresa</h4>
             <ul className="space-y-3">
-              {footerLinks.servicios.map((link) => (
+              {footerLinks.empresa.map((link) => (
                 <li key={link.name}>
                   <Link
                     href={link.href}
@@ -102,58 +90,18 @@ export default function WebsiteFooter() {
                   </Link>
                 </li>
               ))}
-            </ul>
-          </div>
-
-          {/* Enlaces de información */}
-          <div>
-            <h4 className="text-lg font-semibold mb-6">Información</h4>
-            <ul className="space-y-3">
-              {footerLinks.información.map((link) => (
-                <li key={link.name}>
-                  <Link
-                    href={link.href}
-                    className="text-gray-300 hover:text-green-400 transition-colors"
-                  >
-                    {link.name}
-                  </Link>
-                </li>
-              ))}
-            </ul>
-          </div>
-        </div>
-
-        {/* Redes sociales */}
-        <div className="border-t border-gray-800 mt-12 pt-8">
-          <div className="flex flex-col md:flex-row justify-between items-center">
-            <div className="flex space-x-6 mb-4 md:mb-0">
-              {socialLinks.map((social) => (
-                <Link
-                  key={social.name}
-                  href={social.href}
-                  className="w-10 h-10 bg-gray-800 rounded-full flex items-center justify-center hover:bg-green-600 transition-colors"
-                  aria-label={social.name}
+              <li>
+                <a
+                  href={buildWhatsAppUrl('Hola, necesito información sobre productos de TC Constructor')}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="inline-flex items-center gap-2 text-gray-300 hover:text-green-400 transition-colors"
                 >
-                  <social.icon className="w-5 h-5" />
-                </Link>
-              ))}
-            </div>
-
-            {/* Newsletter */}
-            <div className="flex items-center space-x-4">
-              <span className="text-gray-300 text-sm">Suscríbete a nuestro newsletter:</span>
-              <div className="flex">
-                <input
-                  type="email"
-                  placeholder="tu@email.com"
-                  className="px-4 py-2 bg-gray-800 border border-gray-700 rounded-l-lg focus:outline-none focus:ring-2 focus:ring-green-500 text-white placeholder-gray-400 w-64"
-                  style={{ backgroundImage: 'none', backgroundPosition: 'initial' }}
-                />
-                <button className="px-4 py-2 bg-gradient-to-r from-green-600 to-blue-600 text-white rounded-r-lg hover:from-green-700 hover:to-blue-700 transition-all duration-200">
-                  Suscribir
-                </button>
-              </div>
-            </div>
+                  <MessageCircle className="w-4 h-4" />
+                  Escríbenos por WhatsApp
+                </a>
+              </li>
+            </ul>
           </div>
         </div>
       </div>
@@ -163,15 +111,9 @@ export default function WebsiteFooter() {
         <div className="container mx-auto px-4 py-6">
           <div className="flex flex-col md:flex-row justify-between items-center">
             <p className="text-gray-400 text-sm">
-              © 2024 TC Constructor. Todos los derechos reservados.
+              © {year} TC Constructor. Todos los derechos reservados.
             </p>
             <div className="flex space-x-6 mt-4 md:mt-0">
-              <Link href="/website/privacy" className="text-gray-400 hover:text-green-400 text-sm transition-colors">
-                Privacidad
-              </Link>
-              <Link href="/website/terms" className="text-gray-400 hover:text-green-400 text-sm transition-colors">
-                Términos
-              </Link>
               <Link href="/dashboard" className="text-gray-400 hover:text-green-400 text-sm transition-colors">
                 Área Administrativa
               </Link>
@@ -181,4 +123,4 @@ export default function WebsiteFooter() {
       </div>
     </footer>
   )
-} 
+}
