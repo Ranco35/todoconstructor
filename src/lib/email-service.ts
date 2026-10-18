@@ -218,7 +218,7 @@ export const emailTemplates = {
             <p style="margin: 0; color: #1e7e34;"><strong>📞 Contacto para consultas:</strong></p>
             <p style="margin: 5px 0; color: #1e7e34;">${data.contactPerson}</p>
             <p style="margin: 0; color: #1e7e34;">Tel: ${data.contactPhone}</p>
-            <p style="margin: 5px 0 0 0; color: #1e7e34;">Email: info@admintermas.cl</p>
+            <p style="margin: 5px 0 0 0; color: #1e7e34;">Email: ventas@todoconstructor.cl</p>
           </div>
           
           <p>Esperamos que nuestro presupuesto sea de su agrado. No dude en contactarnos para aclarar cualquier consulta.</p>
@@ -230,7 +230,7 @@ export const emailTemplates = {
           
           <div style="text-align: center; margin-top: 40px; padding-top: 20px; border-top: 1px solid #eee;">
             <p style="color: #888; font-size: 12px; margin: 0;">
-              Este presupuesto es válido hasta la fecha indicada. Para consultas, contacte al +56 9 6909 5111 o info@admintermas.cl<br>
+              Este presupuesto es válido hasta la fecha indicada. Para consultas, contacte al +56 9 6909 5111 o ventas@todoconstructor.cl<br>
               Bodegas Termas LLifen - LLifen, Futrono, Chile
             </p>
           </div>
@@ -258,7 +258,7 @@ export const emailTemplates = {
       Saludos cordiales,
       Equipo Comercial TC Constructor
       Tel: +56 9 6909 5111
-      Email: info@admintermas.cl
+      Email: ventas@todoconstructor.cl
       Bodegas Termas LLifen - LLifen, Futrono, Chile
     `,
   }),

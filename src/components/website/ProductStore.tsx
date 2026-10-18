@@ -9,6 +9,19 @@ import { ProductWithStock, ProductCategory, ProductWithPromotion, getProductsFor
 import { getPromotedProductsOnly } from '@/actions/website/promotions'
 import { buildWhatsAppUrl } from '@/lib/website/whatsapp'
 
+// Minúsculas y sin tildes: "Gasfitería" y "gasfiteria" deben coincidir
+function normalizeText(text: string): string {
+  return text.normalize('NFD').replace(/[̀-ͯ]/g, '').toLowerCase().trim()
+}
+
+// "basureros" también busca "basurero"; "tableros" también "tablero"
+function termVariants(term: string): string[] {
+  const variants = [term]
+  if (term.length > 4 && term.endsWith('es')) variants.push(term.slice(0, -2))
+  if (term.length > 3 && term.endsWith('s')) variants.push(term.slice(0, -1))
+  return variants
+}
+
 interface CartItem {
   product: ProductWithStock
   quantity: number
@@ -29,6 +42,7 @@ export default function ProductStore() {
   const [loading, setLoading] = useState(true)
   const [viewMode, setViewMode] = useState<'grid' | 'list'>('grid')
   const [filteredProducts, setFilteredProducts] = useState<ProductWithPromotion[]>([])
+  const [hiddenOutOfStock, setHiddenOutOfStock] = useState(0)
   
   // Estado para mantener todos los filtros activos
   const [activeFilters, setActiveFilters] = useState<ActiveFilters>({
@@ -78,15 +92,20 @@ export default function ProductStore() {
       )
     }
 
-    // 2. Filtro de búsqueda
-    if (activeFilters.searchQuery.trim()) {
-      const query = activeFilters.searchQuery.toLowerCase()
-      filtered = filtered.filter(product =>
-        product.name.toLowerCase().includes(query) ||
-        product.description?.toLowerCase().includes(query) ||
-        product.brand?.toLowerCase().includes(query) ||
-        product.sku?.toLowerCase().includes(query)
-      )
+    // 2. Filtro de búsqueda: cada palabra debe aparecer en el nombre, descripción,
+    // marca, SKU o categoría (sin distinguir tildes ni plurales simples)
+    const terms = normalizeText(activeFilters.searchQuery).split(/\s+/).filter(Boolean)
+    if (terms.length > 0) {
+      filtered = filtered.filter(product => {
+        const haystack = normalizeText([
+          product.name,
+          product.description,
+          product.brand,
+          product.sku,
+          product.category?.name
+        ].filter(Boolean).join(' '))
+        return terms.every(term => termVariants(term).some(variant => haystack.includes(variant)))
+      })
     }
 
     // 3. Filtro de precio (usando precio con promoción si existe)
@@ -108,9 +127,13 @@ export default function ProductStore() {
       })
     }
 
-    // 4. Filtro de stock
+    // 4. Filtro de stock (se guarda cuántos coinciden pero están sin stock, para avisar)
     if (activeFilters.inStockOnly) {
-      filtered = filtered.filter(product => product.stock > 0)
+      const withStock = filtered.filter(product => product.stock > 0)
+      setHiddenOutOfStock(filtered.length - withStock.length)
+      filtered = withStock
+    } else {
+      setHiddenOutOfStock(0)
     }
 
     setFilteredProducts(filtered)
@@ -237,6 +260,7 @@ export default function ProductStore() {
         onCategoryFilter={handleCategoryFilter}
         onPriceFilter={handlePriceFilter}
         onStockFilter={handleStockFilter}
+        inStockOnly={activeFilters.inStockOnly}
       />
 
       {/* Controles de vista y resultados */}
@@ -282,9 +306,25 @@ export default function ProductStore() {
           <h3 className="text-xl font-semibold text-gray-600 mb-2">
             No se encontraron productos
           </h3>
-          <p className="text-gray-500">
-            Intenta ajustar los filtros o buscar con otros términos
-          </p>
+          {hiddenOutOfStock > 0 ? (
+            <>
+              <p className="text-gray-500 mb-4">
+                {hiddenOutOfStock === 1
+                  ? 'Hay 1 producto que coincide, pero está sin stock.'
+                  : `Hay ${hiddenOutOfStock} productos que coinciden, pero están sin stock.`}
+              </p>
+              <button
+                onClick={() => handleStockFilter(false)}
+                className="bg-blue-600 hover:bg-blue-700 text-white px-6 py-2 rounded-lg font-medium transition-colors"
+              >
+                Mostrar productos sin stock
+              </button>
+            </>
+          ) : (
+            <p className="text-gray-500">
+              Intenta ajustar los filtros o buscar con otros términos
+            </p>
+          )}
         </div>
       )}
 

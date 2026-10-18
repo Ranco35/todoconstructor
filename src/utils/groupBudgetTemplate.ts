@@ -571,7 +571,7 @@ export function generateGroupBudgetHTML(data: GroupBudgetData): string {
             <div class="contacto">
                 <div class="contacto-item">
                     <span class="contacto-icon">📧</span>
-                    <div>info@admintermas.cl</div>
+                    <div>ventas@todoconstructor.cl</div>
                 </div>
                 <div class="contacto-item">
                     <span class="contacto-icon">📱</span>

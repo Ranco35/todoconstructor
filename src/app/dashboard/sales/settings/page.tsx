@@ -52,11 +52,11 @@ const SalesSettingsPage = () => {
     paymentTerms: '30 días',
     termsAndConditions: 'Términos y condiciones por defecto...',
     companyInfo: {
-      name: 'Hotel Admintermas',
-      address: 'Dirección del hotel',
-      phone: '+56 9 1234 5678',
-      email: 'info@admintermas.cl',
-      website: 'www.admintermas.cl'
+      name: 'TC Constructor',
+      address: 'Bodegas Termas Llifén - Llifén, Futrono, Chile',
+      phone: '+56 9 6909 5111',
+      email: 'ventas@todoconstructor.cl',
+      website: 'www.todoconstructor.cl'
     },
     autoNumbering: {
       enabled: true,
@@ -92,11 +92,11 @@ const SalesSettingsPage = () => {
         paymentTerms: '30 días',
         termsAndConditions: 'Términos y condiciones por defecto...',
         companyInfo: {
-          name: 'Hotel Admintermas',
-          address: 'Dirección del hotel',
-          phone: '+56 9 1234 5678',
-          email: 'info@admintermas.cl',
-          website: 'www.admintermas.cl'
+          name: 'TC Constructor',
+          address: 'Bodegas Termas Llifén - Llifén, Futrono, Chile',
+          phone: '+56 9 6909 5111',
+          email: 'ventas@todoconstructor.cl',
+          website: 'www.todoconstructor.cl'
         },
         autoNumbering: {
           enabled: true,
