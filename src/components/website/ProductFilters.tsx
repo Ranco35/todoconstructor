@@ -1,6 +1,6 @@
 'use client'
 
-import { useState } from 'react'
+import { useEffect, useState } from 'react'
 import { Search, Filter, X } from 'lucide-react'
 import { ProductCategory } from '@/actions/website/products'
 
@@ -10,6 +10,8 @@ interface ProductFiltersProps {
   onCategoryFilter: (categoryId: number | null) => void
   onPriceFilter: (minPrice: number | null, maxPrice: number | null) => void
   onStockFilter: (inStockOnly: boolean) => void
+  // Permite que el padre cambie el checkbox (ej. botón "Mostrar productos sin stock")
+  inStockOnly?: boolean
 }
 
 export default function ProductFilters({
@@ -17,7 +19,8 @@ export default function ProductFilters({
   onSearch,
   onCategoryFilter,
   onPriceFilter,
-  onStockFilter
+  onStockFilter,
+  inStockOnly: inStockOnlyProp
 }: ProductFiltersProps) {
   const [searchQuery, setSearchQuery] = useState('')
   const [selectedCategory, setSelectedCategory] = useState<number | null>(null)
@@ -25,6 +28,10 @@ export default function ProductFilters({
   const [maxPrice, setMaxPrice] = useState('')
   const [inStockOnly, setInStockOnly] = useState(true)
   const [showFilters, setShowFilters] = useState(false)
+
+  useEffect(() => {
+    if (inStockOnlyProp !== undefined) setInStockOnly(inStockOnlyProp)
+  }, [inStockOnlyProp])
 
   const handleSearch = (e: React.FormEvent) => {
     e.preventDefault()

@@ -167,7 +167,7 @@ export const exportBudgetToPDF = async (
   // === SECCIÓN INFORMACIÓN DE LA EMPRESA (COMPACTA) ===
   addRect(margin, yPosition, contentWidth, 18, colors.light); // REDUCIDO: 25px -> 18px
   addText('Informacion de Contacto', margin + 5, yPosition + 6, 10, true, colors.primary); // REDUCIDO: 12px -> 10px
-  addText('Tel: +56 9 6909 5111 | Email: info@admintermas.cl', margin + 5, yPosition + 12, 8, false, colors.primary); // REDUCIDO: 9px -> 8px
+  addText('Tel: +56 9 6909 5111 | Email: ventas@todoconstructor.cl', margin + 5, yPosition + 12, 8, false, colors.primary); // REDUCIDO: 9px -> 8px
   addText('WhatsApp: Disponible 24/7', pageWidth - 80, yPosition + 12, 8, false, colors.primary); // REDUCIDO: 9px -> 8px
   yPosition += 23; // REDUCIDO: 35px -> 23px
   
@@ -497,7 +497,7 @@ export const generateBudgetPDFBuffer = async (
   // Información de contacto en la esquina superior derecha
   const contactX = pageWidth - margin - 60;
   addText('Tel: +56 9 6909 5111', contactX, yPosition, 10, false, colors.gray);
-  addText('Email: info@admintermas.cl', contactX, yPosition + 6, 10, false, colors.gray);
+  addText('Email: ventas@todoconstructor.cl', contactX, yPosition + 6, 10, false, colors.gray);
   addText('LLifen, Futrono', contactX, yPosition + 12, 10, false, colors.gray);
   
   yPosition += 25;
