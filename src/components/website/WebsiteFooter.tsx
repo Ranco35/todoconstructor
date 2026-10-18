@@ -48,9 +48,9 @@ export default function WebsiteFooter() {
                 <Phone className="w-4 h-4 text-green-400" />
                 <span className="text-gray-300 group-hover:text-green-400 transition-colors">+56 9 6909 5111</span>
               </a>
-              <a href="mailto:info@admintermas.cl" className="flex items-center space-x-3 group">
+              <a href="mailto:ventas@todoconstructor.cl" className="flex items-center space-x-3 group">
                 <Mail className="w-4 h-4 text-green-400" />
-                <span className="text-gray-300 group-hover:text-green-400 transition-colors">info@admintermas.cl</span>
+                <span className="text-gray-300 group-hover:text-green-400 transition-colors">ventas@todoconstructor.cl</span>
               </a>
               <div className="flex items-center space-x-3">
                 <MapPin className="w-4 h-4 text-green-400" />
