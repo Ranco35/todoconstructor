@@ -49,13 +49,19 @@ const nextConfig = {
     return config;
   },
   
-  // Redirección básica - solo para la ruta raíz exacta
+  // La raíz abre el catálogo público; el área administrativa sigue en /dashboard.
+  // /productos era el catálogo antiguo de Odoo (ya no conecta), se reemplazó por /website.
   async redirects() {
     return [
       {
         source: '/',
-        destination: '/dashboard',
+        destination: '/website',
         permanent: false,
+      },
+      {
+        source: '/productos',
+        destination: '/website',
+        permanent: true,
       },
     ];
   },

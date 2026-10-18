@@ -55,6 +55,8 @@ export default function ProductCard({ product, onAddToCart }: ProductCardProps) 
       <div className="relative h-48 bg-gray-100 overflow-hidden">
         {product.image && !imageError ? (
           <img
+            loading="lazy"
+            decoding="async"
             src={product.image}
             alt={product.name}
             className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
@@ -62,6 +64,8 @@ export default function ProductCard({ product, onAddToCart }: ProductCardProps) 
           />
         ) : (
           <img
+            loading="lazy"
+            decoding="async"
             src={getGenericImage(product.category?.name || null)}
             alt={product.name}
             className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"

@@ -1,6 +1,7 @@
 import { getPromotedProductsOnly, getActivePromotions } from '@/actions/website/promotions'
 import ProductCardWithPromotions from '@/components/website/ProductCardWithPromotions'
 import { Percent, Gift, Clock, Tag } from 'lucide-react'
+import { buildWhatsAppUrl } from '@/lib/website/whatsapp'
 
 export const dynamic = 'force-dynamic';
 
@@ -159,7 +160,7 @@ export default async function PromotionsPage() {
                 Contactanos por WhatsApp para más información sobre nuestras ofertas
               </p>
               <a
-                href={`https://wa.me/${process.env.NEXT_PUBLIC_WHATSAPP_NUMBER || '56987654321'}?text=¡Hola! Me interesan sus productos en promoción. ¿Pueden darme más información?`}
+                href={buildWhatsAppUrl('¡Hola! Me interesan sus productos en promoción. ¿Pueden darme más información?')}
                 className="bg-white text-red-600 px-8 py-3 rounded-lg font-bold text-lg hover:bg-gray-100 transition-colors inline-flex items-center"
                 target="_blank"
                 rel="noopener noreferrer"

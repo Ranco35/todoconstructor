@@ -7,6 +7,7 @@ import ProductCardWithPromotions from './ProductCardWithPromotions'
 import ProductFilters from './ProductFilters'
 import { ProductWithStock, ProductCategory, ProductWithPromotion, getProductsForWebsite, getProductCategories } from '@/actions/website/products'
 import { getPromotedProductsOnly } from '@/actions/website/promotions'
+import { buildWhatsAppUrl } from '@/lib/website/whatsapp'
 
 interface CartItem {
   product: ProductWithStock
@@ -151,16 +152,15 @@ export default function ProductStore() {
   // Función para contactar sobre un producto
   const handleContactProduct = (product: ProductWithPromotion) => {
     let message = `Hola, me interesa el producto: ${product.name}`
-    
+
     if (product.hasPromotion && product.promotionData) {
-      message += `%0A%0A¡ESTÁ EN PROMOCIÓN!%0A`
-      message += `Precio original: $${product.originalPrice?.toLocaleString() || 'Consultar'}%0A`
-      message += `Precio con descuento: $${product.promotionPrice?.toLocaleString() || 'Consultar'}%0A`
+      message += `\n\n¡ESTÁ EN PROMOCIÓN!\n`
+      message += `Precio original: $${product.originalPrice?.toLocaleString() || 'Consultar'}\n`
+      message += `Precio con descuento: $${product.promotionPrice?.toLocaleString() || 'Consultar'}\n`
       message += `Ahorro: $${product.promotionData.savings.toLocaleString()} (${Math.round(product.promotionData.savingsPercent)}%)`
     }
-    
-    const whatsappUrl = `https://wa.me/56969095111?text=${message}`
-    window.open(whatsappUrl, '_blank')
+
+    window.open(buildWhatsAppUrl(message), '_blank')
   }
 
   if (loading) {
@@ -291,7 +291,7 @@ export default function ProductStore() {
       {/* Botón flotante de WhatsApp */}
       <div className="fixed bottom-4 right-4">
         <a
-          href="https://wa.me/56969095111?text=Hola,%20me%20interesa%20consultar%20sobre%20productos%20de%20ferretería"
+          href={buildWhatsAppUrl('Hola, me interesa consultar sobre productos de ferretería')}
           target="_blank"
           rel="noopener noreferrer"
           className="bg-green-500 hover:bg-green-600 text-white p-4 rounded-full shadow-lg transition-colors duration-200 flex items-center space-x-2"

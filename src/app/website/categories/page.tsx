@@ -1,6 +1,7 @@
 import { getProductCategories, getProductsForWebsite } from '@/actions/website/products'
 import { createClient } from '@/lib/supabase-server'
 import AllProductsPaginated from '@/components/website/AllProductsPaginated'
+import { buildWhatsAppUrl } from '@/lib/website/whatsapp'
 
 export const dynamic = 'force-dynamic';
 
@@ -109,7 +110,7 @@ export default async function CategoriesPage() {
         {/* Botón flotante de WhatsApp */}
         <div className="fixed bottom-4 right-4">
           <a
-            href="https://wa.me/56969095111?text=Hola,%20me%20interesa%20consultar%20sobre%20productos%20de%20ferretería"
+            href={buildWhatsAppUrl('Hola, me interesa consultar sobre productos de ferretería')}
             target="_blank"
             rel="noopener noreferrer"
             className="bg-green-500 hover:bg-green-600 text-white p-4 rounded-full shadow-lg transition-colors duration-200 flex items-center space-x-2"
